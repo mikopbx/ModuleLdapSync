@@ -2,7 +2,7 @@
     "name": "mikopbx/moduletemplate",
     "description": "ModuleLdapSync",
     "require": {
-        "mikopbx/core": ">=2023.2.160",
+        "php": "7.4.*",
         "directorytree/ldaprecord": "v2.20.4.0"
     },
     "autoload": {
