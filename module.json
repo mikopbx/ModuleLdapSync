@@ -1,0 +1,13 @@
+{
+  "developer":"MIKO",
+  "moduleUniqueID":"ModuleLdapSync",
+  "support_email": "help@miko.ru",
+  "version": "%ModuleVersion%",
+  "min_pbx_version": "2023.2.150",
+  "lic_product_id": 131,
+  "lic_feature_id": 54,
+  "wiki_links": {
+    "ru": {"https://wiki.mikopbx.com/module-ldap-sync": "https://docs.mikopbx.com/mikopbx/modules/miko/module-ldap-sync"},
+    "en": {"https://wiki.mikopbx.com/module-ldap-sync": "https://docs.mikopbx.com/mikopbx/v/english/modules/miko/module-ldap-sync"}
+  }
+}
