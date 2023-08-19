@@ -50,7 +50,7 @@ class ADUsers extends ModulesModelsBase
 
 
     /**
-     * User unique ID
+     * User unique ID usually it is in ObjectGUID attribute
      *
      * @Column(type="string", nullable=false)
      */
@@ -62,6 +62,13 @@ class ADUsers extends ModulesModelsBase
      * @Column(type="string", nullable=false)
      */
     public $paramsHash;
+
+    /**
+     * Date time when the user was changed on LDAP/AD side
+     *
+     * @Column(type="string", nullable=false)
+     */
+    public $lastChangeDate;
 
 
     public function initialize(): void

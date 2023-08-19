@@ -5,9 +5,9 @@
             <thead>
             <tr>
                 <th></th>
-                <th class="center aligned"></th>
                 <th>{{ t._('module_ldap_TableColumnServerName') }}</th>
                 <th>{{ t._('module_ldap_BaseDN') }}</th>
+                <th>{{ t._('module_ldap_OrganizationalUnit') }}</th>
                 <th></th>
             </tr>
             </thead>
@@ -21,15 +21,13 @@
                     <input type="checkbox" {% if server['status']!='disabled' %} checked {% endif %}><label></label>
                 </div>
             </td>
-            <td class="{{ server['status'] }} disability center aligned server-status"><i
-                        class="spinner loading icon"></i></td>
-            <td class="{{ server['status'] }} disability collapsing">{{ server['serverName'] }} <br><span
-                        class="features failure"></span></td>
-            <td class="{{ provider['status'] }} disability">{{ server['baseDN'] }}</td>
+            <td class="{{ server['status'] }} disability">{{ server['serverName'] }}</td>
+            <td class="{{ server['status'] }} disability">{{ server['baseDN'] }}</td>
+            <td class="{{ server['status'] }} disability">{{ server['organizationalUnit'] }}</td>
             {{ partial("partials/tablesbuttons",
                 [
-                    'id': provider['id'],
-                    'edit' : 'module-ldap-sync/module-ldap-sync/modify/'~ server['id'],
+                    'id': server['id'],
+                    'edit' : 'module-ldap-sync/module-ldap-sync/modify/',
                     'delete': 'module-ldap-sync/module-ldap-sync/delete/'
                 ]) }}
         </tr>

@@ -48,7 +48,7 @@ class WorkerLdapSync extends WorkerBase
         $lastCheck = $managedCache->get(self::CACHE_KEY);
         if ($lastCheck === null) {
             // Sync LDAP and MikoPBX users
-            LdapSyncMain::syncUsers();
+            LdapSyncMain::syncAllUsers();
 
             // Store the current timestamp in the cache to track the last repository check
             $managedCache->set(self::CACHE_KEY, time(), 3600); // Check every hour

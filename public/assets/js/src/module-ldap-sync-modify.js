@@ -27,6 +27,11 @@ const ModuleLdapSyncModify = {
 	 */
 	$formObj: $('#module-ldap-sync-form'),
 
+	/**
+	 * jQuery object for the server type dropdown.
+	 * @type {jQuery}
+	 */
+	$ldapTypeDropdown: $('.select-ldap-field'),
 
 	/**
 	 * jQuery object for the getting LDAP users list button.
@@ -39,6 +44,18 @@ const ModuleLdapSyncModify = {
 	 * @type {jQuery}
 	 */
 	$ldapCheckGetUsersSegment: $('#ldap-check-get-users'),
+
+	/**
+	 * jQuery object for the sync LDAP users button.
+	 * @type {jQuery}
+	 */
+	$syncUsersButton: $('.ldap-sync-users'),
+
+	/**
+	 * jQuery object for the ldap sync users segment.
+	 * @type {jQuery}
+	 */
+	$syncUsersSegment: $('#ldap-sync-users'),
 
 	/**
 	 * Validation rules for the form fields.
@@ -105,12 +122,20 @@ const ModuleLdapSyncModify = {
 	 * Initializes the module.
 	 */
 	initialize() {
+		ModuleLdapSyncModify.$ldapTypeDropdown.dropdown();
+
 		ModuleLdapSyncModify.initializeForm();
 
 		// Handle get users list button click
 		ModuleLdapSyncModify.$checkGetUsersButton.on('click', function(e) {
 			e.preventDefault();
 			ModuleLdapSyncModify.apiCallGetLdapUsers();
+		});
+
+		// Handle sync users button click
+		ModuleLdapSyncModify.$syncUsersButton.on('click', function(e) {
+			e.preventDefault();
+			ModuleLdapSyncModify.apiCallSyncUsers();
 		});
 
 	},
@@ -120,7 +145,7 @@ const ModuleLdapSyncModify = {
 	 */
 	apiCallGetLdapUsers(){
 		$.api({
-			url: `${globalRootUrl}module-ldap-sync/module-ldap-sync/get-available-ldap-users`,
+			url: `${Config.pbxUrl}/pbxcore/api/modules/module-ldap-sync/get-available-ldap-users`,
 			on: 'now',
 			method: 'POST',
 			beforeSend(settings) {
@@ -137,17 +162,36 @@ const ModuleLdapSyncModify = {
 			 */
 			onSuccess: function(response) {
 				ModuleLdapSyncModify.$checkGetUsersButton.removeClass('loading disabled');
+				$('#ldap-result').remove();
 				$('.ui.message.ajax').remove();
-				let html = '<ul class="ui list">';
-				$.each(response.data, (index, user) => {
-					html += '<li class="item">';
-						$.each(user, (key, value) => {
-							html += `${key} (${value}) `
+				let html = '<table class="ui very compact selectable table" id="ldap-result">';
+				const uniqueAttributes = {};
+
+				// Extract unique attributes from the response data
+				$.each(response.data, (userKey, userValue) => {
+						$.each(userValue, (index, value) => {
+							uniqueAttributes[index] = true;
 						});
-					html += '</li>';
 				});
-				html += '</ul>';
-				ModuleLdapSyncModify.$ldapCheckGetUsersSegment.after(`<div class="ui icon message ajax positive">${html}</div>`);
+
+				html += '<thead><tr>'
+				$.each(uniqueAttributes, (index, value) => {
+					html +=`<th>${index}</th>`;
+				});
+				html += '</tr></thead>'
+
+				// Generate the HTML table with user data
+				$.each(response.data, (index, user) => {
+					html += '<tr class="item">';
+					$.each(uniqueAttributes, (attrIndex, attrValue) => {
+						const cellValue = user[attrIndex] || '';
+						html += `<td>${cellValue}</td>`;
+					});
+					html += '</tr>';
+				});
+				html += '</table>';
+
+				ModuleLdapSyncModify.$ldapCheckGetUsersSegment.after(html);
 			},
 			/**
 			 * Handles the failure response of the 'get-available-ldap-users' API request.
@@ -156,7 +200,71 @@ const ModuleLdapSyncModify = {
 			onFailure: function(response) {
 				ModuleLdapSyncModify.$checkGetUsersButton.removeClass('loading disabled');
 				$('.ui.message.ajax').remove();
+				$('#ldap-result').remove();
 				ModuleLdapSyncModify.$ldapCheckGetUsersSegment.after(`<div class="ui icon message ajax negative"><i class="icon exclamation circle"></i>${response.message}</div>`);
+			},
+		})
+	},
+
+	apiCallSyncUsers(){
+		$.api({
+			url: `${Config.pbxUrl}/pbxcore/api/modules/module-ldap-sync/sync-ldap-users`,
+			on: 'now',
+			method: 'POST',
+			beforeSend(settings) {
+				ModuleLdapSyncModify.$syncUsersButton.addClass('loading disabled');
+				settings.data = ModuleLdapSyncModify.$formObj.form('get values');
+				return settings;
+			},
+			successTest(response){
+				return response.success;
+			},
+			/**
+			 * Handles the successful response of the 'sync-ldap-users' API request.
+			 * @param {object} response - The response object.
+			 */
+			onSuccess: function(response) {
+				ModuleLdapSyncModify.$syncUsersButton.removeClass('loading disabled');
+				$('#ldap-result').remove();
+				$('.ui.message.ajax').remove();
+				let html = '<table class="ui very compact selectable table" id="ldap-result">';
+				const uniqueAttributes = {};
+
+				// Extract unique attributes from the response data
+				$.each(response.data, (userKey, userValue) => {
+					$.each(userValue, (index, value) => {
+						uniqueAttributes[index] = true;
+					});
+				});
+
+				html += '<thead><tr>'
+				$.each(uniqueAttributes, (index, value) => {
+					html +=`<th>${index}</th>`;
+				});
+				html += '</tr></thead>'
+
+				// Generate the HTML table with user data
+				$.each(response.data, (index, user) => {
+					html += '<tr class="item">';
+					$.each(uniqueAttributes, (attrIndex, attrValue) => {
+						const cellValue = user[attrIndex] || '';
+						html += `<td>${cellValue}</td>`;
+					});
+					html += '</tr>';
+				});
+				html += '</table>';
+
+				ModuleLdapSyncModify.$syncUsersSegment.after(html);
+			},
+			/**
+			 * Handles the failure response of the 'sync-ldap-users' API request.
+			 * @param {object} response - The response object.
+			 */
+			onFailure: function(response) {
+				ModuleLdapSyncModify.$syncUsersButton.removeClass('loading disabled');
+				$('.ui.message.ajax').remove();
+				$('#ldap-result').remove();
+				ModuleLdapSyncModify.$syncUsersSegment.after(`<div class="ui icon message ajax negative"><i class="icon exclamation circle"></i>${response.message}</div>`);
 			},
 		})
 	},

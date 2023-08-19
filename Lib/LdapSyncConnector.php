@@ -19,7 +19,6 @@
 
 namespace Modules\ModuleLdapSync\Lib;
 
-use LdapRecord\Auth\Events\Failed;
 use LdapRecord\Container;
 use MikoPBX\Core\System\SentryErrorLogger;
 
@@ -32,13 +31,12 @@ class LdapSyncConnector extends \Phalcon\Di\Injectable
     private string $baseDN;
     private string $administrativeLogin;
     private string $administrativePassword;
-    private string $userIdAttribute;
-    private string $userNameAttribute;
-    private string $userExtensionAttribute;
-    private string $userMobileAttribute;
-    private string $userEmailAttribute;
+    private array $userAttributes=[];
     private string $organizationalUnit;
     private string $userFilter;
+    private string $userModelClass;
+
+    private \LdapRecord\Connection $connection;
 
     public function __construct(array $ldapCredentials)
     {
@@ -47,74 +45,81 @@ class LdapSyncConnector extends \Phalcon\Di\Injectable
         $this->baseDN = $ldapCredentials['baseDN'];
         $this->administrativeLogin = $ldapCredentials['administrativeLogin'];
         $this->administrativePassword = $ldapCredentials['administrativePassword'];
-        $this->userIdAttribute = $ldapCredentials['userIdAttribute'];
-        $this->userNameAttribute = $ldapCredentials['userNameAttribute'];
-        $this->userExtensionAttribute = $ldapCredentials['userExtensionAttribute'];
-        $this->userMobileAttribute = $ldapCredentials['userMobileAttribute'];
-        $this->userEmailAttribute = $ldapCredentials['userEmailAttribute'];
         $this->organizationalUnit = $ldapCredentials['organizationalUnit'];
         $this->userFilter = $ldapCredentials['userFilter'];
-    }
 
-    /**
-     * Get available users list via LDAP.
-     *
-     * @param string $message The error message.
-     * @return array list of users.
-     */
-    public function getUsersList(string &$message=''): array
-    {
+        $this->userAttributes = json_decode($ldapCredentials['attributes']);
+        foreach ($this->userAttributes as $index=>$value){
+            if (empty($value)){
+                unset($this->userAttributes[$index]);
+            }
+        }
+
+        switch ($ldapCredentials['ldapType']){
+            case 'ActiveDirectory':
+                $this->userModelClass = \LdapRecord\Models\ActiveDirectory\User::class;
+                break;
+            case 'OpenLDAP':
+                $this->userModelClass = \LdapRecord\Models\OpenLDAP\User::class;
+                break;
+            case 'DirectoryServer':
+                $this->userModelClass = \LdapRecord\Models\DirectoryServer\User::class;
+                break;
+            case 'FreeIPA':
+                $this->userModelClass = \LdapRecord\Models\FreeIPA\User::class;
+                break;
+            default:
+                $this->userModelClass = \LdapRecord\Models\ActiveDirectory\User::class;
+        }
+
         // Create a new LDAP connection
-        $connection = new \LdapRecord\Connection([
+        $this->connection = new \LdapRecord\Connection([
             'hosts' => [$this->serverName],
             'port' => $this->serverPort,
             'base_dn' => $this->baseDN,
             'username' => $this->administrativeLogin,
             'password' => $this->administrativePassword,
+            'timeout'  => 15,
         ]);
+    }
+
+    /**
+     * Get available users list via LDAP.
+     * @return AnswerStructure list of users on data attribute
+     */
+    public function getUsersList(): AnswerStructure
+    {
+        $res = new AnswerStructure();
 
         $listOfAvailableUsers = [];
-        $message = $this->translation->_('module_ldap_user_not_found');
         try {
-            $connection->connect();
-
-            $dispatcher = Container::getEventDispatcher();
-            // Listen for failed events
-            $dispatcher->listen(Failed::class, function (Failed $event) use (&$message) {
-                $ldap = $event->getConnection();
-                $message = $ldap->getDiagnosticMessage();
-            });
+            $this->connection->connect();
+            Container::addConnection($this->connection);
 
             // Query LDAP for the user
-            $query = $connection->query();
+            $query = $this->connection->query();
             if ($this->userFilter!==''){
                 $query->rawFilter($this->userFilter);
             }
             if ($this->organizationalUnit!==''){
                 $query->in($this->organizationalUnit);
             }
-            $users = $query->get();
+            $commonAttributes = [Constants::USER_GUID_ATTR, Constants::USER_LAST_CHANGE_ATTR];
+            $requestAttributes = array_merge($commonAttributes, array_values($this->userAttributes));
+            $users =$query->select($requestAttributes)->get();
             foreach ($users as $user) {
                 $record = [];
-                if (array_key_exists($this->userIdAttribute, $user)
-                    && isset($user[$this->userIdAttribute][0])){
-                    $record[$this->userIdAttribute]=$user[$this->userIdAttribute][0];
-                }
-                if (array_key_exists($this->userNameAttribute, $user)
-                    && isset($user[$this->userNameAttribute][0])){
-                    $record[$this->userNameAttribute]=$user[$this->userNameAttribute][0];
-                }
-                if (array_key_exists($this->userExtensionAttribute, $user)
-                    && isset($user[$this->userExtensionAttribute][0])){
-                    $record[$this->userExtensionAttribute]=$user[$this->userExtensionAttribute][0];
-                }
-                if (array_key_exists($this->userMobileAttribute, $user)
-                    && isset($user[$this->userMobileAttribute][0])){
-                    $record[$this->userMobileAttribute]=$user[$this->userMobileAttribute][0];
-                }
-                if (array_key_exists($this->userEmailAttribute, $user)
-                    && isset($user[$this->userEmailAttribute][0])){
-                    $record[$this->userEmailAttribute]=$user[$this->userEmailAttribute][0];
+
+                foreach ($requestAttributes as $attribute){
+                    if (array_key_exists($attribute, $user)
+                        && isset($user[$attribute][0])){
+                        $record[$attribute]=$user[$attribute][0];
+                    }
+                    $attribute = strtolower($attribute);
+                    if (array_key_exists($attribute, $user)
+                        && isset($user[$attribute][0])){
+                        $record[$attribute]=$user[$attribute][0];
+                    }
                 }
                 if (!empty($record)){
                     $listOfAvailableUsers[] = $record;
@@ -122,15 +127,58 @@ class LdapSyncConnector extends \Phalcon\Di\Injectable
             }
             // Sort the array based on the name value
             usort($listOfAvailableUsers, function($a, $b){
-                return $a[$this->userNameAttribute] > $b[$this->userNameAttribute];
+                return $a[$this->userAttributes[Constants::USER_NAME_ATTR]] > $b[$this->userAttributes[Constants::USER_NAME_ATTR]];
             });
 
+            $res->data = $listOfAvailableUsers;
+            $res->success = true;
+        } catch (\LdapRecord\Auth\BindException $e) {
+            $error = $e->getDetailedError();
+            $res->messages['error'][] = $error->getErrorMessage().' ('.$error->getErrorCode().')';
+            $res->success = false;
         } catch (\Throwable $e) {
             SentryErrorLogger::captureExceptionWithSyslog($e, __CLASS__,__METHOD__);
-            $message = $e->getMessage();
+            $res->messages['error'][] = $e->getMessage();
+            $res->success = false;
         }
 
-        return $listOfAvailableUsers;
+        return $res;
+    }
+
+    public function updateDomainUser(string $userGuid, array $newUserData):AnswerStructure
+    {
+        $res = new AnswerStructure();
+
+        try {
+            $this->connection->connect();
+            Container::addConnection($this->connection);
+
+            $updatableAttributes = [
+                Constants::USER_EXTENSION_ATTR,
+                Constants::USER_MOBILE_ATTR
+            ];
+
+            // Query LDAP for the user
+            $user = call_user_func([$this->userModelClass, 'findByGuidOrFail'],[$userGuid]);
+            foreach ($newUserData as $attribute=>$value){
+                if (!empty($value) and in_array($attribute, $updatableAttributes)){
+                    $user->$attribute=$value;
+                }
+            }
+            $user->save();
+            $res->success = true;
+            $res->data[Constants::USER_GUID_ATTR]=$user->getObjectGUID();
+        } catch (\LdapRecord\Models\ModelNotFoundException $e) {
+            $error = $e->getDetailedError();
+            $res->messages['error'][] = $error->getErrorMessage().' ('.$error->getErrorCode().')';
+            $res->success = false;
+        } catch (\Throwable $e) {
+            SentryErrorLogger::captureExceptionWithSyslog($e, __CLASS__,__METHOD__);
+            $res->messages['error'][] = $e->getMessage();
+            $res->success = false;
+        }
+
+        return $res;
     }
 
 }

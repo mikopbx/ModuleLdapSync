@@ -23,4 +23,11 @@ class Constants
 {
     public const HIDDEN_PASSWORD = 'xxxxxxxx';
 
+    public const USER_GUID_ATTR = 'ObjectGUID';
+    public const USER_LAST_CHANGE_ATTR = 'lastChange';
+    public const USER_NAME_ATTR = 'userNameAttribute';
+    public const USER_MOBILE_ATTR = 'userMobileAttribute';
+    public const USER_EXTENSION_ATTR = 'userExtensionAttribute';
+    public const USER_EMAIL_ATTR = 'userEmailAttribute';
+
 }

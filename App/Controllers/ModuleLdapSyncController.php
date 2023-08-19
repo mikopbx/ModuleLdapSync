@@ -17,16 +17,18 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
-namespace Modules\ModuleUsersUI\App\Controllers;
+namespace Modules\ModuleLdapSync\App\Controllers;
 
+use MikoPBX\AdminCabinet\Controllers\BaseController;
 use MikoPBX\AdminCabinet\Providers\AssetProvider;
 use Modules\ModuleLdapSync\App\Forms\LdapConfigForm;
 use Modules\ModuleLdapSync\Lib\Constants;
-use Modules\ModuleLdapSync\Lib\LdapSyncConnector;
 use Modules\ModuleLdapSync\Models\LdapServers;
 
-class ModuleLdapSyncController extends ModuleUsersUIBaseController
+class ModuleLdapSyncController extends BaseController
 {
+    private $moduleUniqueID = 'ModuleLdapSync';
+
     public function indexAction(): void
     {
         $footerCollection = $this->assets->collection(AssetProvider::FOOTER_JS);
@@ -39,10 +41,11 @@ class ModuleLdapSyncController extends ModuleUsersUIBaseController
                 'id'=>$server->id,
                 'serverName' => $server->serverName,
                 'baseDN' => $server->baseDN,
+                'organizationalUnit' => $server->organizationalUnit,
                 'status'=>$server->disabled==='1'?'disabled':'',
             ];
         }
-        $this->view->setVar('servers', $serversList);
+        $this->view->setVar('serversList', $serversList);
     }
 
     /**
@@ -91,6 +94,9 @@ class ModuleLdapSyncController extends ModuleUsersUIBaseController
             switch ($name) {
                 case 'id':
                     break;
+                case 'disabled':
+                    $serverConfig->$name = '0';
+                    break;
                 case 'administrativePassword':
                     if (isset($data['administrativePasswordHidden'])
                         && $data['administrativePasswordHidden'] !== Constants::HIDDEN_PASSWORD) {
@@ -106,63 +112,7 @@ class ModuleLdapSyncController extends ModuleUsersUIBaseController
             }
         }
 
-        $this->saveEntity($serverConfig);
+        $this->saveEntity($serverConfig, 'module-ldap-sync/module-ldap-sync/modify/'.$serverConfig->id);
     }
 
-
-    /**
-     * Retrieves the available LDAP users.
-     *
-     * @return void
-     */
-    public function getAvailableLdapUsersAction(): void
-    {
-        // Check if the request method is POST
-        if (!$this->request->isPost()) {
-            return;
-        }
-        $data = $this->request->getPost();
-        $ldapCredentials = $this->prepareLdapCredentialsArrayFromPost($data);
-        $ldapConnector = new LdapSyncConnector($ldapCredentials);
-        $message = '';
-
-        // Get the list of available LDAP users
-        $availableUsers = $ldapConnector->getUsersList($message);
-
-        // Set the data to be passed to the view
-        $this->view->data = $availableUsers;
-        $this->view->success = count($availableUsers) > 0;
-        $this->view->message = $message;
-    }
-
-    /**
-     * Prepares the LDAP credentials array from the POST data.
-     *
-     * @param array $postData The POST data.
-     *
-     * @return array The prepared LDAP credentials array.
-     */
-    private function prepareLdapCredentialsArrayFromPost(array $postData): array
-    {
-        // Admin password can be stored in DB on the time, on this way it has only xxxxxx value.
-        // It can be empty as well, if some password manager tried to fill it.
-        if (empty($postData['administrativePasswordHidden'])
-            || $postData['administrativePasswordHidden'] === Constants::HIDDEN_PASSWORD) {
-            $ldapConfig = LdapServers::findFirstById($postData['id'])??new LdapServers();
-            $postData['administrativePassword'] = $ldapConfig->administrativePassword??'';
-        } else {
-            $postData['administrativePassword'] = $postData['administrativePasswordHidden'];
-        }
-
-        return [
-            'serverName' => $postData['serverName'],
-            'serverPort' => $postData['serverPort'],
-            'baseDN' => $postData['baseDN'],
-            'administrativeLogin' => $postData['administrativeLogin'],
-            'administrativePassword' => $postData['administrativePassword'],
-            'userIdAttribute' => $postData['userIdAttribute'],
-            'organizationalUnit' => $postData['organizationalUnit'],
-            'userFilter' => $postData['userFilter'],
-        ];
-    }
 }
