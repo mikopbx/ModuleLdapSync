@@ -78,7 +78,7 @@ class LdapServers extends ModulesModelsBase
      *
      * @Column(type="string", nullable=false)
      */
-    public $ldapType;
+    public ?string $ldapType='ActiveDirectory';
 
     /**
      * JSON with user attributes

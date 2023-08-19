@@ -20,7 +20,7 @@
 namespace Modules\ModuleLdapSync\Lib;
 
 use LdapRecord\Container;
-use MikoPBX\Core\System\SentryErrorLogger;
+use MikoPBX\Common\Handlers\CriticalErrorsHandler;
 
 include_once __DIR__.'/../vendor/autoload.php';
 
@@ -137,7 +137,7 @@ class LdapSyncConnector extends \Phalcon\Di\Injectable
             $res->messages['error'][] = $error->getErrorMessage().' ('.$error->getErrorCode().')';
             $res->success = false;
         } catch (\Throwable $e) {
-            SentryErrorLogger::captureExceptionWithSyslog($e, __CLASS__,__METHOD__);
+            CriticalErrorsHandler::handleExceptionWithSyslog($e, __CLASS__,__METHOD__);
             $res->messages['error'][] = $e->getMessage();
             $res->success = false;
         }
@@ -173,7 +173,7 @@ class LdapSyncConnector extends \Phalcon\Di\Injectable
             $res->messages['error'][] = $error->getErrorMessage().' ('.$error->getErrorCode().')';
             $res->success = false;
         } catch (\Throwable $e) {
-            SentryErrorLogger::captureExceptionWithSyslog($e, __CLASS__,__METHOD__);
+            CriticalErrorsHandler::handleExceptionWithSyslog($e, __CLASS__,__METHOD__);
             $res->messages['error'][] = $e->getMessage();
             $res->success = false;
         }

@@ -23,10 +23,10 @@ use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Psr7\Message;
 use GuzzleHttp\Psr7\Request;
+use MikoPBX\Common\Handlers\CriticalErrorsHandler;
 use MikoPBX\Common\Models\Extensions;
 use MikoPBX\Common\Models\PbxSettings;
 use MikoPBX\Common\Models\Users;
-use MikoPBX\Core\System\SentryErrorLogger;
 use MikoPBX\Core\System\Util;
 use MikoPBX\PBXCoreREST\Lib\Extensions\DataStructure;
 use Modules\ModuleLdapSync\Models\ADUsers;
@@ -342,8 +342,8 @@ class LdapSyncMain extends Injectable
             Util::sysLogMsg(__METHOD__, $message, LOG_DEBUG);
             $res->messages['error'][] = $message;
         } catch (\Throwable $e) {
-            // Handle other exceptions and log using SentryErrorLogger
-            SentryErrorLogger::captureExceptionWithSyslog($e, __CLASS__, __METHOD__);
+            // Handle other exceptions and log using SentryErrorHandler
+            CriticalErrorsHandler::handleExceptionWithSyslog($e, __CLASS__, __METHOD__);
             $res->messages['error'][] = $e->getMessage();
         }
 
