@@ -58,6 +58,18 @@ const ModuleLdapSyncModify = {
 	$syncUsersSegment: $('#ldap-sync-users'),
 
 	/**
+	 * Constant with user disabled attribute id
+	 * @type {string}
+	 */
+	userDisabledAttribute: module_ldap_userDisabledAttribute,
+
+	/**
+	 * Constant with hidden users attributes
+	 * @type {array}
+	 */
+	hiddenAttributes: JSON.parse(module_ldap_hiddenAttributes),
+
+	/**
 	 * Validation rules for the form fields.
 	 * @type {Object}
 	 */
@@ -145,7 +157,7 @@ const ModuleLdapSyncModify = {
 	 */
 	apiCallGetLdapUsers(){
 		$.api({
-			url: `${Config.pbxUrl}/pbxcore/api/modules/module-ldap-sync/get-available-ldap-users`,
+			url: `${Config.pbxUrl}/pbxcore/api/modules/ModuleLdapSync/get-available-ldap-users`,
 			on: 'now',
 			method: 'POST',
 			beforeSend(settings) {
@@ -153,9 +165,7 @@ const ModuleLdapSyncModify = {
 				settings.data = ModuleLdapSyncModify.$formObj.form('get values');
 				return settings;
 			},
-			successTest(response){
-				return response.success;
-			},
+			successTest:PbxApi.successTest,
 			/**
 			 * Handles the successful response of the 'get-available-ldap-users' API request.
 			 * @param {object} response - The response object.
@@ -164,33 +174,7 @@ const ModuleLdapSyncModify = {
 				ModuleLdapSyncModify.$checkGetUsersButton.removeClass('loading disabled');
 				$('#ldap-result').remove();
 				$('.ui.message.ajax').remove();
-				let html = '<table class="ui very compact selectable table" id="ldap-result">';
-				const uniqueAttributes = {};
-
-				// Extract unique attributes from the response data
-				$.each(response.data, (userKey, userValue) => {
-						$.each(userValue, (index, value) => {
-							uniqueAttributes[index] = true;
-						});
-				});
-
-				html += '<thead><tr>'
-				$.each(uniqueAttributes, (index, value) => {
-					html +=`<th>${index}</th>`;
-				});
-				html += '</tr></thead>'
-
-				// Generate the HTML table with user data
-				$.each(response.data, (index, user) => {
-					html += '<tr class="item">';
-					$.each(uniqueAttributes, (attrIndex, attrValue) => {
-						const cellValue = user[attrIndex] || '';
-						html += `<td>${cellValue}</td>`;
-					});
-					html += '</tr>';
-				});
-				html += '</table>';
-
+				const html = ModuleLdapSyncModify.buildTableFromUsersList(response.data);
 				ModuleLdapSyncModify.$ldapCheckGetUsersSegment.after(html);
 			},
 			/**
@@ -201,14 +185,14 @@ const ModuleLdapSyncModify = {
 				ModuleLdapSyncModify.$checkGetUsersButton.removeClass('loading disabled');
 				$('.ui.message.ajax').remove();
 				$('#ldap-result').remove();
-				ModuleLdapSyncModify.$ldapCheckGetUsersSegment.after(`<div class="ui icon message ajax negative"><i class="icon exclamation circle"></i>${response.message}</div>`);
+				UserMessage.showMultiString(response.messages);
 			},
 		})
 	},
 
 	apiCallSyncUsers(){
 		$.api({
-			url: `${Config.pbxUrl}/pbxcore/api/modules/module-ldap-sync/sync-ldap-users`,
+			url: `${Config.pbxUrl}/pbxcore/api/modules/ModuleLdapSync/sync-ldap-users`,
 			on: 'now',
 			method: 'POST',
 			beforeSend(settings) {
@@ -216,9 +200,7 @@ const ModuleLdapSyncModify = {
 				settings.data = ModuleLdapSyncModify.$formObj.form('get values');
 				return settings;
 			},
-			successTest(response){
-				return response.success;
-			},
+			successTest:PbxApi.successTest,
 			/**
 			 * Handles the successful response of the 'sync-ldap-users' API request.
 			 * @param {object} response - The response object.
@@ -227,33 +209,7 @@ const ModuleLdapSyncModify = {
 				ModuleLdapSyncModify.$syncUsersButton.removeClass('loading disabled');
 				$('#ldap-result').remove();
 				$('.ui.message.ajax').remove();
-				let html = '<table class="ui very compact selectable table" id="ldap-result">';
-				const uniqueAttributes = {};
-
-				// Extract unique attributes from the response data
-				$.each(response.data, (userKey, userValue) => {
-					$.each(userValue, (index, value) => {
-						uniqueAttributes[index] = true;
-					});
-				});
-
-				html += '<thead><tr>'
-				$.each(uniqueAttributes, (index, value) => {
-					html +=`<th>${index}</th>`;
-				});
-				html += '</tr></thead>'
-
-				// Generate the HTML table with user data
-				$.each(response.data, (index, user) => {
-					html += '<tr class="item">';
-					$.each(uniqueAttributes, (attrIndex, attrValue) => {
-						const cellValue = user[attrIndex] || '';
-						html += `<td>${cellValue}</td>`;
-					});
-					html += '</tr>';
-				});
-				html += '</table>';
-
+				const html = ModuleLdapSyncModify.buildTableFromUsersList(response.data);
 				ModuleLdapSyncModify.$syncUsersSegment.after(html);
 			},
 			/**
@@ -264,9 +220,44 @@ const ModuleLdapSyncModify = {
 				ModuleLdapSyncModify.$syncUsersButton.removeClass('loading disabled');
 				$('.ui.message.ajax').remove();
 				$('#ldap-result').remove();
-				ModuleLdapSyncModify.$syncUsersSegment.after(`<div class="ui icon message ajax negative"><i class="icon exclamation circle"></i>${response.message}</div>`);
+				UserMessage.showMultiString(response.messages);
 			},
 		})
+	},
+
+	buildTableFromUsersList(usersList){
+		let html = '<table class="ui very compact selectable table" id="ldap-result">';
+		const uniqueAttributes = {};
+
+		// Extract unique attributes from the response data
+		$.each(usersList, (userKey, userValue) => {
+			$.each(userValue, (index, value) => {
+				if (ModuleLdapSyncModify.hiddenAttributes.includes(index)) {
+					return;
+				}
+				uniqueAttributes[index] = true;
+			});
+		});
+
+		// Generate the HTML table head user data attributes
+		html += '<thead><tr>'
+		$.each(uniqueAttributes, (index, value) => {
+			html +=`<th>${index}</th>`;
+		});
+		html += '</tr></thead>'
+
+		// Generate the HTML table with user data
+		$.each(usersList, (index, user) => {
+			const rowClass = user[ModuleLdapSyncModify.userDisabledAttribute]===true?'disabled':'item';
+			html += `<tr class="${rowClass}">`;
+			$.each(uniqueAttributes, (attrIndex, attrValue) => {
+				const cellValue = user[attrIndex] || '';
+				html += `<td>${cellValue}</td>`;
+			});
+			html += '</tr>';
+		});
+		html += '</table>';
+		return html;
 	},
 
 	/**
@@ -277,6 +268,17 @@ const ModuleLdapSyncModify = {
 	cbBeforeSendForm(settings) {
 		const result = settings;
 		result.data = ModuleLdapSyncModify.$formObj.form('get values');
+
+		ModuleLdapSyncModify.$formObj.find('.checkbox').each((index, obj) => {
+			const input = $(obj).find('input');
+			const id = input.attr('id');
+			if ($(obj).checkbox('is checked')) {
+				result.data[id]='1';
+			} else {
+				result.data[id]='0';
+			}
+		});
+
 		return result;
 	},
 

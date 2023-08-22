@@ -57,18 +57,18 @@ class ADUsers extends ModulesModelsBase
     public $guid;
 
     /**
-     * Ldap data hash
+     * Local data hash
      *
      * @Column(type="string", nullable=false)
      */
-    public $paramsHash;
+    public $localParamsHash;
 
     /**
-     * Date time when the user was changed on LDAP/AD side
+     * Remote data hash
      *
      * @Column(type="string", nullable=false)
      */
-    public $lastChangeDate;
+    public $domainParamsHash;
 
 
     public function initialize(): void

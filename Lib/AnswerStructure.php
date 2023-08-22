@@ -20,10 +20,12 @@
 namespace Modules\ModuleLdapSync\Lib;
 
 
+use MikoPBX\PBXCoreREST\Lib\PBXApiResult;
+
 /**
- * Class PBXApiResult
+ * Class AnswerStructure
  *
- * @package MikoPBX\PBXCoreREST\Lib
+ * @package Modules\ModuleLdapSync\Lib
  *
  */
 class AnswerStructure
@@ -50,13 +52,21 @@ class AnswerStructure
     public array $messages;
 
     /**
-     * Creates a new instance of PBXApiResult.
+     * AnswerStructure constructor.
+     *
+     * @param PBXApiResult|null $res The PBXApiResult object to initialize from (optional).
      */
-    public function __construct()
+    public function __construct(PBXApiResult $res = null)
     {
-        $this->success   = false;
-        $this->data      = [];
-        $this->messages  = [];
+        // Initialize default values
+        $this->success = false;
+        $this->data = [];
+        $this->messages = [];
+
+        // If PBXApiResult is provided, copy attributes
+        if ($res) {
+            $this->copyAttributesFrom($res);
+        }
     }
 
 
@@ -73,4 +83,20 @@ class AnswerStructure
             'messages'  => $this->messages,
         ];
     }
+
+    /**
+     * Copies attributes from a PBXApiResult to this AnswerStructure.
+     *
+     * @param PBXApiResult $res The PBXApiResult object to copy attributes from.
+     */
+    private function copyAttributesFrom(PBXApiResult $res): void
+    {
+        // Iterate through the attributes of this object and copy values from PBXApiResult
+        foreach ($this as $attribute => $value) {
+            if (!empty($res->$attribute)) {
+                $this->$attribute = $res->$attribute;
+            }
+        }
+    }
+
 }

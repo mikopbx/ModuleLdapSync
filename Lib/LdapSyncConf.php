@@ -76,22 +76,23 @@ class LdapSyncConf extends ConfigClass
         $data = $request['data'];
         switch ($action) {
             case 'GET-AVAILABLE-LDAP-USERS':
-                $result = LdapSyncMain::getAvailableLdapUsers($data);
+                $ldapCredentials = LdapSyncMain::postDataToLdapCredentials($data);
+                $result = LdapSyncMain::getAvailableLdapUsers($ldapCredentials);
                 $res->success = $result->success;
                 $res->messages = $result->messages;
                 $res->data = $result->data;
                 break;
             case 'SYNC-LDAP-USERS':
-                $result = LdapSyncMain::syncUsersPerServer($data);
+                $ldapCredentials = LdapSyncMain::postDataToLdapCredentials($data);
+                $result = LdapSyncMain::syncUsersPerServer($ldapCredentials);
                 $res->success = $result->success;
                 $res->messages = $result->messages;
                 $res->data = $result->data;
                 break;
             default:
                 $res->success = false;
-                $res->messages['error'][] = 'API action not found in ' . __METHOD__;
+                $res->messages[] = 'API action not found in ' . __METHOD__;
         }
-
         return $res;
     }
 

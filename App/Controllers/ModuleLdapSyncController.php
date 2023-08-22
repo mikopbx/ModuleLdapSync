@@ -67,7 +67,13 @@ class ModuleLdapSyncController extends BaseController
         if (!$serverConfig) {
             $serverConfig = new LdapServers();
         }
-
+        $this->view->setVar('hiddenAttributes', json_encode([
+            Constants::USER_ACCOUNT_CONTROL_ATTR,
+            Constants::USER_GUID_ATTR,
+            Constants::USER_DISABLED,
+            Constants::USER_HAD_CHANGES_ON
+        ]));
+        $this->view->setVar('userDisabledAttribute', Constants::USER_DISABLED);
         $this->view->setVar('ldapForm', new LdapConfigForm($serverConfig));
     }
 
@@ -111,6 +117,14 @@ class ModuleLdapSyncController extends BaseController
                     }
             }
         }
+
+        $attributes = [
+            Constants::USER_EMAIL_ATTR => $data[Constants::USER_EMAIL_ATTR],
+            Constants::USER_NAME_ATTR => $data[Constants::USER_NAME_ATTR],
+            Constants::USER_MOBILE_ATTR => $data[Constants::USER_MOBILE_ATTR],
+            Constants::USER_EXTENSION_ATTR => $data[Constants::USER_EXTENSION_ATTR],
+        ];
+        $serverConfig->attributes = json_encode($attributes);
 
         $this->saveEntity($serverConfig, 'module-ldap-sync/module-ldap-sync/modify/'.$serverConfig->id);
     }

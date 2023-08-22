@@ -20,26 +20,92 @@
 namespace Modules\ModuleLdapSync\Lib;
 
 use LdapRecord\Container;
+use LdapRecord\Models\Attributes\AccountControl;
 use MikoPBX\Common\Handlers\CriticalErrorsHandler;
 
 include_once __DIR__.'/../vendor/autoload.php';
 
+/**
+ * Class LdapSyncConnector
+ * Handles synchronization and interaction with LDAP server.
+ */
 class LdapSyncConnector extends \Phalcon\Di\Injectable
 {
+    /**
+     * The name or ip of the LDAP server.
+     *
+     * @var string
+     */
     private string $serverName;
+
+
+    /**
+     * The port of the LDAP server.
+     *
+     * @var string
+     */
     private string $serverPort;
+
+    /**
+     * The base DN (Distinguished Name) for LDAP operations.
+     *
+     * @var string
+     */
     private string $baseDN;
+
+    /**
+     * The administrative login for LDAP connection.
+     *
+     * @var string
+     */
     private string $administrativeLogin;
+
+    /**
+     * The administrative password for LDAP connection.
+     *
+     * @var string
+     */
     private string $administrativePassword;
-    private array $userAttributes=[];
+
+
+    /**
+     * The organizational unit for LDAP operations.
+     *
+     * @var string
+     */
     private string $organizationalUnit;
+
+    /**
+     * The user filter for LDAP operations.
+     *
+     * @var string
+     */
     private string $userFilter;
+
+    /**
+     * The user attributes to synchronize.
+     *
+     * @var array
+     */
+    private array $userAttributes=[];
+
+    /**
+     * The class of the user model based on LDAP type.
+     *
+     * @var string
+     */
     private string $userModelClass;
 
     private \LdapRecord\Connection $connection;
 
+    /**
+     * LdapConnectionManager constructor.
+     *
+     * @param array $ldapCredentials The LDAP credentials.
+     */
     public function __construct(array $ldapCredentials)
     {
+        // Initialize properties from provided LDAP credentials
         $this->serverName = $ldapCredentials['serverName'];
         $this->serverPort = $ldapCredentials['serverPort'];
         $this->baseDN = $ldapCredentials['baseDN'];
@@ -48,29 +114,11 @@ class LdapSyncConnector extends \Phalcon\Di\Injectable
         $this->organizationalUnit = $ldapCredentials['organizationalUnit'];
         $this->userFilter = $ldapCredentials['userFilter'];
 
-        $this->userAttributes = json_decode($ldapCredentials['attributes']);
-        foreach ($this->userAttributes as $index=>$value){
-            if (empty($value)){
-                unset($this->userAttributes[$index]);
-            }
-        }
+        // Parse and filter user attributes
+        $this->userAttributes = array_filter(json_decode($ldapCredentials['attributes'], true));
 
-        switch ($ldapCredentials['ldapType']){
-            case 'ActiveDirectory':
-                $this->userModelClass = \LdapRecord\Models\ActiveDirectory\User::class;
-                break;
-            case 'OpenLDAP':
-                $this->userModelClass = \LdapRecord\Models\OpenLDAP\User::class;
-                break;
-            case 'DirectoryServer':
-                $this->userModelClass = \LdapRecord\Models\DirectoryServer\User::class;
-                break;
-            case 'FreeIPA':
-                $this->userModelClass = \LdapRecord\Models\FreeIPA\User::class;
-                break;
-            default:
-                $this->userModelClass = \LdapRecord\Models\ActiveDirectory\User::class;
-        }
+        // Set user model class based on LDAP type
+        $this->userModelClass = $this->getUserModelClass($ldapCredentials['ldapType']);
 
         // Create a new LDAP connection
         $this->connection = new \LdapRecord\Connection([
@@ -84,8 +132,29 @@ class LdapSyncConnector extends \Phalcon\Di\Injectable
     }
 
     /**
+     * Get the class of the user model based on LDAP type.
+     *
+     * @param string $ldapType The LDAP type.
+     * @return string The user model class.
+     */
+    private function getUserModelClass(string $ldapType): string
+    {
+        switch ($ldapType) {
+            case 'OpenLDAP':
+                return \LdapRecord\Models\OpenLDAP\User::class;
+            case 'DirectoryServer':
+                return \LdapRecord\Models\DirectoryServer\User::class;
+            case 'FreeIPA':
+                return \LdapRecord\Models\FreeIPA\User::class;
+            default:
+                return \LdapRecord\Models\ActiveDirectory\User::class;
+        }
+    }
+
+    /**
      * Get available users list via LDAP.
-     * @return AnswerStructure list of users on data attribute
+     *
+     * @return AnswerStructure List of users in the data attribute.
      */
     public function getUsersList(): AnswerStructure
     {
@@ -97,30 +166,29 @@ class LdapSyncConnector extends \Phalcon\Di\Injectable
             Container::addConnection($this->connection);
 
             // Query LDAP for the user
-            $query = $this->connection->query();
+            $query = call_user_func([$this->userModelClass, 'query']);
+
             if ($this->userFilter!==''){
                 $query->rawFilter($this->userFilter);
             }
             if ($this->organizationalUnit!==''){
                 $query->in($this->organizationalUnit);
             }
-            $commonAttributes = [Constants::USER_GUID_ATTR, Constants::USER_LAST_CHANGE_ATTR];
+            $commonAttributes = [Constants::USER_ACCOUNT_CONTROL_ATTR];
             $requestAttributes = array_merge($commonAttributes, array_values($this->userAttributes));
             $users =$query->select($requestAttributes)->get();
             foreach ($users as $user) {
                 $record = [];
-
                 foreach ($requestAttributes as $attribute){
-                    if (array_key_exists($attribute, $user)
-                        && isset($user[$attribute][0])){
-                        $record[$attribute]=$user[$attribute][0];
-                    }
-                    $attribute = strtolower($attribute);
-                    if (array_key_exists($attribute, $user)
-                        && isset($user[$attribute][0])){
-                        $record[$attribute]=$user[$attribute][0];
+                    if ($user->hasAttribute($attribute)){
+                        $record[$attribute]= $user->getFirstAttribute($attribute);
                     }
                 }
+                $record[Constants::USER_GUID_ATTR] = $user->getConvertedGuid();
+                $record[Constants::USER_DISABLED] = $user->isDisabled();
+                uksort($record, function($a, $b){
+                    return $a>$this->userAttributes[Constants::USER_NAME_ATTR];
+                });
                 if (!empty($record)){
                     $listOfAvailableUsers[] = $record;
                 }
@@ -145,6 +213,13 @@ class LdapSyncConnector extends \Phalcon\Di\Injectable
         return $res;
     }
 
+    /**
+     * Update user data in the LDAP domain.
+     *
+     * @param string $userGuid The GUID of the user to update.
+     * @param array $newUserData The new user data to update.
+     * @return AnswerStructure The response structure indicating success or failure.
+     */
     public function updateDomainUser(string $userGuid, array $newUserData):AnswerStructure
     {
         $res = new AnswerStructure();
@@ -160,14 +235,19 @@ class LdapSyncConnector extends \Phalcon\Di\Injectable
 
             // Query LDAP for the user
             $user = call_user_func([$this->userModelClass, 'findByGuidOrFail'],[$userGuid]);
+            if ($user===null){
+                $res->messages['error'][] ='User with guid: '.$userGuid.' did not found on server '.$this->serverName;
+                $res->success = false;
+            }
             foreach ($newUserData as $attribute=>$value){
                 if (!empty($value) and in_array($attribute, $updatableAttributes)){
-                    $user->$attribute=$value;
+                    $user->{$this->userAttributes[$attribute]}=$value;
                 }
             }
             $user->save();
             $res->success = true;
             $res->data[Constants::USER_GUID_ATTR]=$user->getObjectGUID();
+            $res->messages['info'][]= 'User '.$newUserData[Constants::USER_NAME_ATTR].' was updated on server '.$this->serverName;
         } catch (\LdapRecord\Models\ModelNotFoundException $e) {
             $error = $e->getDetailedError();
             $res->messages['error'][] = $error->getErrorMessage().' ('.$error->getErrorCode().')';

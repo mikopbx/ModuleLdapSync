@@ -6,8 +6,8 @@
         <div class="ui header">{{ t._('module_ldap_LdapServerConnectionHeader') }}</div>
 
         <div class="inline field">
-            {{ ldapForm.render('ldapType') }}
             <label for="ldapType">{{ t._('module_ldap_ldapType') }}</label>
+            {{ ldapForm.render('ldapType') }}
         </div>
 
         <div class="fields">
@@ -100,3 +100,8 @@
 {{ partial("partials/submitbutton",['indexurl':'']) }}
 <div class="ui clearing hidden divider"></div>
 {{ endform() }}
+
+<script type="text/javascript">
+    var module_ldap_hiddenAttributes = '{{ hiddenAttributes }}';
+    var module_ldap_userDisabledAttribute = '{{ userDisabledAttribute }}';
+</script>

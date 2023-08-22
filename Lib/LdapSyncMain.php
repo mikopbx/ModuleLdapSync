@@ -19,15 +19,9 @@
 
 namespace Modules\ModuleLdapSync\Lib;
 
-use GuzzleHttp\Client;
-use GuzzleHttp\Exception\ClientException;
-use GuzzleHttp\Psr7\Message;
-use GuzzleHttp\Psr7\Request;
-use MikoPBX\Common\Handlers\CriticalErrorsHandler;
 use MikoPBX\Common\Models\Extensions;
-use MikoPBX\Common\Models\PbxSettings;
 use MikoPBX\Common\Models\Users;
-use MikoPBX\Core\System\Util;
+use MikoPBX\Common\Providers\PBXCoreRESTClientProvider;
 use MikoPBX\PBXCoreREST\Lib\Extensions\DataStructure;
 use Modules\ModuleLdapSync\Models\ADUsers;
 use Modules\ModuleLdapSync\Models\LdapServers;
@@ -55,89 +49,111 @@ class LdapSyncMain extends Injectable
     /**
      * Synchronizes LDAP users based on the provided server parameters.
      *
-     * @param array $serverParams - Parameters for the LDAP server.
+     * @param array $ldapCredentials - Parameters for the LDAP server.
      * @return AnswerStructure - The structure containing synchronization status.
      */
-    public static function syncUsersPerServer(array $serverParams): AnswerStructure
+    public static function syncUsersPerServer(array $ldapCredentials): AnswerStructure
     {
         $res = new AnswerStructure();
         $res->success = true;
 
         // Create an LDAP connector for the server
-        $connector = new LdapSyncConnector($serverParams);
+        $connector = new LdapSyncConnector($ldapCredentials);
 
         // Get the list of users from LDAP
         $responseFromLdap = $connector->getUsersList();
-        if ($responseFromLdap->success = true) {
-            foreach ($responseFromLdap->data as $userFromLdap) {
+        $processedUsers = [];
+        if ($responseFromLdap->success = false) {
+            return $responseFromLdap;
+        }
 
-                // Update user data based on LDAP information
-                $result = self::updateUserData($serverParams, $userFromLdap);
+        foreach ($responseFromLdap->data as $userFromLdap) {
+            // Update user data on PBX or on Domain based on LDAP information
+            $result = self::updateUserData($ldapCredentials, $userFromLdap);
 
-                if (!$result->success) {
-                    // Update synchronization status and messages
-                    $res->success = false;
-                    $res->messages = array_merge($res->messages, $result->messages);
+            if (!$result->success) {
+                // Update synchronization status and messages
+                $res->success = false;
+                $res->messages = array_merge($res->messages, $result->messages);
+            } else {
+                $processedUser = $userFromLdap;
+                if (!empty($result->data[Constants::USER_HAD_CHANGES_ON])) {
+                    $processedUser[Constants::USER_HAD_CHANGES_ON] = $result->data[Constants::USER_HAD_CHANGES_ON];
                 }
-
+                $processedUsers[] = $processedUser;
             }
         }
+        $res->data = $processedUsers;
+
         return $res;
     }
 
     /**
-     * Updates user data using LDAP information.
+     * Updates user on LDAP or PBX side
      *
-     * @param array $serverData - Configuration data for the LDAP server.
+     * @param array $ldapCredentials - Parameters for the LDAP server.
      * @param array $userFromLdap - User data retrieved from LDAP.
      * @return void
      */
-    public static function updateUserData(array $serverData, array $userFromLdap): AnswerStructure
+    public static function updateUserData(array $ldapCredentials, array $userFromLdap): AnswerStructure
     {
+        // 1. Find data stored in MikoPBX about the user from LDAP
         $userGuid = $userFromLdap[Constants::USER_GUID_ATTR];
-        $userDataHash = md5(implode('', $userFromLdap));
         $parameters = [
-            'conditions' => 'server_id=:server_id and guid=:guid',
+            'conditions' => 'server_id=:server_id: and guid=:guid:',
             'bind' => [
                 'guid' => $userGuid,
-                'server_id' => $serverData['id'],
+                'server_id' => $ldapCredentials['id'],
             ]
         ];
 
         $previousSyncUser = ADUsers::findFirst($parameters);
-        if ($previousSyncUser and $previousSyncUser->paramsHash === $userDataHash) {
-            $res = new AnswerStructure();
-            $res->success = true;
-            return $res; // No changes
-        }
-
         if ($previousSyncUser === null) {
             $previousSyncUser = new ADUsers();
-            $previousSyncUser->paramsHash = $userDataHash;
-            $previousSyncUser->server_id = $serverData['id'];
+            $previousSyncUser->server_id = $ldapCredentials['id'];
             $previousSyncUser->guid = $userGuid;
         }
 
-        $onlyDigitsMobile = preg_replace('/[^0-9]/', '', $userFromLdap[$serverData[Constants::USER_MOBILE_ATTR]]);
-        $params = [
-            'email' => $userFromLdap[$serverData[Constants::USER_EMAIL_ATTR]],
-            'mobile' => $onlyDigitsMobile,
-            'number' => $userFromLdap[$serverData[Constants::USER_EXTENSION_ATTR]],
-            'username' => $userFromLdap[$serverData[Constants::USER_NAME_ATTR]]
-        ];
+        // 2. Prepare data structure from LDAP directory
+        $userDataFromLdap = self::getUserDataFromLdap($ldapCredentials['attributes'], $userFromLdap);
+        $domainParamsHash = md5(implode('', $userDataFromLdap));
 
-        if ($previousSyncUser->lastChangeDate === $userFromLdap[Constants::USER_LAST_CHANGE_ATTR]) {
-            // Changes on MikoPBX side
-            $response = self::updateADUser($previousSyncUser);
-        } else {
-            // Changes on Domain side
-            $response = self::createUpdateUser($params);
-            $previousSyncUser->lastChangeDate = $userFromLdap[Constants::USER_LAST_CHANGE_ATTR];
+        // 3. Prepare data structure from MikoPBX database
+        $userDataFromMikoPBX = self::getUserOnMikoPBX($previousSyncUser->user_id);
+        $localParamsHash = md5(implode('', $userDataFromMikoPBX));
+
+        if ($ldapCredentials['updateAttributes']==='1'){
+            // No need to update attributes on domain side, track only domain changes
+            $previousSyncUser->localParamsHash = $localParamsHash;
         }
 
-        if ($response->sussess) {
+        // 4. Compare data hash with stored value
+        if ($previousSyncUser->domainParamsHash!==$domainParamsHash){
+            // 5. Changes on domain side, need update PBX info first
+            $response = self::createUpdateUser($userDataFromLdap);
+            $response->data[Constants::USER_HAD_CHANGES_ON] = 'PBX';
+            if ($response->success){
+                $previousSyncUser->domainParamsHash=$domainParamsHash;
+            }
+        } elseif ($previousSyncUser->localParamsHash!==$localParamsHash){
+            // 6. Changes on PBX side, need update domain info
+            $response = self::updateADUser($ldapCredentials, $previousSyncUser->guid, $userDataFromMikoPBX);
+            $response->data[Constants::USER_HAD_CHANGES_ON] = 'AD';
+            if ($response->success){
+                $previousSyncUser->localParamsHash=$localParamsHash;
+            }
+        } else {
+            // No changes on both sides
+            $response = new AnswerStructure();
+            $response->success = true;
+        }
+
+        if ($response->success) {
             $previousSyncUser->user_id = $response->data['user_id'];
-            $previousSyncUser->save();
+            if (!$previousSyncUser->save()){
+                $response->success=false;
+                $response->messages['error'][]=$previousSyncUser->getMessages();
+            }
         }
 
         return $response;
@@ -146,72 +162,147 @@ class LdapSyncMain extends Injectable
     /**
      * Updates an AD user's data based on the previous synchronization.
      *
-     * @param ADUsers $previousSyncUser - The previously synchronized user data.
+     * @param array $ldapCredentials - Parameters for the LDAP server.
+     * @param string $userGuid The GUID of domain user to update.
+     * @param array $newUserData The new user data to update.
      * @return AnswerStructure - The structure containing update status and user ID.
      */
-    private static function updateADUser(ADUsers $previousSyncUser): AnswerStructure
+    private static function updateADUser(array $ldapCredentials, string $userGuid, array $newUserData): AnswerStructure
     {
-        $res = new AnswerStructure();
-
-        // Retrieve LDAP server configuration
-        $ldapServer = LdapServers::findFirstById($previousSyncUser->server_id)->toArray();
-        if ($ldapServer === null or $ldapServer['updateAttributes'] === '0') {
-            // No need to update attributes, return success
-            $res->success = true;
-            $res->data['user_id'] = $previousSyncUser->user_id;
-            return $res;
-        }
-
         // Create an LDAP connector
-        $connector = new LdapSyncConnector($ldapServer);
-
-        // Define parameters for database query
-        $parameters = [
-            'models' => [
-                'Users' => Users::class,
-            ],
-            'conditions' => 'Users.id = :user_id',
-            'binds' => [
-                'user_id' => $previousSyncUser->user_id
-            ],
-            'columns' => [
-                Constants::USER_NAME_ATTR => 'Users.username',
-                Constants::USER_EXTENSION_ATTR => 'Extensions.number',
-                Constants::USER_MOBILE_ATTR => 'ExtensionsExternal.number',
-                Constants::USER_EMAIL_ATTR => 'Users.email',
-            ],
-            'joins' => [
-                'Extensions' => [
-                    0 => Extensions::class,
-                    1 => 'Users.id = Extensions.userid AND Extensions.type=' . Extensions::TYPE_SIP,
-                    2 => 'Users',
-                    3 => 'INNER',
-                ],
-                'ExtensionsExternal' => [
-                    0 => Extensions::class,
-                    1 => 'ExtensionsExternal.userid = Users.id AND Extensions.type=' . Extensions::TYPE_EXTERNAL,
-                    2 => 'ExtensionsExternal',
-                    3 => 'LEFT',
-                ],
-            ],
-        ];
-        $userOnMikoPBX = Di::getDefault()->get('modelsManager')->createBuilder($parameters)
-            ->getQuery()
-            ->getSingleResult();
+        $connector = new LdapSyncConnector($ldapCredentials);
 
         // Update AD user's data using the LDAP connector
-        $res = $connector->updateDomainUser($previousSyncUser->guid, $userOnMikoPBX);
-        $res->data['user_id'] = $previousSyncUser->user_id;
-        return $res;
+        return $connector->updateDomainUser($userGuid, $newUserData);
     }
 
     /**
      * Creates or updates a user using provided data.
      *
-     * @param array $userData - User data to be created or updated.
+     * @param array $userDataFromLdap - User data to be created or updated.
      * @return AnswerStructure
      */
-    public static function createUpdateUser(array $userData): AnswerStructure
+    public static function createUpdateUser(array $userDataFromLdap): AnswerStructure
+    {
+        if ($userDataFromLdap[Constants::USER_DISABLED]){
+            $result = new AnswerStructure();
+            $result->success=true;
+            $result->data = $userDataFromLdap;
+            $result->messages=['info'=>'The user is disabled on domain side. Skipped.'];
+            return $result;
+        }
+
+        $extensionId = self::findUserInMikoPBX($userDataFromLdap);
+
+        // Get user data from the API
+        $di = Di::getDefault();
+        $restAnswer = $di->get(PBXCoreRESTClientProvider::SERVICE_NAME, [
+            '/pbxcore/api/extensions/getRecord',
+            PBXCoreRESTClientProvider::HTTP_METHOD_GET,
+            ['id' => $extensionId]
+        ]);
+        if (!$restAnswer->success) {
+            return new AnswerStructure($restAnswer);
+        }
+
+        // Create a new data structure for user data
+        $dataStructure = new DataStructure($restAnswer->data);
+        $dataStructure->user_username = $userDataFromLdap[Constants::USER_NAME_ATTR] ?? $dataStructure->user_username;
+        $dataStructure->user_email = $userDataFromLdap[Constants::USER_EMAIL_ATTR] ?? $dataStructure->user_email;
+        $dataStructure->number = $userDataFromLdap[Constants::USER_EXTENSION_ATTR] ?? $dataStructure->number;
+
+        // Update mobile number and forwarding settings
+        $mobileFromDomain = $userDataFromLdap[Constants::USER_MOBILE_ATTR] ?? $dataStructure->mobile_number;
+        if (!empty($mobileFromDomain)) {
+            $oldMobileNumber = $dataStructure->mobile_number;
+            $dataStructure->mobile_number = $mobileFromDomain;
+            $dataStructure->mobile_dialstring = $mobileFromDomain;
+
+            if ($oldMobileNumber === $dataStructure->fwd_forwardingonunavailable) {
+                $dataStructure->fwd_forwardingonunavailable = $mobileFromDomain;
+            }
+            if ($oldMobileNumber === $dataStructure->fwd_forwarding) {
+                $dataStructure->fwd_forwarding = $mobileFromDomain;
+            }
+            if ($oldMobileNumber === $dataStructure->fwd_forwardingonbusy) {
+                $dataStructure->fwd_forwardingonbusy = $mobileFromDomain;
+            }
+        }
+
+        // Save user data through the API
+        $restAnswer = $di->get(PBXCoreRESTClientProvider::SERVICE_NAME, [
+            '/pbxcore/api/extensions/saveRecord',
+            PBXCoreRESTClientProvider::HTTP_METHOD_POST,
+            $dataStructure->toArray()
+        ]);
+
+        return new AnswerStructure($restAnswer);
+    }
+
+    /**
+     * Retrieves available LDAP users based on provided data.
+     *
+     * @param array $ldapCredentials - Data containing LDAP configuration.
+     * @return AnswerStructure - The structure containing available LDAP users.
+     */
+    public static function getAvailableLdapUsers(array $ldapCredentials): AnswerStructure
+    {
+        // Create an LDAP connector
+        $ldapConnector = new LdapSyncConnector($ldapCredentials);
+
+        // Retrieve the list of available LDAP users
+        return $ldapConnector->getUsersList();
+    }
+
+    /**
+     * Convert post data into LDAP credentials.
+     *
+     * @param array $postData The input post data.
+     * @return array The LDAP credentials.
+     */
+    public static function postDataToLdapCredentials(array $postData): array
+    {
+        // Admin password can be stored in DB on the time, on this way it has only xxxxxx value.
+        // It can be empty as well, if some password manager tried to fill it.
+        if (empty($postData['administrativePasswordHidden'])
+            || $postData['administrativePasswordHidden'] === Constants::HIDDEN_PASSWORD) {
+            $ldapConfig = LdapServers::findFirstById($postData['id']) ?? new LdapServers();
+            $postData['administrativePassword'] = $ldapConfig->administrativePassword ?? '';
+        } else {
+            $postData['administrativePassword'] = $postData['administrativePasswordHidden'];
+        }
+
+        // Define attributes for LDAP search
+        $attributes = [
+            Constants::USER_EMAIL_ATTR => $postData[Constants::USER_EMAIL_ATTR],
+            Constants::USER_NAME_ATTR => $postData[Constants::USER_NAME_ATTR],
+            Constants::USER_MOBILE_ATTR => $postData[Constants::USER_MOBILE_ATTR],
+            Constants::USER_EXTENSION_ATTR => $postData[Constants::USER_EXTENSION_ATTR],
+        ];
+
+        // Construct and return LDAP credentials
+        return [
+            'id' => $postData['id'],
+            'ldapType' => $postData['ldapType'],
+            'serverName' => $postData['serverName'],
+            'serverPort' => $postData['serverPort'],
+            'baseDN' => $postData['baseDN'],
+            'administrativeLogin' => $postData['administrativeLogin'],
+            'administrativePassword' => $postData['administrativePassword'],
+            'attributes' => json_encode($attributes),
+            'organizationalUnit' => $postData['organizationalUnit'],
+            'userFilter' => $postData['userFilter'],
+            'updateAttributes' => $postData['updateAttributes'],
+        ];
+    }
+
+    /**
+     * Find a user extension id in the MikoPBX DB based on LDAP data.
+     *
+     * @param array $userDataFromLdap The LDAP user data.
+     * @return string The extension ID if found, otherwise an empty string.
+     */
+    public static function findUserInMikoPBX(array $userDataFromLdap): string
     {
         $parameters = [
             'models' => [
@@ -235,164 +326,117 @@ class LdapSyncMain extends Injectable
             ],
         ];
 
-        foreach ($userData as $index => $value) {
+        foreach ($userDataFromLdap as $index => $value) {
             if (!empty($value)) {
                 switch ($index) {
-                    case 'email':
-                        $parameters['conditions'] = $parameters['conditions'] . ' OR Users.email=:email';
-                        $parameters['bind'][$index] = $value;
+                    case Constants::USER_EMAIL_ATTR:
+                        $parameters['conditions'] = $parameters['conditions'] . ' OR Users.email=:email:';
+                        $parameters['bind']['email'] = $value;
                         break;
-                    case 'mobile':
-                        $parameters['conditions'] = $parameters['conditions'] . ' OR Extensions.number = :mobile';
-                        $parameters['bind'][$index] = $value;
+                    case Constants::USER_MOBILE_ATTR:
+                        $parameters['conditions'] = $parameters['conditions'] . ' OR Extensions.number = :mobile:';
+                        $parameters['bind']['mobile'] = $value;
                         break;
-                    case 'number':
-                        $parameters['conditions'] = $parameters['conditions'] . ' OR Extensions.number = :number';
-                        $parameters['bind'][$index] = $value;
+                    case Constants::USER_EXTENSION_ATTR:
+                        $parameters['conditions'] = $parameters['conditions'] . ' OR Extensions.number = :number:';
+                        $parameters['bind']['number'] = $value;
                         break;
-                    case 'username':
-                        $parameters['conditions'] = $parameters['conditions'] . ' OR Users.username=:username';
-                        $parameters['bind'][$index] = $value;
+                    case Constants::USER_NAME_ATTR:
+                        $parameters['conditions'] = $parameters['conditions'] . ' OR Users.username=:username:';
+                        $parameters['bind']['username'] = $value;
                         break;
                 }
             }
         }
-        $parameters['conditions'] = substr($parameters['conditions'], 3);
-        $userOnMikoPBX = null;
+        $parameters['conditions'] = '(' . substr($parameters['conditions'], 3) . ') AND Extensions.type="' . Extensions::TYPE_SIP . '"';
+        $userDataFromMikoPBX = null;
         if (!empty($parameters['bind'])) {
-            $userOnMikoPBX = Di::getDefault()->get('modelsManager')->createBuilder($parameters)
+            $userDataFromMikoPBX = Di::getDefault()->get('modelsManager')->createBuilder($parameters)
                 ->getQuery()
                 ->getSingleResult();
         }
-        if ($userOnMikoPBX === null) {
+        if ($userDataFromMikoPBX === null) {
             $extensionId = '';
         } else {
-            $extensionId = $userOnMikoPBX->extension_id;
+            $extensionId = $userDataFromMikoPBX->extension_id;
         }
 
-        // Get user data from the API
-        $restAnswer = self::restApiRequest('/pbxcore/api/extensions/getRecord', 'GET', ['id' => $extensionId]);
-        if (!$restAnswer->success) {
-            return $restAnswer;
-        }
-
-        // Create a new data structure for user data
-        /** @var $dataStructure \MikoPBX\PBXCoreREST\Lib\Extensions\DataStructure */
-        $dataStructure = new DataStructure($restAnswer['data']);
-        $dataStructure->user_username = $userData['username'];
-        $dataStructure->user_email = $userData['email'];
-        $dataStructure->number = $userData['number'];
-
-        // Update mobile number and forwarding settings
-        $oldMobileNumber = $dataStructure->mobile_number;
-        $dataStructure->mobile_number = $userData['mobile'];
-        $dataStructure->mobile_dialstring = $userData['mobile'];
-
-        if ($oldMobileNumber === $dataStructure->fwd_forwardingonunavailable) {
-            $dataStructure->fwd_forwardingonunavailable = $userData['mobile'];
-        }
-        if ($oldMobileNumber === $dataStructure->fwd_forwarding) {
-            $dataStructure->fwd_forwarding = $userData['mobile'];
-        }
-        if ($oldMobileNumber === $dataStructure->fwd_forwardingonbusy) {
-            $dataStructure->fwd_forwardingonbusy = $userData['mobile'];
-        }
-
-        // Save user data through the API
-        return self::restApiRequest('/pbxcore/api/extensions/saveRecord', 'POST', $dataStructure->toArray());
+        return $extensionId;
     }
 
     /**
-     * Makes a REST API request.
+     * Get user information from MikoPBX.
      *
-     * @param string $url - The API endpoint URL.
-     * @param string $method - The HTTP method (default: 'GET').
-     * @param array $data - Optional data to include in the request.
-     * @return AnswerStructure - The response from the API as AnswerStructure class.
+     * @param string $userId The ID of the user.
+     * @return mixed|null The user information from MikoPBX.
      */
-    public static function restApiRequest(string $url, string $method = 'GET', array $data = []): AnswerStructure
+    public static function getUserOnMikoPBX(string $userId)
     {
-        $res = new AnswerStructure();
-
-        // Get the web port from PbxSettings
-        $webPort = PbxSettings::getValueByKey('WEBPort');
-
-        // Create a new HTTP client instance
-        $client = new Client([
-            'base_uri' => 'http://localhost:' . $webPort,
-            'timeout' => 0,
-            'allow_redirects' => false
-        ]);
-
-        // Create a new request with the specified method and data
-        $request = new Request($method, $url, ['query' => $data]);
-
-        try {
-            // Send the request and get the response
-            $response = $client->send($request, ['timeout' => 10]);
-            $body = $response->getBody();
-            $result = json_decode($body, true);
-
-            $res->data = $result['data'];
-            $res->messages = $result['messages'];
-            $res->success = $result['success'];
-        } catch (ClientException $e) {
-            // Handle client exception
-            $message = "Rest API request error " . Message::toString($e->getResponse());
-            Util::sysLogMsg(__METHOD__, $message, LOG_DEBUG);
-            $res->messages['error'][] = $message;
-        } catch (\Throwable $e) {
-            // Handle other exceptions and log using SentryErrorHandler
-            CriticalErrorsHandler::handleExceptionWithSyslog($e, __CLASS__, __METHOD__);
-            $res->messages['error'][] = $e->getMessage();
-        }
-
-        return $res;
+        // Query parameters for retrieving user information.
+        $parameters = [
+            'models' => [
+                'Users' => Users::class,
+            ],
+            'conditions' => 'Users.id = :user_id:',
+            'bind' => [
+                'user_id' => $userId
+            ],
+            'columns' => [
+                Constants::USER_NAME_ATTR => 'Users.username',
+                Constants::USER_EXTENSION_ATTR => 'Extensions.number',
+                Constants::USER_MOBILE_ATTR => 'ExtensionsExternal.number',
+                Constants::USER_EMAIL_ATTR => 'Users.email',
+            ],
+            'joins' => [
+                'Extensions' => [
+                    0 => Extensions::class,
+                    1 => 'Extensions.userid=Users.id AND Extensions.type="' . Extensions::TYPE_SIP . '"',
+                    2 => 'Extensions',
+                    3 => 'INNER',
+                ],
+                'ExtensionsExternal' => [
+                    0 => Extensions::class,
+                    1 => 'ExtensionsExternal.userid = Users.id AND ExtensionsExternal.type="' . Extensions::TYPE_EXTERNAL . '"',
+                    2 => 'ExtensionsExternal',
+                    3 => 'LEFT',
+                ],
+            ],
+        ];
+        // Build and execute the query to fetch user information.
+        return Di::getDefault()->get('modelsManager')->createBuilder($parameters)
+            ->getQuery()
+            ->getSingleResult();
     }
 
     /**
-     * Retrieves available LDAP users based on provided data.
+     * Get user data from LDAP.
      *
-     * @param array $postData - Data containing LDAP configuration.
-     * @return AnswerStructure - The structure containing available LDAP users.
+     * @param string $attributes JSON-encoded user attributes mapping.
+     * @param array $userFromLdap The user data fetched from LDAP.
+     * @return array The user data mapped based on provided attributes.
      */
-    public static function getAvailableLdapUsers(array $postData): AnswerStructure
+    public static function getUserDataFromLdap(string $attributes, array $userFromLdap): array
     {
-        // Admin password can be stored in DB on the time, on this way it has only xxxxxx value.
-        // It can be empty as well, if some password manager tried to fill it.
-        if (empty($postData['administrativePasswordHidden'])
-            || $postData['administrativePasswordHidden'] === Constants::HIDDEN_PASSWORD) {
-            $ldapConfig = LdapServers::findFirstById($postData['id']) ?? new LdapServers();
-            $postData['administrativePassword'] = $ldapConfig->administrativePassword ?? '';
-        } else {
-            $postData['administrativePassword'] = $postData['administrativePasswordHidden'];
+        // Decode the JSON-encoded attributes mapping.
+        $userAttributes = json_decode($attributes, true);
+
+        $userDataFromLdap = [];
+        foreach ($userAttributes as $attributeId => $attributeName) {
+            // Get the value for the attribute from the LDAP data.
+            $value = $userFromLdap[$attributeName] ?? '';
+            // Skip empty attributes.
+            if (empty($value)) {
+                continue;
+            }
+
+            // Process mobile attribute to remove non-numeric characters.
+            if ($attributeId === Constants::USER_MOBILE_ATTR) {
+                $userDataFromLdap[$attributeId] = preg_replace('/[^0-9]/', '', $value);
+            } else {
+                // For other attributes, simply use the value as-is.
+                $userDataFromLdap[$attributeId] = $value;
+            }
         }
-
-        // Define attributes for LDAP search
-        $attributes = [
-            Constants::USER_EMAIL_ATTR => $postData[Constants::USER_EMAIL_ATTR],
-            Constants::USER_NAME_ATTR => $postData[Constants::USER_NAME_ATTR],
-            Constants::USER_MOBILE_ATTR => $postData[Constants::USER_MOBILE_ATTR],
-            Constants::USER_EXTENSION_ATTR => $postData[Constants::USER_EXTENSION_ATTR],
-        ];
-
-        // Construct LDAP credentials
-        $ldapCredentials = [
-            'ldapType' => $postData['ldapType'],
-            'serverName' => $postData['serverName'],
-            'serverPort' => $postData['serverPort'],
-            'baseDN' => $postData['baseDN'],
-            'administrativeLogin' => $postData['administrativeLogin'],
-            'administrativePassword' => $postData['administrativePassword'],
-            'attributes' => json_encode($attributes),
-            'organizationalUnit' => $postData['organizationalUnit'],
-            'userFilter' => $postData['userFilter'],
-        ];
-
-        // Create an LDAP connector
-        $ldapConnector = new LdapSyncConnector($ldapCredentials);
-
-        // Retrieve the list of available LDAP users
-        return $ldapConnector->getUsersList();
+        return $userDataFromLdap;
     }
 }
