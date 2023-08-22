@@ -119,13 +119,12 @@ class LdapSyncMain extends Injectable
         $domainParamsHash = md5(implode('', $userDataFromLdap));
 
         // 3. Prepare data structure from MikoPBX database
-        $userDataFromMikoPBX = self::getUserOnMikoPBX($previousSyncUser->user_id);
-        $localParamsHash = md5(implode('', $userDataFromMikoPBX));
-
-        if ($ldapCredentials['updateAttributes']==='1'){
-            // No need to update attributes on domain side, track only domain changes
-            $previousSyncUser->localParamsHash = $localParamsHash;
+        if ($previousSyncUser->user_id){
+            $userDataFromMikoPBX = self::getUserOnMikoPBX($previousSyncUser->user_id);
+        } else {
+            $userDataFromMikoPBX = [];
         }
+        $localParamsHash = md5(implode('', $userDataFromMikoPBX));
 
         // 4. Compare data hash with stored value
         if ($previousSyncUser->domainParamsHash!==$domainParamsHash){
@@ -135,7 +134,11 @@ class LdapSyncMain extends Injectable
             if ($response->success){
                 $previousSyncUser->domainParamsHash=$domainParamsHash;
             }
-        } elseif ($previousSyncUser->localParamsHash!==$localParamsHash){
+        } elseif (
+            $previousSyncUser->localParamsHash!==$localParamsHash
+            && $ldapCredentials['updateAttributes']==='1'
+            && !empty($userDataFromMikoPBX)
+        ){
             // 6. Changes on PBX side, need update domain info
             $response = self::updateADUser($ldapCredentials, $previousSyncUser->guid, $userDataFromMikoPBX);
             $response->data[Constants::USER_HAD_CHANGES_ON] = 'AD';

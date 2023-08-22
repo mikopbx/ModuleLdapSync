@@ -126,7 +126,7 @@ class ModuleLdapSyncController extends BaseController
         ];
         $serverConfig->attributes = json_encode($attributes);
 
-        $this->saveEntity($serverConfig, 'module-ldap-sync/module-ldap-sync/modify/'.$serverConfig->id);
+        $this->saveEntity($serverConfig, 'module-ldap-sync/module-ldap-sync/modify/{id}');
     }
 
 }

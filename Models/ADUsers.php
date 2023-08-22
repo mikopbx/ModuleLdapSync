@@ -40,14 +40,12 @@ class ADUsers extends ModulesModelsBase
      */
     public $user_id;
 
-
     /**
      * Link to the ldap server table
      *
      * @Column(type="string", nullable=false)
      */
     public $server_id;
-
 
     /**
      * User unique ID usually it is in ObjectGUID attribute
@@ -59,14 +57,14 @@ class ADUsers extends ModulesModelsBase
     /**
      * Local data hash
      *
-     * @Column(type="string", nullable=false)
+     * @Column(type="string", nullable=true)
      */
     public $localParamsHash;
 
     /**
      * Remote data hash
      *
-     * @Column(type="string", nullable=false)
+     * @Column(type="string", nullable=true)
      */
     public $domainParamsHash;
 

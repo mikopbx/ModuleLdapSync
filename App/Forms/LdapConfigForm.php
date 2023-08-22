@@ -36,22 +36,37 @@ class LdapConfigForm extends BaseForm
         $this->add(new Hidden('id'));
 
         // ServerHost
-        $this->add(new Text('serverName', ['placeholder' => 'dc1.domain.com']));
+        $this->add(new Text('serverName', [
+            'placeholder' => 'dc1.domain.com'
+        ]));
 
         // ServerPort
-        $this->add(new Text('serverPort', ['placeholder' => '389']));
+        $this->add(new Text('serverPort', [
+            'placeholder' => '389',
+            'value' =>$entity->serverPort ?? '389'
+        ]));
 
         // AdministrativeLogin
         $this->add(new Text('administrativeLogin', ['placeholder' => 'Domain admin login']));
 
         // AdministrativePassword
-        $this->add(new Password('administrativePasswordHidden', ['autocomplete' => 'off', 'placeholder' => 'Domain admin password', 'value' => Constants::HIDDEN_PASSWORD]));
+        $this->add(new Password('administrativePasswordHidden', [
+            'autocomplete' => 'off',
+            'placeholder' => 'Domain admin password',
+            'value' => Constants::HIDDEN_PASSWORD
+        ]));
 
         // BaseDN
-        $this->add(new Text('baseDN', ['placeholder' => 'dc=domain, dc=com']));
+        $this->add(new Text('baseDN', [
+            'placeholder' => 'dc=domain, dc=com',
+            'value' => $entity->baseDN ?? 'dc=domain, dc=com'
+        ]));
 
         // UserFilter
-        $this->addTextArea('userFilter', $entity->userFilter ?? '', 90, ['placeholder' => '(&(objectClass=user)(objectCategory=PERSON))']);
+        $this->addTextArea('userFilter', $entity->userFilter ?? '', 90, [
+            'placeholder' => '(&(objectClass=user)(objectCategory=PERSON))',
+            'value' => $entity->userFilter ?? '(&(objectClass=user)(objectCategory=PERSON))'
+        ]);
 
         // Select server type
         $types = [
@@ -79,29 +94,31 @@ class LdapConfigForm extends BaseForm
         // UserNameAttribute
         $this->add(new Text(Constants::USER_NAME_ATTR, [
             'placeholder' => 'cn',
-            'value' => $attributes[Constants::USER_NAME_ATTR] ?? ''
+            'value' => $attributes[Constants::USER_NAME_ATTR] ?? 'cn'
         ]));
 
         // UserExtensionAttribute
         $this->add(new Text(Constants::USER_EXTENSION_ATTR, [
             'placeholder' => 'telephoneNumber',
-            'value' => $attributes[Constants::USER_EXTENSION_ATTR] ?? ''
+            'value' => $attributes[Constants::USER_EXTENSION_ATTR] ?? 'telephoneNumber'
         ]));
 
         // UserMobileAttribute
         $this->add(new Text(Constants::USER_MOBILE_ATTR, [
             'placeholder' => 'mobile',
-            'value' => $attributes[Constants::USER_MOBILE_ATTR] ?? ''
+            'value' => $attributes[Constants::USER_MOBILE_ATTR] ?? 'mobile'
         ]));
 
         // UserEmailAttribute
         $this->add(new Text(Constants::USER_EMAIL_ATTR, [
             'placeholder' => 'mail',
-            'value' => $attributes[Constants::USER_EMAIL_ATTR] ?? ''
+            'value' => $attributes[Constants::USER_EMAIL_ATTR] ?? 'mail'
         ]));
 
         // OrganizationUnit
-        $this->add(new Text('organizationalUnit', ['placeholder' => 'ou=users, dc=domain, dc=com']));
+        $this->add(new Text('organizationalUnit', [
+            'placeholder' => 'ou=users, dc=domain, dc=com'
+        ]));
 
         // UpdateAttributes checkbox
         $checkArr = [];
