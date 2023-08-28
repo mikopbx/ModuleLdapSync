@@ -242,7 +242,7 @@ const ModuleLdapSyncModify = {
 		// Generate the HTML table head user data attributes
 		html += '<thead><tr>'
 		$.each(uniqueAttributes, (index, value) => {
-			html +=`<th>${index}</th>`;
+			html +='<th>'+ModuleLdapSyncModify.getTranslation(index)+'</th>';
 		});
 		html += '</tr></thead>'
 
@@ -252,7 +252,7 @@ const ModuleLdapSyncModify = {
 			html += `<tr class="${rowClass}">`;
 			$.each(uniqueAttributes, (attrIndex, attrValue) => {
 				const cellValue = user[attrIndex] || '';
-				html += `<td>${cellValue}</td>`;
+				html += '<td>'+ModuleLdapSyncModify.getTranslation(cellValue)+'</td>';
 			});
 			html += '</tr>';
 		});
@@ -260,6 +260,21 @@ const ModuleLdapSyncModify = {
 		return html;
 	},
 
+	/**
+	 * Translates the given text using the global translation object.
+	 *
+	 * @param {string} text - The text to be translated.
+	 * @returns {string} The translated text if available, or the original text.
+	 */
+	getTranslation(text){
+		const nameTemplate = `module_ldap_${text}`;
+		const name = globalTranslate[nameTemplate];
+		if (name!==undefined) {
+			return name;
+		} else {
+			return text;
+		}
+	},
 	/**
 	 * Callback function before sending the form.
 	 * @param {object} settings - The settings object.

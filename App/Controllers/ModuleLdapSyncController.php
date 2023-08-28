@@ -67,11 +67,14 @@ class ModuleLdapSyncController extends BaseController
         if (!$serverConfig) {
             $serverConfig = new LdapServers();
         }
+
+        $attributeValues = json_decode($serverConfig->attributes, true);
+
         $this->view->setVar('hiddenAttributes', json_encode([
             Constants::USER_ACCOUNT_CONTROL_ATTR,
             Constants::USER_GUID_ATTR,
             Constants::USER_DISABLED,
-            Constants::USER_HAD_CHANGES_ON
+            $attributeValues[Constants::USER_AVATAR_ATTR]??Constants::USER_AVATAR_ATTR,
         ]));
         $this->view->setVar('userDisabledAttribute', Constants::USER_DISABLED);
         $this->view->setVar('ldapForm', new LdapConfigForm($serverConfig));
@@ -123,6 +126,8 @@ class ModuleLdapSyncController extends BaseController
             Constants::USER_NAME_ATTR => $data[Constants::USER_NAME_ATTR],
             Constants::USER_MOBILE_ATTR => $data[Constants::USER_MOBILE_ATTR],
             Constants::USER_EXTENSION_ATTR => $data[Constants::USER_EXTENSION_ATTR],
+            Constants::USER_AVATAR_ATTR => $data[Constants::USER_AVATAR_ATTR],
+            Constants::USER_ACCOUNT_CONTROL_ATTR => $data[Constants::USER_ACCOUNT_CONTROL_ATTR],
         ];
         $serverConfig->attributes = json_encode($attributes);
 

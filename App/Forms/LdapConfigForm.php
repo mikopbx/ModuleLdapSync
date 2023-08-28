@@ -91,10 +91,11 @@ class LdapConfigForm extends BaseForm
 
         $attributes = json_decode($entity->attributes??'', true);
 
+
         // UserNameAttribute
         $this->add(new Text(Constants::USER_NAME_ATTR, [
-            'placeholder' => 'cn',
-            'value' => $attributes[Constants::USER_NAME_ATTR] ?? 'cn'
+            'placeholder' => 'cn or displayName',
+            'value' => $attributes[Constants::USER_NAME_ATTR] ?? 'displayName'
         ]));
 
         // UserExtensionAttribute
@@ -113,6 +114,18 @@ class LdapConfigForm extends BaseForm
         $this->add(new Text(Constants::USER_EMAIL_ATTR, [
             'placeholder' => 'mail',
             'value' => $attributes[Constants::USER_EMAIL_ATTR] ?? 'mail'
+        ]));
+
+        // UserAvatarAttribute
+        $this->add(new Text(Constants::USER_AVATAR_ATTR, [
+            'placeholder' => 'thumbnailPhoto or jpegPhoto',
+            'value' => $attributes[Constants::USER_AVATAR_ATTR] ?? 'jpegPhoto'
+        ]));
+
+        // UserAccountControlAttribute
+        $this->add(new Text(Constants::USER_ACCOUNT_CONTROL_ATTR, [
+            'placeholder' => 'userAccountControl',
+            'value' => $attributes[Constants::USER_ACCOUNT_CONTROL_ATTR] ?? 'userAccountControl'
         ]));
 
         // OrganizationUnit
