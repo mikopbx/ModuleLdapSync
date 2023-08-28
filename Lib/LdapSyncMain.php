@@ -27,6 +27,8 @@ use Modules\ModuleLdapSync\Models\ADUsers;
 use Modules\ModuleLdapSync\Models\LdapServers;
 use Phalcon\Di;
 use Phalcon\Di\Injectable;
+use Phalcon\Mvc\Model;
+use Phalcon\Mvc\Model\Query;
 
 /**
  * Class for synchronizing user data from LDAP servers.
@@ -70,17 +72,19 @@ class LdapSyncMain extends Injectable
         foreach ($responseFromLdap->data as $userFromLdap) {
             // Update user data on PBX or on Domain based on LDAP information
             $result = self::updateUserData($ldapCredentials, $userFromLdap);
+            $res->messages = array_merge($res->messages, $result->messages);
 
-            if (!$result->success) {
-                // Update synchronization status and messages
-                $res->success = false;
-                $res->messages = array_merge($res->messages, $result->messages);
-            } else {
+            if ($result->success) {
                 $processedUser = $userFromLdap;
                 if (!empty($result->data[Constants::USER_HAD_CHANGES_ON])) {
                     $processedUser[Constants::USER_HAD_CHANGES_ON] = $result->data[Constants::USER_HAD_CHANGES_ON];
                 }
+                if (!empty($result->data[Constants::USER_SYNC_RESULT])) {
+                    $processedUser[Constants::USER_SYNC_RESULT] = $result->data[Constants::USER_SYNC_RESULT];
+                }
                 $processedUsers[] = $processedUser;
+            } else {
+                $res->success = false;
             }
         }
         $res->data = $processedUsers;
@@ -127,12 +131,18 @@ class LdapSyncMain extends Injectable
         $localParamsHash = md5(implode('', $userDataFromMikoPBX));
 
         // 4. Compare data hash with stored value
-        if ($previousSyncUser->domainParamsHash!==$domainParamsHash){
+        if ($previousSyncUser->domainParamsHash!==$domainParamsHash
+            || $userDataFromMikoPBX===[]
+        ){
             // 5. Changes on domain side, need update PBX info first
             $response = self::createUpdateUser($userDataFromLdap);
-            $response->data[Constants::USER_HAD_CHANGES_ON] = 'PBX';
             if ($response->success){
+                $response->data[Constants::USER_HAD_CHANGES_ON] = Constants::HAD_CHANGES_ON_PBX;
+                $response->data[Constants::USER_SYNC_RESULT]=Constants::SYNC_RESULT_UPDATED;
                 $previousSyncUser->domainParamsHash=$domainParamsHash;
+                $previousSyncUser->user_id = $response->data['user_id'];
+            } else {
+                $response->data[Constants::USER_SYNC_RESULT]=Constants::SYNC_RESULT_SKIPPED;
             }
         } elseif (
             $previousSyncUser->localParamsHash!==$localParamsHash
@@ -141,18 +151,20 @@ class LdapSyncMain extends Injectable
         ){
             // 6. Changes on PBX side, need update domain info
             $response = self::updateADUser($ldapCredentials, $previousSyncUser->guid, $userDataFromMikoPBX);
-            $response->data[Constants::USER_HAD_CHANGES_ON] = 'AD';
             if ($response->success){
+                $response->data[Constants::USER_HAD_CHANGES_ON] = Constants::HAD_CHANGES_ON_AD;
                 $previousSyncUser->localParamsHash=$localParamsHash;
             }
         } else {
             // No changes on both sides
             $response = new AnswerStructure();
+            $response->data[Constants::USER_SYNC_RESULT]=Constants::SYNC_RESULT_SKIPPED;
             $response->success = true;
+            return $response;
         }
 
+        // Save hashes into database
         if ($response->success) {
-            $previousSyncUser->user_id = $response->data['user_id'];
             if (!$previousSyncUser->save()){
                 $response->success=false;
                 $response->messages['error'][]=$previousSyncUser->getMessages();
@@ -191,18 +203,19 @@ class LdapSyncMain extends Injectable
             $result = new AnswerStructure();
             $result->success=true;
             $result->data = $userDataFromLdap;
+            $result->data[Constants::USER_SYNC_RESULT]=Constants::SYNC_RESULT_SKIPPED;
             $result->messages=['info'=>'The user is disabled on domain side. Skipped.'];
             return $result;
         }
 
-        $extensionId = self::findUserInMikoPBX($userDataFromLdap);
+        $pbxUserData = self::findUserInMikoPBX($userDataFromLdap);
 
         // Get user data from the API
         $di = Di::getDefault();
         $restAnswer = $di->get(PBXCoreRESTClientProvider::SERVICE_NAME, [
             '/pbxcore/api/extensions/getRecord',
             PBXCoreRESTClientProvider::HTTP_METHOD_GET,
-            ['id' => $extensionId]
+            ['id' => $pbxUserData['extension_id']??'']
         ]);
         if (!$restAnswer->success) {
             return new AnswerStructure($restAnswer);
@@ -210,29 +223,55 @@ class LdapSyncMain extends Injectable
 
         // Create a new data structure for user data
         $dataStructure = new DataStructure($restAnswer->data);
-        $dataStructure->user_username = $userDataFromLdap[Constants::USER_NAME_ATTR] ?? $dataStructure->user_username;
-        $dataStructure->user_email = $userDataFromLdap[Constants::USER_EMAIL_ATTR] ?? $dataStructure->user_email;
-        $dataStructure->number = $userDataFromLdap[Constants::USER_EXTENSION_ATTR] ?? $dataStructure->number;
 
-        // Update mobile number and forwarding settings
-        $mobileFromDomain = $userDataFromLdap[Constants::USER_MOBILE_ATTR] ?? $dataStructure->mobile_number;
-        if (!empty($mobileFromDomain)) {
-            $oldMobileNumber = $dataStructure->mobile_number;
-            $dataStructure->mobile_number = $mobileFromDomain;
-            $dataStructure->mobile_dialstring = $mobileFromDomain;
-
-            if ($oldMobileNumber === $dataStructure->fwd_forwardingonunavailable) {
-                $dataStructure->fwd_forwardingonunavailable = $mobileFromDomain;
-            }
-            if ($oldMobileNumber === $dataStructure->fwd_forwarding) {
-                $dataStructure->fwd_forwarding = $mobileFromDomain;
-            }
-            if ($oldMobileNumber === $dataStructure->fwd_forwardingonbusy) {
-                $dataStructure->fwd_forwardingonbusy = $mobileFromDomain;
+        // Check if provided phone number is available
+        $number = $userDataFromLdap[Constants::USER_EXTENSION_ATTR];
+        if (!empty($number) && $number!==$dataStructure->number){
+            $restAnswer = $di->get(PBXCoreRESTClientProvider::SERVICE_NAME, [
+                '/pbxcore/api/extensions/available',
+                PBXCoreRESTClientProvider::HTTP_METHOD_GET,
+                ['number' => $number]
+            ]);
+            if ($restAnswer->success || $restAnswer->data['userId']==$pbxUserData['user_id']) {
+                $dataStructure->number = $number;
             }
         }
 
-        // Save user data through the API
+        // Check if provided mobile number is available
+        $mobileFromDomain = $userDataFromLdap[Constants::USER_MOBILE_ATTR];
+        if (!empty($mobileFromDomain) && $mobileFromDomain!==$dataStructure->mobile_number){
+            $restAnswer = $di->get(PBXCoreRESTClientProvider::SERVICE_NAME, [
+                '/pbxcore/api/extensions/available',
+                PBXCoreRESTClientProvider::HTTP_METHOD_GET,
+                ['number' => $mobileFromDomain]
+            ]);
+            if ($restAnswer->success && $restAnswer->data['userId']==$pbxUserData['user_id']) {
+                // Update mobile number and forwarding settings
+                $oldMobileNumber = $dataStructure->mobile_number;
+                $dataStructure->mobile_number = $mobileFromDomain;
+                $dataStructure->mobile_dialstring = $mobileFromDomain;
+
+                if ($oldMobileNumber === $dataStructure->fwd_forwardingonunavailable) {
+                    $dataStructure->fwd_forwardingonunavailable = $mobileFromDomain;
+                }
+                if ($oldMobileNumber === $dataStructure->fwd_forwarding) {
+                    $dataStructure->fwd_forwarding = $mobileFromDomain;
+                }
+                if ($oldMobileNumber === $dataStructure->fwd_forwardingonbusy) {
+                    $dataStructure->fwd_forwardingonbusy = $mobileFromDomain;
+                }
+            }
+        }
+
+        // TODO: Add support for other attributes
+        $dataStructure->user_email = $userDataFromLdap[Constants::USER_EMAIL_ATTR] ?? $dataStructure->user_email;
+
+
+        $dataStructure->user_username = $userDataFromLdap[Constants::USER_NAME_ATTR]?? $dataStructure->user_username;
+
+        $dataStructure->user_avatar = $userDataFromLdap[Constants::USER_AVATAR_ATTR]?? $dataStructure->user_avatar;
+
+        // Save user data through the CORE API
         $restAnswer = $di->get(PBXCoreRESTClientProvider::SERVICE_NAME, [
             '/pbxcore/api/extensions/saveRecord',
             PBXCoreRESTClientProvider::HTTP_METHOD_POST,
@@ -281,6 +320,8 @@ class LdapSyncMain extends Injectable
             Constants::USER_NAME_ATTR => $postData[Constants::USER_NAME_ATTR],
             Constants::USER_MOBILE_ATTR => $postData[Constants::USER_MOBILE_ATTR],
             Constants::USER_EXTENSION_ATTR => $postData[Constants::USER_EXTENSION_ATTR],
+            Constants::USER_ACCOUNT_CONTROL_ATTR => $postData[Constants::USER_ACCOUNT_CONTROL_ATTR],
+            Constants::USER_AVATAR_ATTR => $postData[Constants::USER_AVATAR_ATTR],
         ];
 
         // Construct and return LDAP credentials
@@ -303,9 +344,9 @@ class LdapSyncMain extends Injectable
      * Find a user extension id in the MikoPBX DB based on LDAP data.
      *
      * @param array $userDataFromLdap The LDAP user data.
-     * @return string The extension ID if found, otherwise an empty string.
+     * @return array The user data if found, otherwise an empty array.
      */
-    public static function findUserInMikoPBX(array $userDataFromLdap): string
+    public static function findUserInMikoPBX(array $userDataFromLdap): array
     {
         $parameters = [
             'models' => [
@@ -359,12 +400,12 @@ class LdapSyncMain extends Injectable
                 ->getSingleResult();
         }
         if ($userDataFromMikoPBX === null) {
-            $extensionId = '';
+            $result = [];
         } else {
-            $extensionId = $userDataFromMikoPBX->extension_id;
+            $result = $userDataFromMikoPBX->toArray();
         }
 
-        return $extensionId;
+        return $result;
     }
 
     /**
@@ -373,7 +414,7 @@ class LdapSyncMain extends Injectable
      * @param string $userId The ID of the user.
      * @return mixed|null The user information from MikoPBX.
      */
-    public static function getUserOnMikoPBX(string $userId)
+    public static function getUserOnMikoPBX(string $userId):array
     {
         // Query parameters for retrieving user information.
         $parameters = [
@@ -389,6 +430,7 @@ class LdapSyncMain extends Injectable
                 Constants::USER_EXTENSION_ATTR => 'Extensions.number',
                 Constants::USER_MOBILE_ATTR => 'ExtensionsExternal.number',
                 Constants::USER_EMAIL_ATTR => 'Users.email',
+                Constants::USER_AVATAR_ATTR => 'Users.avatar',
             ],
             'joins' => [
                 'Extensions' => [
@@ -406,9 +448,14 @@ class LdapSyncMain extends Injectable
             ],
         ];
         // Build and execute the query to fetch user information.
-        return Di::getDefault()->get('modelsManager')->createBuilder($parameters)
+        $result =  Di::getDefault()->get('modelsManager')->createBuilder($parameters)
             ->getQuery()
             ->getSingleResult();
+
+        if ($result === null) {
+            return [];
+        }
+        return $result->toArray();
     }
 
     /**
@@ -442,4 +489,5 @@ class LdapSyncMain extends Injectable
         }
         return $userDataFromLdap;
     }
+
 }

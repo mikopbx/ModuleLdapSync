@@ -20,7 +20,6 @@
 namespace Modules\ModuleLdapSync\Lib;
 
 use LdapRecord\Container;
-use LdapRecord\Models\Attributes\AccountControl;
 use MikoPBX\Common\Handlers\CriticalErrorsHandler;
 
 include_once __DIR__.'/../vendor/autoload.php';
@@ -174,14 +173,19 @@ class LdapSyncConnector extends \Phalcon\Di\Injectable
             if ($this->organizationalUnit!==''){
                 $query->in($this->organizationalUnit);
             }
-            $commonAttributes = [Constants::USER_ACCOUNT_CONTROL_ATTR];
-            $requestAttributes = array_merge($commonAttributes, array_values($this->userAttributes));
+            $requestAttributes = array_values($this->userAttributes);
             $users =$query->select($requestAttributes)->get();
             foreach ($users as $user) {
                 $record = [];
                 foreach ($requestAttributes as $attribute){
                     if ($user->hasAttribute($attribute)){
-                        $record[$attribute]= $user->getFirstAttribute($attribute);
+                        if ($attribute===$this->userAttributes[Constants::USER_AVATAR_ATTR]) {
+                            $binData = $user->getFirstAttribute($attribute);
+                            $record[$attribute] = 'data:image/jpeg;base64,'.base64_encode($binData);
+                        } else {
+                            $record[$attribute]= $user->getFirstAttribute($attribute);
+                        }
+
                     }
                 }
                 $record[Constants::USER_GUID_ATTR] = $user->getConvertedGuid();
@@ -201,11 +205,10 @@ class LdapSyncConnector extends \Phalcon\Di\Injectable
             $res->data = $listOfAvailableUsers;
             $res->success = true;
         } catch (\LdapRecord\Auth\BindException $e) {
-            $error = $e->getDetailedError();
-            $res->messages['error'][] = $error->getErrorMessage().' ('.$error->getErrorCode().')';
+            $res->messages['error'][] = $e->getMessage().' ('.$e->getCode().')';
             $res->success = false;
         } catch (\Throwable $e) {
-            CriticalErrorsHandler::handleExceptionWithSyslog($e, __CLASS__,__METHOD__);
+            CriticalErrorsHandler::handleExceptionWithSyslog($e);
             $res->messages['error'][] = $e->getMessage();
             $res->success = false;
         }
@@ -223,6 +226,7 @@ class LdapSyncConnector extends \Phalcon\Di\Injectable
     public function updateDomainUser(string $userGuid, array $newUserData):AnswerStructure
     {
         $res = new AnswerStructure();
+        $res->data[Constants::USER_SYNC_RESULT]=Constants::SYNC_RESULT_SKIPPED;
 
         try {
             $this->connection->connect();
@@ -230,31 +234,40 @@ class LdapSyncConnector extends \Phalcon\Di\Injectable
 
             $updatableAttributes = [
                 Constants::USER_EXTENSION_ATTR,
-                Constants::USER_MOBILE_ATTR
+                Constants::USER_MOBILE_ATTR,
+                Constants::USER_EMAIL_ATTR,
+                Constants::USER_AVATAR_ATTR,
             ];
 
             // Query LDAP for the user
-            $user = call_user_func([$this->userModelClass, 'findByGuidOrFail'],[$userGuid]);
+            $user = call_user_func([$this->userModelClass, 'findByGuid'], $userGuid);
             if ($user===null){
-                $res->messages['error'][] ='User with guid: '.$userGuid.' did not found on server '.$this->serverName;
+                $res->messages['error'][] ='User '.$newUserData[Constants::USER_NAME_ATTR].' with guid: '.$userGuid.' did not found on server '.$this->serverName;
                 $res->success = false;
+                return $res;
             }
             foreach ($newUserData as $attribute=>$value){
                 if (!empty($value) and in_array($attribute, $updatableAttributes)){
-                    $user->{$this->userAttributes[$attribute]}=$value;
+                    if ($attribute===Constants::USER_AVATAR_ATTR){
+                        $base64Image = $value;
+                        $base64Data = substr($base64Image, strpos($base64Image, ',') + 1);
+                        $binaryData = base64_decode($base64Data);
+                        $user->{$this->userAttributes[$attribute]} = $binaryData;
+                    } else {
+                        $user->{$this->userAttributes[$attribute]}=$value;
+                    }
+
                 }
             }
             $user->save();
             $res->success = true;
-            $res->data[Constants::USER_GUID_ATTR]=$user->getObjectGUID();
             $res->messages['info'][]= 'User '.$newUserData[Constants::USER_NAME_ATTR].' was updated on server '.$this->serverName;
-        } catch (\LdapRecord\Models\ModelNotFoundException $e) {
-            $error = $e->getDetailedError();
-            $res->messages['error'][] = $error->getErrorMessage().' ('.$error->getErrorCode().')';
-            $res->success = false;
+            $res->data[Constants::USER_SYNC_RESULT]=Constants::SYNC_RESULT_UPDATED;
+        } catch (\LdapRecord\Exceptions\InsufficientAccessException $e) {
+            $res->messages['info'][]= 'User '.$newUserData[Constants::USER_NAME_ATTR].' was not updated on server '.$this->serverName.' because of insufficient access rights';
+            $res->success = true;
         } catch (\Throwable $e) {
-            CriticalErrorsHandler::handleExceptionWithSyslog($e, __CLASS__,__METHOD__);
-            $res->messages['error'][] = $e->getMessage();
+            $res->messages['error'][] = CriticalErrorsHandler::handleExceptionWithSyslog($e);
             $res->success = false;
         }
 
