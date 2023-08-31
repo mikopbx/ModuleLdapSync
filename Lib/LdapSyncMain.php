@@ -263,9 +263,18 @@ class LdapSyncMain extends Injectable
             }
         }
 
-        // TODO: Add support for other attributes
-        $dataStructure->user_email = $userDataFromLdap[Constants::USER_EMAIL_ATTR] ?? $dataStructure->user_email;
-
+        // Check if provided email is available
+        $email = $userDataFromLdap[Constants::USER_EMAIL_ATTR];
+        if (!empty($email) && $email!==$dataStructure->user_email){
+            $restAnswer = $di->get(PBXCoreRESTClientProvider::SERVICE_NAME, [
+                '/pbxcore/api/users/available',
+                PBXCoreRESTClientProvider::HTTP_METHOD_GET,
+                ['email' => $email]
+            ]);
+            if ($restAnswer->success || $restAnswer->data['userId']==$pbxUserData['user_id']) {
+                $dataStructure->user_email = $email;
+            }
+        }
 
         $dataStructure->user_username = $userDataFromLdap[Constants::USER_NAME_ATTR]?? $dataStructure->user_username;
 
