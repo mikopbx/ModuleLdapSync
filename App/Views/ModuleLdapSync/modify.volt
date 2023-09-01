@@ -63,11 +63,11 @@
         </div>
         <div class="inline field">
             {{ ldapForm.render('userMobileAttribute') }}
-            <label for="userMobileAttribute">{{ t._('module_ldap_MobileAttribute') }}</label>
+            <label for="userMobileAttribute">{{ t._('module_ldap_UserMobileAttribute') }}</label>
         </div>
         <div class="inline field">
             {{ ldapForm.render('userEmailAttribute') }}
-            <label for="userEmailAttribute">{{ t._('module_ldap_EmailAttribute') }}</label>
+            <label for="userEmailAttribute">{{ t._('module_ldap_UserEmailAttribute') }}</label>
         </div>
         <div class="inline field">
             {{ ldapForm.render('userAccountControl') }}

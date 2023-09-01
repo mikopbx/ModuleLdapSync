@@ -118,7 +118,7 @@ class LdapConfigForm extends BaseForm
 
         // UserAvatarAttribute
         $this->add(new Text(Constants::USER_AVATAR_ATTR, [
-            'placeholder' => 'thumbnailPhoto or jpegPhoto',
+            'placeholder' => 'jpegPhoto',
             'value' => $attributes[Constants::USER_AVATAR_ATTR] ?? 'jpegPhoto'
         ]));
 
