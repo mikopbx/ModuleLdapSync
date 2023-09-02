@@ -23,6 +23,7 @@ return [
     'BreadcrumbModuleLdapSync'  => 'Синхронизация с LDAP/AD',
     'SubHeaderModuleLdapSync'   => 'Модуль позволяет загружать пользователей из домена',
     'module_ldap_LdapServerConnectionHeader'=>'Параметры подключения к контроллеру домена',
+    'module_ldap_EnableAutoSync'=> 'Включить синхронизацию по расписанию (каждый час)',
     'module_ldap_AddServer'=> 'Добавить сервер',
     'module_ldap_AddServerShort'=> 'Добавить',
     'module_ldap_NoAnyServers'=>'Нет настроенных серверов',

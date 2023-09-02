@@ -22,13 +22,12 @@ namespace Modules\ModuleLdapSync\Lib;
 use MikoPBX\Common\Models\Extensions;
 use MikoPBX\Common\Models\Users;
 use MikoPBX\Common\Providers\PBXCoreRESTClientProvider;
+use MikoPBX\Core\System\Util;
 use MikoPBX\PBXCoreREST\Lib\Extensions\DataStructure;
 use Modules\ModuleLdapSync\Models\ADUsers;
 use Modules\ModuleLdapSync\Models\LdapServers;
 use Phalcon\Di;
 use Phalcon\Di\Injectable;
-use Phalcon\Mvc\Model;
-use Phalcon\Mvc\Model\Query;
 
 /**
  * Class for synchronizing user data from LDAP servers.
@@ -78,9 +77,16 @@ class LdapSyncMain extends Injectable
                 $processedUser = $userFromLdap;
                 if (!empty($result->data[Constants::USER_HAD_CHANGES_ON])) {
                     $processedUser[Constants::USER_HAD_CHANGES_ON] = $result->data[Constants::USER_HAD_CHANGES_ON];
+                    $userName = $processedUser[$connector->userAttributes[Constants::USER_NAME_ATTR]];
+                    Util::sysLogMsg(__METHOD__,"Updated ".$userName." data on ".$result->data[Constants::USER_HAD_CHANGES_ON]);
                 }
                 if (!empty($result->data[Constants::USER_SYNC_RESULT])) {
                     $processedUser[Constants::USER_SYNC_RESULT] = $result->data[Constants::USER_SYNC_RESULT];
+                }
+                // Remove avatar data from arrays to prevents memory leaks and overloading the beanstalk
+                $avatarKey = $connector->userAttributes[Constants::USER_AVATAR_ATTR];
+                if (!empty($processedUser[$avatarKey])) {
+                    unset( $processedUser[$avatarKey]);
                 }
                 $processedUsers[] = $processedUser;
             } else {
@@ -199,7 +205,7 @@ class LdapSyncMain extends Injectable
      */
     public static function createUpdateUser(array $userDataFromLdap): AnswerStructure
     {
-        if ($userDataFromLdap[Constants::USER_DISABLED]){
+        if ($userDataFromLdap[Constants::USER_DISABLED]??false){
             $result = new AnswerStructure();
             $result->success=true;
             $result->data = $userDataFromLdap;
@@ -302,7 +308,18 @@ class LdapSyncMain extends Injectable
         $ldapConnector = new LdapSyncConnector($ldapCredentials);
 
         // Retrieve the list of available LDAP users
-        return $ldapConnector->getUsersList();
+        $result =  $ldapConnector->getUsersList();
+
+        // Remove big data strings from response
+        $avatarKey = $ldapConnector->userAttributes[Constants::USER_AVATAR_ATTR];
+        if ($result->success){
+            foreach ($result->data as &$processedUser){
+                if (!empty($processedUser[$avatarKey])) {
+                    unset( $processedUser[$avatarKey]);
+                }
+            }
+        }
+       return $result;
     }
 
     /**

@@ -18,7 +18,12 @@
 
 /* global globalRootUrl, globalTranslate, Form, PbxApi */
 
-
+/**
+ * ModuleLdapSyncModify
+ *
+ * This object handles the functionality of synchronizing LDAP users and
+ * other related features.
+ */
 const ModuleLdapSyncModify = {
 
 	/**
@@ -153,7 +158,7 @@ const ModuleLdapSyncModify = {
 	},
 
 	/**
-	 * Handles get LDAP users list button click.
+	 * Make an API call to get LDAP users
 	 */
 	apiCallGetLdapUsers(){
 		$.api({
@@ -190,6 +195,9 @@ const ModuleLdapSyncModify = {
 		})
 	},
 
+	/**
+	 * Make an API call to sync LDAP users
+	 */
 	apiCallSyncUsers(){
 		$.api({
 			url: `${Config.pbxUrl}/pbxcore/api/modules/ModuleLdapSync/sync-ldap-users`,
@@ -225,6 +233,12 @@ const ModuleLdapSyncModify = {
 		})
 	},
 
+	/**
+	 * Build table from the user's list
+	 *
+	 * @param {Array} usersList - The list of users
+	 * @returns {string} The HTML table
+	 */
 	buildTableFromUsersList(usersList){
 		let html = '<table class="ui very compact selectable table" id="ldap-result">';
 		const uniqueAttributes = {};
@@ -275,6 +289,7 @@ const ModuleLdapSyncModify = {
 			return text;
 		}
 	},
+	
 	/**
 	 * Callback function before sending the form.
 	 * @param {object} settings - The settings object.

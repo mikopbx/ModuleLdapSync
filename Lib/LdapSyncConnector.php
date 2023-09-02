@@ -86,7 +86,7 @@ class LdapSyncConnector extends \Phalcon\Di\Injectable
      *
      * @var array
      */
-    private array $userAttributes=[];
+    public array $userAttributes=[];
 
     /**
      * The class of the user model based on LDAP type.

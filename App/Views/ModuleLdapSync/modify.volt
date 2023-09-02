@@ -3,6 +3,7 @@
 
 <div class="field">
     <div class="ui basic segment">
+
         <div class="ui header">{{ t._('module_ldap_LdapServerConnectionHeader') }}</div>
 
         <div class="inline field">
@@ -77,11 +78,21 @@
             {{ ldapForm.render('userAvatarAttribute') }}
             <label for="userAvatarAttribute">{{ t._('module_ldap_UserAvatarAttribute') }}</label>
         </div>
-        <div class="field">
-            <div class="ui toggle checkbox">
-                {{ ldapForm.render('updateAttributes') }}
-                <label for="updateAttributes">{{ t._('module_ldap_UpdateAttributes') }}</label>
-            </div>
+    </div>
+</div>
+<div class="field">
+    <div class="ui segment">
+        <div class="ui toggle checkbox">
+            {{ ldapForm.render('updateAttributes') }}
+            <label for="updateAttributes">{{ t._('module_ldap_UpdateAttributes') }}</label>
+        </div>
+    </div>
+</div>
+<div class="field">
+    <div class="ui segment">
+        <div class="ui toggle checkbox">
+            {{ ldapForm.render('autosync') }}
+            <label for="autosync">{{ t._('module_ldap_EnableAutoSync') }}</label>
         </div>
     </div>
 </div>
@@ -105,8 +116,7 @@
         </div>
     </div>
 </div>
-{{ partial("partials/submitbutton",['indexurl':'']) }}
-<div class="ui clearing hidden divider"></div>
+{{ partial("partials/submitbutton",['indexurl':'module-ldap-sync/module-ldap-sync/index']) }}
 {{ endform() }}
 
 <script type="text/javascript">

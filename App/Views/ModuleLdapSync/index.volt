@@ -1,6 +1,6 @@
     {% for server in serversList %}
         {% if loop.first %}
-            {{ link_to("module-ldap-sync/module-ldap-sync/modify", '<i class="add circle icon"></i>  '~t._('module_ldap_AddServer'), "class": "ui blue button add-new-button", "id":"add-new-server") }}
+            {{ link_to("module-ldap-sync/module-ldap-sync/modify", '<i class="add circle icon"></i>  '~t._('module_ldap_AddServer'), "class": "ui blue button add-new-button disability", "id":"add-new-server") }}
             <table class="ui selectable unstackable table" id="servers-table">
             <thead>
             <tr>
@@ -14,16 +14,15 @@
             <tbody>
         {% endif %}
 
-        <tr class="server-row" id="{{ server['id'] }}">
-
-            <td class="no-modify-columns collapsing">
-                <div class="ui  toggle checkbox">
+        <tr class="ui server-row disability" id="{{ server['id'] }}">
+            <td class="collapsing">
+                <div class="ui toggle checkbox server-sync-status">
                     <input type="checkbox" {% if server['status']!='disabled' %} checked {% endif %}><label></label>
                 </div>
             </td>
-            <td class="{{ server['status'] }} disability">{{ server['serverName'] }}</td>
-            <td class="{{ server['status'] }} disability">{{ server['baseDN'] }}</td>
-            <td class="{{ server['status'] }} disability">{{ server['organizationalUnit'] }}</td>
+            <td class="{{ server['status'] }} status-dependent">{{ server['serverName'] }}</td>
+            <td class="{{ server['status'] }} status-dependent">{{ server['baseDN'] }}</td>
+            <td class="{{ server['status'] }} status-dependent">{{ server['organizationalUnit'] }}</td>
             {{ partial("partials/tablesbuttons",
                 [
                     'id': server['id'],
@@ -43,6 +42,6 @@
             <i class="users icon"></i>
             {{ t._('module_ldap_NoAnyServers') }}
         </div>
-        {{ link_to("module-ldap-sync/module-ldap-sync/modify", '<i class="add circle icon"></i>  '~t._('module_ldap_AddServerShort'), "class": "ui blue button add-new-button", "id":"add-new-server") }}
+        {{ link_to("module-ldap-sync/module-ldap-sync/modify", '<i class="add circle icon"></i>  '~t._('module_ldap_AddServerShort'), "class": "ui blue button add-new-button disability", "id":"add-new-server") }}
     </div>
 {% endif %}

@@ -29,10 +29,14 @@ class ModuleLdapSyncController extends BaseController
 {
     private $moduleUniqueID = 'ModuleLdapSync';
 
+    public bool $showModuleStatusToggle = true;
+
     public function indexAction(): void
     {
         $footerCollection = $this->assets->collection(AssetProvider::FOOTER_JS);
-        $footerCollection->addJs('js/cache/'.$this->moduleUniqueID.'/module-ldap-sync-index.js', true);
+        $footerCollection
+            ->addJs('js/cache/'.$this->moduleUniqueID.'/module-ldap-sync-status.js', true)
+            ->addJs('js/cache/'.$this->moduleUniqueID.'/module-ldap-sync-index.js', true);
 
         $servers = LdapServers::find();
         $serversList = null;
@@ -57,9 +61,11 @@ class ModuleLdapSyncController extends BaseController
      */
     public function modifyAction(string $id = null): void
     {
+        $this->showModuleStatusToggle = false;
         $footerCollection = $this->assets->collection(AssetProvider::FOOTER_JS);
         $footerCollection
             ->addJs('js/pbx/main/form.js', true)
+            ->addJs('js/cache/'.$this->moduleUniqueID.'/module-ldap-sync-status.js', true)
             ->addJs('js/cache/'.$this->moduleUniqueID.'/module-ldap-sync-modify.js', true);
 
         $serverConfig = LdapServers::findFirstById($id);
@@ -73,8 +79,7 @@ class ModuleLdapSyncController extends BaseController
         $this->view->setVar('hiddenAttributes', json_encode([
             Constants::USER_ACCOUNT_CONTROL_ATTR,
             Constants::USER_GUID_ATTR,
-            Constants::USER_DISABLED,
-            $attributeValues[Constants::USER_AVATAR_ATTR]??Constants::USER_AVATAR_ATTR,
+            Constants::USER_DISABLED
         ]));
         $this->view->setVar('userDisabledAttribute', Constants::USER_DISABLED);
         $this->view->setVar('ldapForm', new LdapConfigForm($serverConfig));
@@ -104,7 +109,7 @@ class ModuleLdapSyncController extends BaseController
                 case 'id':
                     break;
                 case 'disabled':
-                    $serverConfig->$name = '0';
+                    $serverConfig->$name = $data['autosync']==='1'?'0':'1';
                     break;
                 case 'administrativePassword':
                     if (isset($data['administrativePasswordHidden'])
@@ -132,6 +137,37 @@ class ModuleLdapSyncController extends BaseController
         $serverConfig->attributes = json_encode($attributes);
 
         $this->saveEntity($serverConfig, 'module-ldap-sync/module-ldap-sync/modify/{id}');
+    }
+
+
+    /**
+     * Enables a ldap server.
+     *
+     * @param string $id Unique identifier of the server.
+     */
+    public function enableAction(string $id): void
+    {
+        $this->view->success = false;
+        $record = LdapServers::findFirstById($id);
+        if ($record !== null) {
+            $record->disabled = '0';
+            $this->saveEntity($record);
+        }
+    }
+
+    /**
+     * Disables a ldap server.
+     *
+     * @param string $id Unique identifier of the server.
+     */
+    public function disableAction(string $id): void
+    {
+        $this->view->success = false;
+        $record = LdapServers::findFirstById($id);
+        if ($record !== null) {
+            $record->disabled = '1';
+            $this->saveEntity($record);
+        }
     }
 
 }
