@@ -53,7 +53,6 @@ return [
     'module_ldap_ValidateAdministrativeLoginIsEmpty' => '',
     'module_ldap_ValidateAdministrativePasswordIsEmpty' => '',
     'module_ldap_ValidateBaseDNIsEmpty' => '',
-    'module_ldap_ValidateUserIdAttributeIsEmpty' => '',
     'module_ldap_LdapManualSyncHeader' => '',
     'module_ldap_LdapManualSyncManual' => '',
     'module_ldap_LdapManualSyncButton' => '',

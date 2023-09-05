@@ -53,7 +53,6 @@ return [
     'module_ldap_ValidateAdministrativeLoginIsEmpty' => 'დომენის მომხმარებლის შესვლა არ არის შევსებული',
     'module_ldap_ValidateAdministrativePasswordIsEmpty' => 'პაროლი არ არის შევსებული დომენის მომხმარებლისთვის',
     'module_ldap_ValidateBaseDNIsEmpty' => 'დომენის ფესვი არ არის შევსებული',
-    'module_ldap_ValidateUserIdAttributeIsEmpty' => 'დომენში მომხმარებლის სახელის მქონე ატრიბუტი არ არის შევსებული',
     'module_ldap_LdapManualSyncHeader' => 'ხელით სინქრონიზაცია',
     'module_ldap_LdapManualSyncManual' => 'ღილაკზე დაჭერით მოხდება მომხმარებლების სინქრონიზაცია მითითებულ დომენის კონტროლერსა და MikoPBX-ს შორის',
     'module_ldap_LdapManualSyncButton' => 'მონაცემთა სინქრონიზაცია',

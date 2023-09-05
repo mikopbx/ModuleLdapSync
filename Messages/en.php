@@ -55,7 +55,6 @@ return [
     'module_ldap_ValidateAdministrativeLoginIsEmpty' => 'Login for domain user is not filled',
     'module_ldap_ValidateAdministrativePasswordIsEmpty' => 'Password not filled for domain user',
     'module_ldap_ValidateBaseDNIsEmpty' => 'Domain root not filled',
-    'module_ldap_ValidateUserIdAttributeIsEmpty' => 'The attribute with the username in the domain is not filled',
     'module_ldap_LdapManualSyncHeader' => 'Manual sync',
     'module_ldap_LdapManualSyncManual' => 'Clicking the button will synchronize users between the specified domain controller and MikoPBX',
     'module_ldap_LdapManualSyncButton' => 'Synchronize data',
