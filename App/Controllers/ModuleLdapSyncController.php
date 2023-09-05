@@ -21,6 +21,7 @@ namespace Modules\ModuleLdapSync\App\Controllers;
 
 use MikoPBX\AdminCabinet\Controllers\BaseController;
 use MikoPBX\AdminCabinet\Providers\AssetProvider;
+use MikoPBX\Modules\PbxExtensionUtils;
 use Modules\ModuleLdapSync\App\Forms\LdapConfigForm;
 use Modules\ModuleLdapSync\Lib\Constants;
 use Modules\ModuleLdapSync\Models\LdapServers;
@@ -30,6 +31,17 @@ class ModuleLdapSyncController extends BaseController
     private $moduleUniqueID = 'ModuleLdapSync';
 
     public bool $showModuleStatusToggle = true;
+
+
+    /**
+     * Basic initial class
+     */
+    public function initialize(): void
+    {
+        $this->moduleDir = PbxExtensionUtils::getModuleDir($this->moduleUniqueID);
+        $this->view->logoImagePath = $this->url->get() . 'assets/img/cache/' . $this->moduleUniqueID . '/logo.svg';
+        parent::initialize();
+    }
 
     public function indexAction(): void
     {

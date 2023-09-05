@@ -70,9 +70,8 @@ class LdapConfigForm extends BaseForm
         ]));
 
         // UserFilter
-        $this->addTextArea('userFilter', $entity->userFilter ?? '', 90, [
-            'placeholder' => '(&(objectClass=user)(objectCategory=PERSON))',
-            'value' => $entity->userFilter ?? '(&(objectClass=user)(objectCategory=PERSON))'
+        $this->addTextArea('userFilter', $entity->userFilter ?? '(&(objectClass=user)(objectCategory=PERSON))', 90, [
+            'placeholder' => '(&(objectClass=user)(objectCategory=PERSON))'
         ]);
 
         // Select server type

@@ -124,12 +124,48 @@ const ModuleLdapSyncModify = {
 				},
 			],
 		},
-		userIdAttribute: {
-			identifier: 'userIdAttribute',
+		userNameAttribute: {
+			identifier: 'userNameAttribute',
 			rules: [
 				{
 					type: 'empty',
-					prompt: globalTranslate.module_ldap_ValidateUserIdAttributeIsEmpty,
+					prompt: globalTranslate.module_ldap_ValidateUserNameAttributeIsEmpty,
+				},
+			],
+		},
+		userMobileAttribute: {
+			identifier: 'userMobileAttribute',
+			rules: [
+				{
+					type: 'empty',
+					prompt: globalTranslate.module_ldap_ValidateUserMobileAttributeIsEmpty,
+				},
+			],
+		},
+		userExtensionAttribute: {
+			identifier: 'userExtensionAttribute',
+			rules: [
+				{
+					type: 'empty',
+					prompt: globalTranslate.module_ldap_ValidateUserExtensionAttributeIsEmpty,
+				},
+			],
+		},
+		userEmailAttribute: {
+			identifier: 'userEmailAttribute',
+			rules: [
+				{
+					type: 'empty',
+					prompt: globalTranslate.module_ldap_ValidateUserEmailAttributeIsEmpty,
+				},
+			],
+		},
+		userAccountControl: {
+			identifier: 'userAccountControl',
+			rules: [
+				{
+					type: 'empty',
+					prompt: globalTranslate.module_ldap_ValidateUserAccountControlIsEmpty,
 				},
 			],
 		},
