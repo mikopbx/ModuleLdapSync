@@ -62,4 +62,10 @@ return [
     'module_ldap_OnDomainSide' => 'დომენში',
     'module_ldap_SKIPPED' => 'გამოტოვა',
     'module_ldap_UPDATED' => 'დამუშავებული',
+    'module_ldap_EnableAutoSync' => 'დაგეგმილი სინქრონიზაციის ჩართვა (ყოველ საათში)',
+    'module_ldap_ValidateUserNameAttributeIsEmpty' => 'დომენში მომხმარებლის სახელის მქონე ატრიბუტი არ არის შევსებული',
+    'module_ldap_ValidateUserExtensionAttributeIsEmpty' => 'დომენში მომხმარებლის შიდა ტელეფონის ნომრის ატრიბუტი არ არის შევსებული',
+    'module_ldap_ValidateUserEmailAttributeIsEmpty' => 'დომენში მომხმარებლის ელ. ფოსტით ატრიბუტი არ არის შევსებული',
+    'module_ldap_ValidateUserAccountControlIsEmpty' => 'დომენში მომხმარებლის აქტივობის ატრიბუტით ატრიბუტი არ არის შევსებული',
+    'module_ldap_ValidateUserMobileAttributeIsEmpty' => 'დომენში მომხმარებლის მობილური ტელეფონის ატრიბუტი არ არის შევსებული',
 ];
