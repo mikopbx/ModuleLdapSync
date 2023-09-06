@@ -74,39 +74,18 @@ class LdapServers extends ModulesModelsBase
     public $userFilter;
 
     /**
-     * User id attribute i.e. samaccountname
+     * Type of ldap server {ActiveDirectory, OpenLDAP, FreeIPA, DirectoryServer}
      *
      * @Column(type="string", nullable=false)
      */
-    public $userIdAttribute;
+    public ?string $ldapType='ActiveDirectory';
 
     /**
-     * User name attribute i.e. cn
+     * JSON with user attributes
      *
      * @Column(type="string", nullable=false)
      */
-    public $userNameAttribute;
-
-    /**
-     * User extension attribute i.e. telephoneNumber
-     *
-     * @Column(type="string", nullable=false)
-     */
-    public $userExtensionAttribute;
-
-    /**
-     * User mobile attribute i.e. mobile
-     *
-     * @Column(type="string", nullable=false)
-     */
-    public $userMobileAttribute;
-
-    /**
-     * User email attribute i.e. mail
-     *
-     * @Column(type="string", nullable=false)
-     */
-    public $userEmailAttribute;
+    public ?string $attributes='';
 
     /**
      * Organizational unit filter  i.e. s OU=Accounting,DC=miko,DC=ru
@@ -114,6 +93,13 @@ class LdapServers extends ModulesModelsBase
      * @Column(type="string", nullable=true)
      */
     public $organizationalUnit;
+
+    /**
+     * Flag update AD attributes from MikoPBX
+     *
+     * @Column(type="string", length=1, nullable=false)
+     */
+    public ?string $updateAttributes = '0';
 
     /**
      * Flag indicating whether the server account is disabled or not

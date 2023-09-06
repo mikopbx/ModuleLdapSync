@@ -18,7 +18,12 @@
 
 /* global globalRootUrl, globalTranslate, Form, PbxApi */
 
-
+/**
+ * ModuleLdapSyncModify
+ *
+ * This object handles the functionality of synchronizing LDAP users and
+ * other related features.
+ */
 const ModuleLdapSyncModify = {
 
 	/**
@@ -27,6 +32,11 @@ const ModuleLdapSyncModify = {
 	 */
 	$formObj: $('#module-ldap-sync-form'),
 
+	/**
+	 * jQuery object for the server type dropdown.
+	 * @type {jQuery}
+	 */
+	$ldapTypeDropdown: $('.select-ldap-field'),
 
 	/**
 	 * jQuery object for the getting LDAP users list button.
@@ -39,6 +49,30 @@ const ModuleLdapSyncModify = {
 	 * @type {jQuery}
 	 */
 	$ldapCheckGetUsersSegment: $('#ldap-check-get-users'),
+
+	/**
+	 * jQuery object for the sync LDAP users button.
+	 * @type {jQuery}
+	 */
+	$syncUsersButton: $('.ldap-sync-users'),
+
+	/**
+	 * jQuery object for the ldap sync users segment.
+	 * @type {jQuery}
+	 */
+	$syncUsersSegment: $('#ldap-sync-users'),
+
+	/**
+	 * Constant with user disabled attribute id
+	 * @type {string}
+	 */
+	userDisabledAttribute: module_ldap_userDisabledAttribute,
+
+	/**
+	 * Constant with hidden users attributes
+	 * @type {array}
+	 */
+	hiddenAttributes: JSON.parse(module_ldap_hiddenAttributes),
 
 	/**
 	 * Validation rules for the form fields.
@@ -90,12 +124,48 @@ const ModuleLdapSyncModify = {
 				},
 			],
 		},
-		userIdAttribute: {
-			identifier: 'userIdAttribute',
+		userNameAttribute: {
+			identifier: 'userNameAttribute',
 			rules: [
 				{
 					type: 'empty',
-					prompt: globalTranslate.module_ldap_ValidateUserIdAttributeIsEmpty,
+					prompt: globalTranslate.module_ldap_ValidateUserNameAttributeIsEmpty,
+				},
+			],
+		},
+		userMobileAttribute: {
+			identifier: 'userMobileAttribute',
+			rules: [
+				{
+					type: 'empty',
+					prompt: globalTranslate.module_ldap_ValidateUserMobileAttributeIsEmpty,
+				},
+			],
+		},
+		userExtensionAttribute: {
+			identifier: 'userExtensionAttribute',
+			rules: [
+				{
+					type: 'empty',
+					prompt: globalTranslate.module_ldap_ValidateUserExtensionAttributeIsEmpty,
+				},
+			],
+		},
+		userEmailAttribute: {
+			identifier: 'userEmailAttribute',
+			rules: [
+				{
+					type: 'empty',
+					prompt: globalTranslate.module_ldap_ValidateUserEmailAttributeIsEmpty,
+				},
+			],
+		},
+		userAccountControl: {
+			identifier: 'userAccountControl',
+			rules: [
+				{
+					type: 'empty',
+					prompt: globalTranslate.module_ldap_ValidateUserAccountControlIsEmpty,
 				},
 			],
 		},
@@ -105,6 +175,8 @@ const ModuleLdapSyncModify = {
 	 * Initializes the module.
 	 */
 	initialize() {
+		ModuleLdapSyncModify.$ldapTypeDropdown.dropdown();
+
 		ModuleLdapSyncModify.initializeForm();
 
 		// Handle get users list button click
@@ -113,14 +185,20 @@ const ModuleLdapSyncModify = {
 			ModuleLdapSyncModify.apiCallGetLdapUsers();
 		});
 
+		// Handle sync users button click
+		ModuleLdapSyncModify.$syncUsersButton.on('click', function(e) {
+			e.preventDefault();
+			ModuleLdapSyncModify.apiCallSyncUsers();
+		});
+
 	},
 
 	/**
-	 * Handles get LDAP users list button click.
+	 * Make an API call to get LDAP users
 	 */
 	apiCallGetLdapUsers(){
 		$.api({
-			url: `${globalRootUrl}module-ldap-sync/module-ldap-sync/get-available-ldap-users`,
+			url: `${Config.pbxUrl}/pbxcore/api/modules/ModuleLdapSync/get-available-ldap-users`,
 			on: 'now',
 			method: 'POST',
 			beforeSend(settings) {
@@ -128,26 +206,17 @@ const ModuleLdapSyncModify = {
 				settings.data = ModuleLdapSyncModify.$formObj.form('get values');
 				return settings;
 			},
-			successTest(response){
-				return response.success;
-			},
+			successTest:PbxApi.successTest,
 			/**
 			 * Handles the successful response of the 'get-available-ldap-users' API request.
 			 * @param {object} response - The response object.
 			 */
 			onSuccess: function(response) {
 				ModuleLdapSyncModify.$checkGetUsersButton.removeClass('loading disabled');
+				$('#ldap-result').remove();
 				$('.ui.message.ajax').remove();
-				let html = '<ul class="ui list">';
-				$.each(response.data, (index, user) => {
-					html += '<li class="item">';
-						$.each(user, (key, value) => {
-							html += `${key} (${value}) `
-						});
-					html += '</li>';
-				});
-				html += '</ul>';
-				ModuleLdapSyncModify.$ldapCheckGetUsersSegment.after(`<div class="ui icon message ajax positive">${html}</div>`);
+				const html = ModuleLdapSyncModify.buildTableFromUsersList(response.data);
+				ModuleLdapSyncModify.$ldapCheckGetUsersSegment.after(html);
 			},
 			/**
 			 * Handles the failure response of the 'get-available-ldap-users' API request.
@@ -156,11 +225,107 @@ const ModuleLdapSyncModify = {
 			onFailure: function(response) {
 				ModuleLdapSyncModify.$checkGetUsersButton.removeClass('loading disabled');
 				$('.ui.message.ajax').remove();
-				ModuleLdapSyncModify.$ldapCheckGetUsersSegment.after(`<div class="ui icon message ajax negative"><i class="icon exclamation circle"></i>${response.message}</div>`);
+				$('#ldap-result').remove();
+				UserMessage.showMultiString(response.messages);
 			},
 		})
 	},
 
+	/**
+	 * Make an API call to sync LDAP users
+	 */
+	apiCallSyncUsers(){
+		$.api({
+			url: `${Config.pbxUrl}/pbxcore/api/modules/ModuleLdapSync/sync-ldap-users`,
+			on: 'now',
+			method: 'POST',
+			beforeSend(settings) {
+				ModuleLdapSyncModify.$syncUsersButton.addClass('loading disabled');
+				settings.data = ModuleLdapSyncModify.$formObj.form('get values');
+				return settings;
+			},
+			successTest:PbxApi.successTest,
+			/**
+			 * Handles the successful response of the 'sync-ldap-users' API request.
+			 * @param {object} response - The response object.
+			 */
+			onSuccess: function(response) {
+				ModuleLdapSyncModify.$syncUsersButton.removeClass('loading disabled');
+				$('#ldap-result').remove();
+				$('.ui.message.ajax').remove();
+				const html = ModuleLdapSyncModify.buildTableFromUsersList(response.data);
+				ModuleLdapSyncModify.$syncUsersSegment.after(html);
+			},
+			/**
+			 * Handles the failure response of the 'sync-ldap-users' API request.
+			 * @param {object} response - The response object.
+			 */
+			onFailure: function(response) {
+				ModuleLdapSyncModify.$syncUsersButton.removeClass('loading disabled');
+				$('.ui.message.ajax').remove();
+				$('#ldap-result').remove();
+				UserMessage.showMultiString(response.messages);
+			},
+		})
+	},
+
+	/**
+	 * Build table from the user's list
+	 *
+	 * @param {Array} usersList - The list of users
+	 * @returns {string} The HTML table
+	 */
+	buildTableFromUsersList(usersList){
+		let html = '<table class="ui very compact selectable table" id="ldap-result">';
+		const uniqueAttributes = {};
+
+		// Extract unique attributes from the response data
+		$.each(usersList, (userKey, userValue) => {
+			$.each(userValue, (index, value) => {
+				if (ModuleLdapSyncModify.hiddenAttributes.includes(index)) {
+					return;
+				}
+				uniqueAttributes[index] = true;
+			});
+		});
+
+		// Generate the HTML table head user data attributes
+		html += '<thead><tr>'
+		$.each(uniqueAttributes, (index, value) => {
+			html +='<th>'+ModuleLdapSyncModify.getTranslation(index)+'</th>';
+		});
+		html += '</tr></thead>'
+
+		// Generate the HTML table with user data
+		$.each(usersList, (index, user) => {
+			const rowClass = user[ModuleLdapSyncModify.userDisabledAttribute]===true?'disabled':'item';
+			html += `<tr class="${rowClass}">`;
+			$.each(uniqueAttributes, (attrIndex, attrValue) => {
+				const cellValue = user[attrIndex] || '';
+				html += '<td>'+ModuleLdapSyncModify.getTranslation(cellValue)+'</td>';
+			});
+			html += '</tr>';
+		});
+		html += '</table>';
+		return html;
+	},
+
+	/**
+	 * Translates the given text using the global translation object.
+	 *
+	 * @param {string} text - The text to be translated.
+	 * @returns {string} The translated text if available, or the original text.
+	 */
+	getTranslation(text){
+		const nameTemplate = `module_ldap_${text}`;
+		const name = globalTranslate[nameTemplate];
+		if (name!==undefined) {
+			return name;
+		} else {
+			return text;
+		}
+	},
+	
 	/**
 	 * Callback function before sending the form.
 	 * @param {object} settings - The settings object.
@@ -169,6 +334,17 @@ const ModuleLdapSyncModify = {
 	cbBeforeSendForm(settings) {
 		const result = settings;
 		result.data = ModuleLdapSyncModify.$formObj.form('get values');
+
+		ModuleLdapSyncModify.$formObj.find('.checkbox').each((index, obj) => {
+			const input = $(obj).find('input');
+			const id = input.attr('id');
+			if ($(obj).checkbox('is checked')) {
+				result.data[id]='1';
+			} else {
+				result.data[id]='0';
+			}
+		});
+
 		return result;
 	},
 

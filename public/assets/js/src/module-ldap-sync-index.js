@@ -16,26 +16,54 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
-const ModuleLdapSyncIndex = {
-	$statusToggle: $('#module-status-toggle'),
-	$disabilityFields: $('.disability'),
-	initialize(){
-		ModuleLdapSyncIndex.cbOnChangeStatusToggle();
-		window.addEventListener('ModuleStatusChanged', ModuleLdapSyncIndex.cbOnChangeStatusToggle);
-	},
-	/**
-	 * Change some form elements classes depends of module status
-	 */
-	cbOnChangeStatusToggle() {
-		if (ModuleLdapSyncIndex.$statusToggle.checkbox('is checked')) {
-			ModuleLdapSyncIndex.$disabilityFields.removeClass('disabled');
-		} else {
-			ModuleLdapSyncIndex.$disabilityFields.addClass('disabled');
-		}
-	},
+/* global globalRootUrl, globalTranslate, Form, PbxApi */
 
-};
+/**
+ * ModuleLdapSyncModify
+ *
+ * This object handles the functionality of synchronizing LDAP users and
+ * other related features.
+ */
+const ModuleLdapSyncIndex = {
+    $autoSyncStatuses:$('.checkbox.server-sync-status'),
+    initialize(){
+        // Enable/disable server checkbox handlers
+        ModuleLdapSyncIndex.$autoSyncStatuses
+            .checkbox({
+                onChecked() {
+                    const id = $(this).closest('tr').attr('id');
+                    $.api({
+                        url: `${globalRootUrl}module-ldap-sync/module-ldap-sync/enable/{id}`,
+                        on: 'now',
+                        urlData: {
+                            id,
+                        },
+                        onSuccess(response) {
+                            if (response.success) {
+                                $(`#${id} .status-dependent`).removeClass('disabled');
+                            }
+                        },
+                    });
+                },
+                onUnchecked() {
+                    const id = $(this).closest('tr').attr('id');
+                    $.api({
+                        url: `${globalRootUrl}module-ldap-sync/module-ldap-sync/disable/{id}`,
+                        on: 'now',
+                        urlData: {
+                            id,
+                        },
+                        onSuccess(response) {
+                            if (response.success) {
+                                $(`#${id} .status-dependent`).addClass('disabled');
+                            }
+                        },
+                    });
+                },
+            });
+    }
+}
 
 $(document).ready(() => {
-	ModuleLdapSyncIndex.initialize();
+    ModuleLdapSyncIndex.initialize();
 });

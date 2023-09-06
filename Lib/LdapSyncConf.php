@@ -22,6 +22,7 @@ namespace Modules\ModuleLdapSync\Lib;
 use MikoPBX\Common\Providers\ManagedCacheProvider;
 use MikoPBX\Core\Workers\Cron\WorkerSafeScriptsCore;
 use MikoPBX\Modules\Config\ConfigClass;
+use MikoPBX\PBXCoreREST\Lib\PBXApiResult;
 use Modules\ModuleLdapSync\Lib\Workers\WorkerLdapSync;
 use Modules\ModuleLdapSync\Models\LdapServers;
 
@@ -35,7 +36,7 @@ class LdapSyncConf extends ConfigClass
      */
     public function modelsEventChangeData($data): void
     {
-        // f.e. if somebody changes ModuleLdapSyncServers, we will restart all workers
+        // Somebody changes LdapServers, we will restart all workers
         if (
             $data['model'] === LdapServers::class
         ) {
@@ -53,9 +54,46 @@ class LdapSyncConf extends ConfigClass
     {
         return [
             [
-                'type'   => WorkerSafeScriptsCore::CHECK_BY_PID_NOT_ALERT,
+                'type' => WorkerSafeScriptsCore::CHECK_BY_PID_NOT_ALERT,
                 'worker' => WorkerLdapSync::class,
             ],
         ];
     }
+
+    /**
+     * Process PBXCoreREST requests under root rights
+     * @see https://docs.mikopbx.com/mikopbx-development/module-developement/module-class#modulerestapicallback
+     *
+     * @param array $request GET/POST parameters
+     *
+     * @return PBXApiResult An object containing the result of the API call.
+     */
+    public function moduleRestAPICallback(array $request): PBXApiResult
+    {
+        $res = new PBXApiResult();
+        $res->processor = __METHOD__;
+        $action = strtoupper($request['action']);
+        $data = $request['data'];
+        switch ($action) {
+            case 'GET-AVAILABLE-LDAP-USERS':
+                $ldapCredentials = LdapSyncMain::postDataToLdapCredentials($data);
+                $result = LdapSyncMain::getAvailableLdapUsers($ldapCredentials);
+                $res->success = $result->success;
+                $res->messages = $result->messages;
+                $res->data = $result->data;
+                break;
+            case 'SYNC-LDAP-USERS':
+                $ldapCredentials = LdapSyncMain::postDataToLdapCredentials($data);
+                $result = LdapSyncMain::syncUsersPerServer($ldapCredentials);
+                $res->success = $result->success;
+                $res->messages = $result->messages;
+                $res->data = $result->data;
+                break;
+            default:
+                $res->success = false;
+                $res->messages[] = 'API action not found in ' . __METHOD__;
+        }
+        return $res;
+    }
+
 }
