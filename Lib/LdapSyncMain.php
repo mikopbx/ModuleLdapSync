@@ -22,7 +22,7 @@ namespace Modules\ModuleLdapSync\Lib;
 use MikoPBX\Common\Models\Extensions;
 use MikoPBX\Common\Models\Users;
 use MikoPBX\Common\Providers\PBXCoreRESTClientProvider;
-use MikoPBX\Core\System\Util;
+use MikoPBX\Modules\Logger;
 use MikoPBX\PBXCoreREST\Lib\Extensions\DataStructure;
 use Modules\ModuleLdapSync\Models\ADUsers;
 use Modules\ModuleLdapSync\Models\LdapServers;
@@ -58,6 +58,10 @@ class LdapSyncMain extends Injectable
         $res = new AnswerStructure();
         $res->success = true;
 
+        // Create Logger instance
+        $className        = basename(str_replace('\\', '/', static::class));
+        $logger =  new Logger($className, 'ModuleLdapSync');
+
         // Create an LDAP connector for the server
         $connector = new LdapSyncConnector($ldapCredentials);
 
@@ -78,7 +82,7 @@ class LdapSyncMain extends Injectable
                 if (!empty($result->data[Constants::USER_HAD_CHANGES_ON])) {
                     $processedUser[Constants::USER_HAD_CHANGES_ON] = $result->data[Constants::USER_HAD_CHANGES_ON];
                     $userName = $processedUser[$connector->userAttributes[Constants::USER_NAME_ATTR]];
-                    Util::sysLogMsg(__METHOD__,"Updated ".$userName." data on ".$result->data[Constants::USER_HAD_CHANGES_ON]);
+                    $logger->writeInfo("Updated ".$userName." data on ".$result->data[Constants::USER_HAD_CHANGES_ON]);
                 }
                 if (!empty($result->data[Constants::USER_SYNC_RESULT])) {
                     $processedUser[Constants::USER_SYNC_RESULT] = $result->data[Constants::USER_SYNC_RESULT];

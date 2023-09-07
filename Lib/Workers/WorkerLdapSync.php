@@ -38,10 +38,10 @@ class WorkerLdapSync extends WorkerBase
     /**
      * Starts the checker worker.
      *
-     * @param array $params The command-line arguments passed to the worker.
+     * @param array $argv The command-line arguments passed to the worker.
      * @return void
      */
-    public function start(array $params): void
+    public function start(array $argv): void
     {
         $managedCache = $this->di->get(ManagedCacheProvider::SERVICE_NAME);
         // Retrieve the last license check timestamp from the cache
