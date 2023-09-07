@@ -55,7 +55,6 @@ return [
     'module_ldap_ValidateAdministrativeLoginIsEmpty' => 'Login for domain user is not filled',
     'module_ldap_ValidateAdministrativePasswordIsEmpty' => 'Password not filled for domain user',
     'module_ldap_ValidateBaseDNIsEmpty' => 'Domain root not filled',
-    'module_ldap_ValidateUserIdAttributeIsEmpty' => 'The attribute with the username in the domain is not filled',
     'module_ldap_LdapManualSyncHeader' => 'Manual sync',
     'module_ldap_LdapManualSyncManual' => 'Clicking the button will synchronize users between the specified domain controller and MikoPBX',
     'module_ldap_LdapManualSyncButton' => 'Synchronize data',
@@ -63,4 +62,10 @@ return [
     'module_ldap_OnPBXSide' => 'inside MikoPBX',
     'module_ldap_OnDomainSide' => 'in the domain',
     'module_ldap_SKIPPED' => 'skipped',
+    'module_ldap_EnableAutoSync' => 'Enable scheduled synchronization (every hour)',
+    'module_ldap_ValidateUserNameAttributeIsEmpty' => 'The attribute with the username in the domain is not filled',
+    'module_ldap_ValidateUserMobileAttributeIsEmpty' => 'The attribute with the user\'s mobile phone in the domain is not filled',
+    'module_ldap_ValidateUserExtensionAttributeIsEmpty' => 'The attribute with the internal phone number of the user in the domain is not filled',
+    'module_ldap_ValidateUserEmailAttributeIsEmpty' => 'The attribute with the user\'s e-mail in the domain is not filled',
+    'module_ldap_ValidateUserAccountControlIsEmpty' => 'The attribute with the attribute of user activity in the domain is not filled',
 ];
