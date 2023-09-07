@@ -16,7 +16,7 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
-/* global globalRootUrl, globalTranslate, Form, PbxApi */
+/* global globalRootUrl, globalTranslate, Form, PbxApi, module_ldap_userDisabledAttribute, module_ldap_hiddenAttributes, Config, UserMessage */
 
 /**
  * ModuleLdapSyncModify
@@ -321,9 +321,9 @@ const ModuleLdapSyncModify = {
 		const name = globalTranslate[nameTemplate];
 		if (name!==undefined) {
 			return name;
-		} else {
-			return text;
 		}
+
+		return text;
 	},
 	
 	/**

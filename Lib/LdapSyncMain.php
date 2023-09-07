@@ -107,7 +107,7 @@ class LdapSyncMain extends Injectable
      *
      * @param array $ldapCredentials - Parameters for the LDAP server.
      * @param array $userFromLdap - User data retrieved from LDAP.
-     * @return void
+     * @return AnswerStructure
      */
     public static function updateUserData(array $ldapCredentials, array $userFromLdap): AnswerStructure
     {
