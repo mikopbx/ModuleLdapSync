@@ -68,4 +68,5 @@ return [
     'module_ldap_ValidateUserExtensionAttributeIsEmpty' => 'Atributul cu numărul de telefon intern al utilizatorului din domeniu nu este completat',
     'module_ldap_ValidateUserEmailAttributeIsEmpty' => 'Atributul cu e-mailul utilizatorului din domeniu nu este completat',
     'module_ldap_ValidateUserAccountControlIsEmpty' => 'Atributul cu atributul activității utilizatorului în domeniu nu este completat',
+    'module_ldap_TableColumnAutoSync' => 'Auto-sincronizare',
 ];
