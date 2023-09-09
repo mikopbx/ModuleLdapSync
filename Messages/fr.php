@@ -68,4 +68,5 @@ return [
     'module_ldap_ValidateUserMobileAttributeIsEmpty' => 'L\'attribut avec le téléphone mobile de l\'utilisateur dans le domaine n\'est pas renseigné',
     'module_ldap_ValidateUserExtensionAttributeIsEmpty' => 'L\'attribut avec le numéro de téléphone interne de l\'utilisateur dans le domaine n\'est pas renseigné',
     'module_ldap_ValidateUserAccountControlIsEmpty' => 'L\'attribut avec l\'attribut d\'activité de l\'utilisateur dans le domaine n\'est pas renseigné',
+    'module_ldap_TableColumnAutoSync' => 'Synchronisation automatique',
 ];
