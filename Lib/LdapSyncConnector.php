@@ -21,6 +21,7 @@ namespace Modules\ModuleLdapSync\Lib;
 
 use LdapRecord\Container;
 use MikoPBX\Common\Handlers\CriticalErrorsHandler;
+use MikoPBX\Common\Providers\ManagedCacheProvider;
 
 include_once __DIR__.'/../vendor/autoload.php';
 
@@ -95,7 +96,13 @@ class LdapSyncConnector extends \Phalcon\Di\Injectable
      */
     private string $userModelClass;
 
+    // Ldap connection
     private \LdapRecord\Connection $connection;
+
+    // Cache provider
+    private $redis;
+
+    private string $redisKeyPrefix;
 
     /**
      * LdapConnectionManager constructor.
@@ -128,6 +135,9 @@ class LdapSyncConnector extends \Phalcon\Di\Injectable
             'password' => $this->administrativePassword,
             'timeout'  => 15,
         ]);
+
+        $this->redis = $this->getDI()->getShared(ManagedCacheProvider::SERVICE_NAME);
+        $this->redisKeyPrefix = 'modules:ldap-sync:'.md5($this->serverName.$ldapCredentials['attributes']);
     }
 
     /**
@@ -158,7 +168,6 @@ class LdapSyncConnector extends \Phalcon\Di\Injectable
     public function getUsersList(): AnswerStructure
     {
         $res = new AnswerStructure();
-
         $listOfAvailableUsers = [];
         try {
             $this->connection->connect();
@@ -174,8 +183,17 @@ class LdapSyncConnector extends \Phalcon\Di\Injectable
                 $query->in($this->organizationalUnit);
             }
             $requestAttributes = array_values($this->userAttributes);
-            $users =$query->select($requestAttributes)->get();
-            foreach ($users as $user) {
+
+            $page = $this->redis->getAdapter()->incr($this->redisKeyPrefix . '-users-list:page');
+
+            $users = $query->select($requestAttributes)->slice($page, 20);
+
+            if ($page >= $users->lastPage()){
+                // Stop paginating
+                $this->redis->getAdapter()->del($this->redisKeyPrefix . '-users-list:page');
+            };
+
+            foreach ($users->items() as $user) {
                 $record = [];
                 foreach ($requestAttributes as $attribute){
                     if ($user->hasAttribute($attribute)){

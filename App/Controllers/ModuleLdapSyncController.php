@@ -38,7 +38,6 @@ class ModuleLdapSyncController extends BaseController
      */
     public function initialize(): void
     {
-        $this->moduleDir = PbxExtensionUtils::getModuleDir($this->moduleUniqueID);
         $this->view->logoImagePath = $this->url->get() . 'assets/img/cache/' . $this->moduleUniqueID . '/logo.svg';
         parent::initialize();
     }
@@ -84,9 +83,8 @@ class ModuleLdapSyncController extends BaseController
 
         if (!$serverConfig) {
             $serverConfig = new LdapServers();
+            $serverConfig->disabled = '1';
         }
-
-        $attributeValues = json_decode($serverConfig->attributes, true);
 
         $this->view->setVar('hiddenAttributes', json_encode([
             Constants::USER_ACCOUNT_CONTROL_ATTR,
