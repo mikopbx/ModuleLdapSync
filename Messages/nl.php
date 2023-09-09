@@ -68,4 +68,5 @@ return [
     'module_ldap_ValidateUserExtensionAttributeIsEmpty' => 'Het attribuut met het interne telefoonnummer van de gebruiker in het domein is niet gevuld',
     'module_ldap_ValidateUserEmailAttributeIsEmpty' => 'Het attribuut met het e-mailadres van de gebruiker in het domein is niet gevuld',
     'module_ldap_ValidateUserAccountControlIsEmpty' => 'Het attribuut met het attribuut van gebruikersactiviteit in het domein is niet gevuld',
+    'module_ldap_TableColumnAutoSync' => 'Automatisch synchroniseren',
 ];
