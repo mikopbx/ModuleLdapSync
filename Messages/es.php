@@ -68,4 +68,5 @@ return [
     'module_ldap_ValidateUserEmailAttributeIsEmpty' => 'El atributo con el correo electrónico del usuario en el dominio no está completado',
     'module_ldap_ValidateUserAccountControlIsEmpty' => 'El atributo con el atributo de actividad del usuario en el dominio no está completo',
     'module_ldap_EnableAutoSync' => 'Habilitar la sincronización programada (cada hora)',
+    'module_ldap_TableColumnAutoSync' => 'Sincronización automática',
 ];
