@@ -68,4 +68,5 @@ return [
     'module_ldap_ValidateUserExtensionAttributeIsEmpty' => 'ドメイン内のユーザーの内部電話番号を含む属性が入力されていません',
     'module_ldap_ValidateUserEmailAttributeIsEmpty' => 'ドメイン内のユーザーの電子メールの属性が入力されていません',
     'module_ldap_ValidateUserAccountControlIsEmpty' => 'ドメイン内のユーザーアクティビティの属性を持つ属性が入力されていません',
+    'module_ldap_TableColumnAutoSync' => '自動同期',
 ];
