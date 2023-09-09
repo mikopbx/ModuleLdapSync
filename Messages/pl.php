@@ -68,4 +68,5 @@ return [
     'module_ldap_ValidateUserExtensionAttributeIsEmpty' => 'Atrybut z wewnętrznym numerem telefonu użytkownika w domenie nie jest wypełniony',
     'module_ldap_ValidateUserEmailAttributeIsEmpty' => 'Atrybut z adresem e-mail użytkownika w domenie nie jest wypełniony',
     'module_ldap_ValidateUserAccountControlIsEmpty' => 'Atrybut z atrybutem aktywności użytkownika w domenie nie jest wypełniony',
+    'module_ldap_TableColumnAutoSync' => 'Automatyczna synchronizacja',
 ];
