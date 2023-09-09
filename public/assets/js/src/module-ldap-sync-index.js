@@ -38,11 +38,6 @@ const ModuleLdapSyncIndex = {
                         urlData: {
                             id,
                         },
-                        onSuccess(response) {
-                            if (response.success) {
-                                $(`#${id} .status-dependent`).removeClass('disabled');
-                            }
-                        },
                     });
                 },
                 onUnchecked() {
@@ -52,11 +47,6 @@ const ModuleLdapSyncIndex = {
                         on: 'now',
                         urlData: {
                             id,
-                        },
-                        onSuccess(response) {
-                            if (response.success) {
-                                $(`#${id} .status-dependent`).addClass('disabled');
-                            }
                         },
                     });
                 },

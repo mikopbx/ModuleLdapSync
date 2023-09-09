@@ -24,6 +24,7 @@ use MikoPBX\Common\Models\Users;
 use MikoPBX\Common\Providers\PBXCoreRESTClientProvider;
 use MikoPBX\Modules\Logger;
 use MikoPBX\PBXCoreREST\Lib\Extensions\DataStructure;
+use Modules\ModuleLdapSync\Lib\Workers\WorkerLdapSync;
 use Modules\ModuleLdapSync\Models\ADUsers;
 use Modules\ModuleLdapSync\Models\LdapServers;
 use Phalcon\Di;
@@ -55,10 +56,11 @@ class LdapSyncMain extends Injectable
      */
     public static function syncUsersPerServer(array $ldapCredentials): AnswerStructure
     {
+        // Create an answer structure for the result
         $res = new AnswerStructure();
         $res->success = true;
 
-        // Create Logger instance
+        // Create a Logger instance
         $className        = basename(str_replace('\\', '/', static::class));
         $logger =  new Logger($className, 'ModuleLdapSync');
 
@@ -68,6 +70,8 @@ class LdapSyncMain extends Injectable
         // Get the list of users from LDAP
         $responseFromLdap = $connector->getUsersList();
         $processedUsers = [];
+
+        // Check if LDAP retrieval was successful
         if ($responseFromLdap->success = false) {
             return $responseFromLdap;
         }
@@ -79,15 +83,19 @@ class LdapSyncMain extends Injectable
 
             if ($result->success) {
                 $processedUser = $userFromLdap;
+
+                // Check for changes in user data
                 if (!empty($result->data[Constants::USER_HAD_CHANGES_ON])) {
                     $processedUser[Constants::USER_HAD_CHANGES_ON] = $result->data[Constants::USER_HAD_CHANGES_ON];
                     $userName = $processedUser[$connector->userAttributes[Constants::USER_NAME_ATTR]];
                     $logger->writeInfo("Updated ".$userName." data on ".$result->data[Constants::USER_HAD_CHANGES_ON]);
+                    WorkerLdapSync::increaseSyncFrequency();
                 }
                 if (!empty($result->data[Constants::USER_SYNC_RESULT])) {
                     $processedUser[Constants::USER_SYNC_RESULT] = $result->data[Constants::USER_SYNC_RESULT];
                 }
-                // Remove avatar data from arrays to prevents memory leaks and overloading the beanstalk
+
+                // Remove avatar data from arrays to prevent memory leaks and overloading the beanstalk
                 $avatarKey = $connector->userAttributes[Constants::USER_AVATAR_ATTR];
                 if (!empty($processedUser[$avatarKey])) {
                     unset( $processedUser[$avatarKey]);

@@ -4,7 +4,7 @@
             <table class="ui selectable unstackable table" id="servers-table">
             <thead>
             <tr>
-                <th></th>
+                <th>{{ t._('module_ldap_TableColumnAutoSync') }}</th>
                 <th>{{ t._('module_ldap_TableColumnServerName') }}</th>
                 <th>{{ t._('module_ldap_BaseDN') }}</th>
                 <th>{{ t._('module_ldap_OrganizationalUnit') }}</th>
@@ -20,9 +20,9 @@
                     <input type="checkbox" {% if server['status']!='disabled' %} checked {% endif %}><label></label>
                 </div>
             </td>
-            <td class="{{ server['status'] }} status-dependent">{{ server['serverName'] }}</td>
-            <td class="{{ server['status'] }} status-dependent">{{ server['baseDN'] }}</td>
-            <td class="{{ server['status'] }} status-dependent">{{ server['organizationalUnit'] }}</td>
+            <td>{{ server['serverName'] }}</td>
+            <td>{{ server['baseDN'] }}</td>
+            <td>{{ server['organizationalUnit'] }}</td>
             {{ partial("partials/tablesbuttons",
                 [
                     'id': server['id'],

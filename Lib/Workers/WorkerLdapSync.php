@@ -23,20 +23,21 @@ namespace Modules\ModuleLdapSync\Lib\Workers;
 use MikoPBX\Common\Providers\ManagedCacheProvider;
 use MikoPBX\Core\Workers\WorkerBase;
 use Modules\ModuleLdapSync\Lib\LdapSyncMain;
+use Phalcon\Di;
 
 require_once 'Globals.php';
 
 /**
- * WorkerLdapSync is a worker class responsible for sync users on LDAP with users on MikoPBX.
+ * WorkerLdapSync is a worker class responsible for synchronizing users on LDAP with users on MikoPBX.
  *
  * @package Modules\ModuleLdapSync\Lib\Workers
  */
 class WorkerLdapSync extends WorkerBase
 {
-    public const CACHE_KEY  = 'Workers:WorkerLdapSync:lastCheck';
+    public const CACHE_KEY  = 'Workers:WorkerLdapSync:lastSync';
 
     /**
-     * Starts the checker worker.
+     * Starts the LDAP synchronization worker.
      *
      * @param array $argv The command-line arguments passed to the worker.
      * @return void
@@ -44,15 +45,51 @@ class WorkerLdapSync extends WorkerBase
     public function start(array $argv): void
     {
         $managedCache = $this->di->get(ManagedCacheProvider::SERVICE_NAME);
-        // Retrieve the last license check timestamp from the cache
-        $lastCheck = $managedCache->get(self::CACHE_KEY);
-        if ($lastCheck === null) {
+
+        // Retrieve the last sync timestamp from the cache
+        $lastSync = $managedCache->get(self::CACHE_KEY);
+
+        if ($lastSync === null) {
+            // Generate a random delay before the first run
+            $randomDelay = $this->generateRandomDelay();
+
+            // Store the current timestamp in the cache to track the last sync check
+            $managedCache->set(self::CACHE_KEY, time() + $randomDelay, 86400); // Sync every hour if no changes; decrease interval if changes
+
+            // Sleep for the random delay before the first sync check
+            sleep($randomDelay);
+
             // Sync LDAP and MikoPBX users
             LdapSyncMain::syncAllUsers();
-
-            // Store the current timestamp in the cache to track the last repository check
-            $managedCache->set(self::CACHE_KEY, time(), 3600); // Check every hour
+        } elseif (time() - $lastSync > 3600) {
+            $managedCache->set(self::CACHE_KEY, time(), 86400);
+            // Sync LDAP and MikoPBX users every hour
+            LdapSyncMain::syncAllUsers();
         }
+
+    }
+
+    /**
+     * Increases the sync frequency for LDAP synchronization.
+     *
+     * @return void
+     */
+    public static function increaseSyncFrequency():void
+    {
+        $managedCache = Di::getDefault()->get(ManagedCacheProvider::SERVICE_NAME);
+        // Decrease sync interval to 5 minutes if changes occur
+        $managedCache->set(self::CACHE_KEY, time()-3300, 86400);
+    }
+
+    /**
+     * Generates a random delay before the first run.
+     *
+     * @return int The delay in seconds.
+     */
+    private function generateRandomDelay(): int
+    {
+        // Generate a random delay between 0 and 3600 seconds (1 hour)
+        return rand(0, 3600);
     }
 }
 

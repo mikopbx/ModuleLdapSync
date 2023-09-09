@@ -83,9 +83,8 @@ class ModuleLdapSyncController extends BaseController
 
         if (!$serverConfig) {
             $serverConfig = new LdapServers();
+            $serverConfig->disabled = '1';
         }
-
-        $attributeValues = json_decode($serverConfig->attributes??'', true);
 
         $this->view->setVar('hiddenAttributes', json_encode([
             Constants::USER_ACCOUNT_CONTROL_ATTR,
