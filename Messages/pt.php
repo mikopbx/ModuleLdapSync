@@ -68,4 +68,5 @@ return [
     'module_ldap_ValidateUserExtensionAttributeIsEmpty' => 'O atributo com o número de telefone interno do usuário no domínio não está preenchido',
     'module_ldap_ValidateUserEmailAttributeIsEmpty' => 'O atributo com o e-mail do usuário no domínio não está preenchido',
     'module_ldap_EnableAutoSync' => 'Habilitar sincronização agendada (a cada hora)',
+    'module_ldap_TableColumnAutoSync' => 'Sincronização automática',
 ];
