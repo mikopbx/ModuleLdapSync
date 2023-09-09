@@ -68,4 +68,5 @@ return [
     'module_ldap_ValidateUserExtensionAttributeIsEmpty' => 'Attributet med användarens interna telefonnummer i domänen är inte ifyllt',
     'module_ldap_ValidateUserEmailAttributeIsEmpty' => 'Attributet med användarens e-post i domänen är inte ifyllt',
     'module_ldap_ValidateUserAccountControlIsEmpty' => 'Attributet med attributet för användaraktivitet i domänen är inte ifyllt',
+    'module_ldap_TableColumnAutoSync' => 'Automatisk synkronisering',
 ];
