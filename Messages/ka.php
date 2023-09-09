@@ -68,4 +68,5 @@ return [
     'module_ldap_ValidateUserEmailAttributeIsEmpty' => 'დომენში მომხმარებლის ელ. ფოსტით ატრიბუტი არ არის შევსებული',
     'module_ldap_ValidateUserAccountControlIsEmpty' => 'დომენში მომხმარებლის აქტივობის ატრიბუტით ატრიბუტი არ არის შევსებული',
     'module_ldap_ValidateUserMobileAttributeIsEmpty' => 'დომენში მომხმარებლის მობილური ტელეფონის ატრიბუტი არ არის შევსებული',
+    'module_ldap_TableColumnAutoSync' => 'ავტომატური სინქრონიზაცია',
 ];
