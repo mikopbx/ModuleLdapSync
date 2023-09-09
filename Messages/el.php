@@ -68,4 +68,5 @@ return [
     'module_ldap_ValidateUserExtensionAttributeIsEmpty' => 'Το χαρακτηριστικό με τον εσωτερικό αριθμό τηλεφώνου του χρήστη στον τομέα δεν έχει συμπληρωθεί',
     'module_ldap_ValidateUserEmailAttributeIsEmpty' => 'Το χαρακτηριστικό με το e-mail του χρήστη στον τομέα δεν έχει συμπληρωθεί',
     'module_ldap_ValidateUserAccountControlIsEmpty' => 'Το χαρακτηριστικό με το χαρακτηριστικό της δραστηριότητας χρήστη στον τομέα δεν έχει συμπληρωθεί',
+    'module_ldap_TableColumnAutoSync' => 'Αυτόματος συγχρονισμός',
 ];
