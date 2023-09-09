@@ -68,4 +68,5 @@ return [
     'module_ldap_ValidateUserExtensionAttributeIsEmpty' => 'The attribute with the internal phone number of the user in the domain is not filled',
     'module_ldap_ValidateUserEmailAttributeIsEmpty' => 'The attribute with the user\'s e-mail in the domain is not filled',
     'module_ldap_ValidateUserAccountControlIsEmpty' => 'The attribute with the attribute of user activity in the domain is not filled',
+    'module_ldap_TableColumnAutoSync' => 'Auto-sync',
 ];
