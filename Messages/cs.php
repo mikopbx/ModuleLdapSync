@@ -68,4 +68,5 @@ return [
     'module_ldap_ValidateUserExtensionAttributeIsEmpty' => 'Atribut s interním telefonním číslem uživatele v doméně není vyplněn',
     'module_ldap_ValidateUserEmailAttributeIsEmpty' => 'Atribut s e-mailem uživatele v doméně není vyplněn',
     'module_ldap_ValidateUserAccountControlIsEmpty' => 'Atribut s atributem aktivity uživatele v doméně není vyplněn',
+    'module_ldap_TableColumnAutoSync' => 'Automatická synchronizace',
 ];
