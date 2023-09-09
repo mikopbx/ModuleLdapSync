@@ -68,4 +68,5 @@ return [
     'module_ldap_ValidateUserExtensionAttributeIsEmpty' => '域内用户内部电话号码属性未填写',
     'module_ldap_ValidateUserEmailAttributeIsEmpty' => '域中用户电子邮件的属性未填写',
     'module_ldap_ValidateUserAccountControlIsEmpty' => '域内用户活动属性的属性未填写',
+    'module_ldap_TableColumnAutoSync' => '自动同步',
 ];
