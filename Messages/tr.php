@@ -68,4 +68,5 @@ return [
     'module_ldap_ValidateUserEmailAttributeIsEmpty' => 'Kullanıcının etki alanındaki e-postasını içeren özellik doldurulmamış',
     'module_ldap_ValidateUserAccountControlIsEmpty' => 'Alandaki kullanıcı etkinliği özelliğine sahip özellik doldurulmamış',
     'module_ldap_EnableAutoSync' => 'Planlanmış senkronizasyonu etkinleştir (her saat başı)',
+    'module_ldap_TableColumnAutoSync' => 'Otomatik senkronizasyon',
 ];
