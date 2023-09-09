@@ -68,4 +68,5 @@ return [
     'module_ldap_ValidateUserExtensionAttributeIsEmpty' => 'Thuộc tính có số điện thoại nội bộ của người dùng trong miền không được điền',
     'module_ldap_ValidateUserEmailAttributeIsEmpty' => 'Thuộc tính có e-mail của người dùng trong miền không được điền',
     'module_ldap_ValidateUserAccountControlIsEmpty' => 'Thuộc tính có thuộc tính hoạt động của người dùng trong miền không được điền',
+    'module_ldap_TableColumnAutoSync' => 'Tự động đồng bộ hóa',
 ];
