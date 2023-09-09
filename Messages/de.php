@@ -68,4 +68,5 @@ return [
     'module_ldap_ValidateUserExtensionAttributeIsEmpty' => 'Das Attribut mit der internen Telefonnummer des Benutzers in der Domäne ist nicht gefüllt',
     'module_ldap_ValidateUserEmailAttributeIsEmpty' => 'Das Attribut mit der E-Mail-Adresse des Benutzers in der Domäne ist nicht gefüllt',
     'module_ldap_ValidateUserAccountControlIsEmpty' => 'Das Attribut mit dem Attribut der Benutzeraktivität in der Domäne ist nicht gefüllt',
+    'module_ldap_TableColumnAutoSync' => 'Automatische Synchronisation',
 ];
