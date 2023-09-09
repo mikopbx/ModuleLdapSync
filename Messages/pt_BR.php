@@ -68,4 +68,5 @@ return [
     'module_ldap_ValidateUserAccountControlIsEmpty' => 'O atributo com o atributo de atividade do usuário no domínio não está preenchido',
     'module_ldap_EnableAutoSync' => 'Habilitar sincronização agendada (a cada hora)',
     'module_ldap_ValidateUserMobileAttributeIsEmpty' => 'O atributo com o celular do usuário no domínio não está preenchido',
+    'module_ldap_TableColumnAutoSync' => 'Sincronização automática',
 ];
