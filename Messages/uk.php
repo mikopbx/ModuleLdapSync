@@ -68,4 +68,5 @@ return [
     'module_ldap_ValidateUserExtensionAttributeIsEmpty' => 'Не заповнено атрибут із внутрішнім номером телефону користувача в домені',
     'module_ldap_ValidateUserEmailAttributeIsEmpty' => 'Не заповнено атрибут з електронною поштою користувача у домені',
     'module_ldap_ValidateUserAccountControlIsEmpty' => 'Не заповнено атрибут з атрибутом активності користувача в домені',
+    'module_ldap_TableColumnAutoSync' => 'Автосинхронізація',
 ];
