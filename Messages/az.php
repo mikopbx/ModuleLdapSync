@@ -68,4 +68,5 @@ return [
     'module_ldap_ValidateUserMobileAttributeIsEmpty' => 'Domendə istifadəçinin mobil telefonu ilə atribut doldurulmayıb',
     'module_ldap_ValidateUserExtensionAttributeIsEmpty' => 'Domendəki istifadəçinin daxili telefon nömrəsi ilə atribut doldurulmayıb',
     'module_ldap_ValidateUserEmailAttributeIsEmpty' => 'Domendə istifadəçinin e-poçtu olan atribut doldurulmayıb',
+    'module_ldap_TableColumnAutoSync' => 'Avtomatik sinxronizasiya',
 ];
