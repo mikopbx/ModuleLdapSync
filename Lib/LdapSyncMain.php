@@ -517,15 +517,48 @@ class LdapSyncMain extends Injectable
                 continue;
             }
 
-            // Process mobile attribute to remove non-numeric characters.
-            if ($attributeId === Constants::USER_MOBILE_ATTR) {
-                $userDataFromLdap[$attributeId] = preg_replace('/[^0-9]/', '', $value);
-            } else {
-                // For other attributes, simply use the value as-is.
-                $userDataFromLdap[$attributeId] = $value;
+            // Sanitizing
+            switch ($attributeId){
+                case Constants::USER_MOBILE_ATTR:
+                case Constants::USER_EXTENSION_ATTR:
+                    // Process mobile and extension attribute to remove non-numeric characters.
+                    $userDataFromLdap[$attributeId] = preg_replace('/\D/', '', $value);
+                    break;
+                case Constants::USER_EMAIL_ATTR:
+                    if (self::isValidEmail($value)){
+                        $userDataFromLdap[$attributeId] = $value;
+                    }
+                    break;
+                case Constants::USER_AVATAR_ATTR:
+                    $maxLengthInBytes = 512 * 1024; // 512 kilobytes
+                    if (strlen($value)< $maxLengthInBytes){
+                        $userDataFromLdap[$attributeId] = $value;
+                    }
+                    break;
+                case Constants::USER_NAME_ATTR:
+                    $userDataFromLdap[$attributeId] = preg_replace('/[^A-Za-zА-Яа-я0-9() ]/u', '', $value);
+                    break;
+                default:
+                    // For other attributes, simply use the value as-is.
+                    $userDataFromLdap[$attributeId] = $value;
             }
+
         }
         return $userDataFromLdap;
+    }
+
+    /**
+     * Check if presented email is valid
+     * @param string $email
+     * @return bool
+     */
+    private static function isValidEmail(string $email): bool
+    {
+        // Define a regular expression pattern for a valid email address
+        $pattern = '/^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/';
+
+        // Use the preg_match function to perform the validation
+        return preg_match($pattern, $email) === 1;
     }
 
 }
