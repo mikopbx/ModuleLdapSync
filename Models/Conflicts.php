@@ -19,7 +19,9 @@
 
 namespace Modules\ModuleLdapSync\Models;
 
+use MikoPBX\Common\Models\Users;
 use MikoPBX\Modules\Models\ModulesModelsBase;
+use Phalcon\Mvc\Model\Relation;
 
 class Conflicts extends ModulesModelsBase
 {
@@ -73,4 +75,18 @@ class Conflicts extends ModulesModelsBase
      */
     public $server_id;
 
+
+    public function initialize(): void
+    {
+        $this->setSource('m_ModuleLdapSync_Conflicts');
+        parent::initialize();
+        $this->belongsTo(
+            'server_id',
+            LdapServers::class,
+            'id',
+            [
+                'alias' => 'LdapServers',
+            ]
+        );
+    }
 }
