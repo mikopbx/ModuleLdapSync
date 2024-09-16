@@ -89,6 +89,28 @@ class LdapSyncConf extends ConfigClass
                 $res->messages = $result->messages;
                 $res->data = $result->data;
                 break;
+            case 'GET-SERVER-CONFLICTS':
+                if ($data) {
+                    $result = LdapSyncConflicts::getServerConflicts($data['id']);
+                    $res->success = $result->success;
+                    $res->messages = $result->messages;
+                    $res->data = $result->data;
+                } else {
+                    $res->success = false;
+                    $res->messages[] = 'No server id provided';
+                }
+                break;
+            case 'DELETE-SERVER-CONFLICT':
+                if ($data) {
+                    $result = LdapSyncConflicts::deleteServerConflict($data['recordId']);
+                    $res->success = $result->success;
+                    $res->messages = $result->messages;
+                    $res->data = $result->data;
+                } else {
+                    $res->success = false;
+                    $res->messages[] = 'No record id provided';
+                }
+                break;
             default:
                 $res->success = false;
                 $res->messages[] = 'API action not found in ' . __METHOD__;

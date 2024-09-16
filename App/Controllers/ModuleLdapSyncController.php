@@ -21,7 +21,6 @@ namespace Modules\ModuleLdapSync\App\Controllers;
 
 use MikoPBX\AdminCabinet\Controllers\BaseController;
 use MikoPBX\AdminCabinet\Providers\AssetProvider;
-use MikoPBX\Modules\PbxExtensionUtils;
 use Modules\ModuleLdapSync\App\Forms\LdapConfigForm;
 use Modules\ModuleLdapSync\Lib\Constants;
 use Modules\ModuleLdapSync\Models\LdapServers;

@@ -36,9 +36,12 @@ class Constants
     public const SYNC_RESULT_UPDATED = 'UPDATED';
     public const SYNC_RESULT_SKIPPED = 'SKIPPED';
 
+    public const SYNC_RESULT_CONFLICT = 'CONFLICT';
+
     public const USER_HAD_CHANGES_ON = 'userHadChangesOnTheSide';
     public const HAD_CHANGES_ON_PBX = 'OnPBXSide';
     public const HAD_CHANGES_ON_AD = 'OnDomainSide';
 
-
+    public const PBX_UPDATE_CONFLICT = 'PBX_UPDATE_CONFLICT';
+    public const LDAP_UPDATE_CONFLICT = 'LDAP_UPDATE_CONFLICT';
 }
