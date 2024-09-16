@@ -298,6 +298,8 @@ class LdapSyncMain extends Injectable
 
         $dataStructure->user_avatar = $userDataFromLdap[Constants::USER_AVATAR_ATTR]?? $dataStructure->user_avatar;
 
+        $dataStructure->sip_transport = trim($dataStructure->sip_transport);
+
         // Save user data through the CORE API
         $restAnswer = $di->get(PBXCoreRESTClientProvider::SERVICE_NAME, [
             '/pbxcore/api/extensions/saveRecord',
