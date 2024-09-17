@@ -78,4 +78,8 @@ return [
     'module_ldap_NoAnyConflicts' => 'Không tìm thấy vấn đề nào',
     'module_ldap_deleteCurrentConflict' => 'Xóa mục nhập hiện tại, không thay đổi dữ liệu trong PBX hoặc phía máy chủ LDAP/AD',
     'module_ldap_ConflictTime' => 'Ngày',
+    'module_ldap_CONFLICT' => 'xung đột',
+    'module_ldap_SyncTabHeader' => 'Đồng bộ hóa và xung đột',
+    'module_ldap_TabAttributes' => 'Các trường đồng bộ hóa',
+    'module_ldap_DeleteAllConflicts' => 'Xóa mọi xung đột',
 ];
