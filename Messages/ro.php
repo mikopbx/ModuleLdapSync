@@ -78,4 +78,8 @@ return [
     'module_ldap_ConflictErrorMessages' => 'Motivul refuzului',
     'module_ldap_PBX_UPDATE_CONFLICT' => 'PBX',
     'module_ldap_LDAP_UPDATE_CONFLICT' => 'LDAP/AD',
+    'module_ldap_CONFLICT' => 'conflict',
+    'module_ldap_SyncTabHeader' => 'Sincronizare și conflicte',
+    'module_ldap_TabAttributes' => 'Câmpuri de sincronizare',
+    'module_ldap_DeleteAllConflicts' => 'Ștergeți toate conflictele',
 ];
