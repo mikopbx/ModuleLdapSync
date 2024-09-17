@@ -78,4 +78,8 @@ return [
     'module_ldap_ConflictSide' => 'Kim imtina etdi',
     'module_ldap_ConflictErrorMessages' => 'İmtina səbəbi',
     'module_ldap_LDAP_UPDATE_CONFLICT' => 'LDAP/AD',
+    'module_ldap_CONFLICT' => 'münaqişə',
+    'module_ldap_TabAttributes' => 'Sinxronizasiya sahələri',
+    'module_ldap_DeleteAllConflicts' => 'Bütün münaqişələri təmizləyin',
+    'module_ldap_SyncTabHeader' => 'Sinxronizasiya və münaqişələr',
 ];
