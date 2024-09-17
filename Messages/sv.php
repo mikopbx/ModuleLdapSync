@@ -78,4 +78,8 @@ return [
     'module_ldap_ConflictSide' => 'Som vägrade',
     'module_ldap_ConflictErrorMessages' => 'Orsak till avslag',
     'module_ldap_LDAP_UPDATE_CONFLICT' => 'LDAP/AD',
+    'module_ldap_CONFLICT' => 'konflikt',
+    'module_ldap_SyncTabHeader' => 'Synkronisering och konflikter',
+    'module_ldap_TabAttributes' => 'Synkroniseringsfält',
+    'module_ldap_DeleteAllConflicts' => 'Rensa alla konflikter',
 ];
