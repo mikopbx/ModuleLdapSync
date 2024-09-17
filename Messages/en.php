@@ -78,4 +78,8 @@ return [
     'module_ldap_ConflictUserData' => 'Stored data',
     'module_ldap_ConflictSide' => 'Who refused?',
     'module_ldap_ConflictErrorMessages' => 'Reason for refusal',
+    'module_ldap_CONFLICT' => 'conflict',
+    'module_ldap_SyncTabHeader' => 'Synchronization and conflicts',
+    'module_ldap_TabAttributes' => 'Synchronization fields',
+    'module_ldap_DeleteAllConflicts' => 'Clear all conflicts',
 ];
