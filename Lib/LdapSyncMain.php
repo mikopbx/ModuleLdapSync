@@ -80,10 +80,23 @@ class LdapSyncMain extends Injectable
             // Update user data on PBX or on Domain based on LDAP information
             $result = self::updateUserData($ldapCredentials, $userFromLdap);
             $res->messages = array_merge($res->messages, $result->messages);
+            $processedUser = $userFromLdap;
+
+            // Remove avatar data from arrays to prevent memory leaks and overloading the beanstalk
+            $avatarKey = $connector->userAttributes[Constants::USER_AVATAR_ATTR];
+            if (!empty($processedUser[$avatarKey])) {
+                $processedUser[$avatarKey]='base64picture...';
+            }
+
+            if (!empty($result->data[Constants::USER_SYNC_RESULT])) {
+                $processedUser[Constants::USER_SYNC_RESULT] = $result->data[Constants::USER_SYNC_RESULT];
+
+                if ($result->data[Constants::USER_SYNC_RESULT] === Constants::SYNC_RESULT_CONFLICT) {
+                    LdapSyncConflicts::recordSyncConflict($ldapCredentials['id'], $processedUser, $result->messages, $result->data[Constants::SYNC_RESULT_CONFLICT_SIDE]);
+                }
+            }
 
             if ($result->success) {
-                $processedUser = $userFromLdap;
-
                 // Check for changes in user data
                 if (!empty($result->data[Constants::USER_HAD_CHANGES_ON])) {
                     $processedUser[Constants::USER_HAD_CHANGES_ON] = $result->data[Constants::USER_HAD_CHANGES_ON];
@@ -91,22 +104,16 @@ class LdapSyncMain extends Injectable
                     $logger->writeInfo("Updated " . $userName . " data on " . $result->data[Constants::USER_HAD_CHANGES_ON]);
                     WorkerLdapSync::increaseSyncFrequency();
                 }
-                if (!empty($result->data[Constants::USER_SYNC_RESULT])) {
-                    $processedUser[Constants::USER_SYNC_RESULT] = $result->data[Constants::USER_SYNC_RESULT];
-                }
-
-                // Remove avatar data from arrays to prevent memory leaks and overloading the beanstalk
-                $avatarKey = $connector->userAttributes[Constants::USER_AVATAR_ATTR];
-                if (!empty($processedUser[$avatarKey])) {
-                    unset($processedUser[$avatarKey]);
-                }
-                $processedUsers[] = $processedUser;
-            } else {
-                $res->success = false;
             }
-        }
-        $res->data = $processedUsers;
 
+            if (!empty($processedUser[$avatarKey])) {
+                $processedUser[$avatarKey]='<i class="camera retro icon"></i>';
+            }
+            $processedUsers[] = $processedUser;
+        }
+
+        $res->success = true;
+        $res->data = $processedUsers;
         return $res;
     }
 
@@ -160,9 +167,8 @@ class LdapSyncMain extends Injectable
                 $previousSyncUser->domainParamsHash = $domainParamsHash;
                 $previousSyncUser->user_id = $response->data['user_id'];
             } else {
-                LdapSyncConflicts::recordSyncConflict($ldapCredentials['id'], $userDataFromLdap, $response->messages, Constants::PBX_UPDATE_CONFLICT);
                 $response->data[Constants::USER_SYNC_RESULT] = Constants::SYNC_RESULT_CONFLICT;
-                $response->success = true;
+                $response->data[Constants::SYNC_RESULT_CONFLICT_SIDE] = Constants::PBX_UPDATE_CONFLICT;
             }
         } elseif (
             $previousSyncUser->localParamsHash !== $localParamsHash
@@ -175,9 +181,8 @@ class LdapSyncMain extends Injectable
                 $response->data[Constants::USER_HAD_CHANGES_ON] = Constants::HAD_CHANGES_ON_AD;
                 $previousSyncUser->localParamsHash = $localParamsHash;
             } else {
-                LdapSyncConflicts::recordSyncConflict($ldapCredentials['id'], $userDataFromMikoPBX, $response->messages, Constants::LDAP_UPDATE_CONFLICT);
                 $response->data[Constants::USER_SYNC_RESULT] = Constants::SYNC_RESULT_CONFLICT;
-                $response->success = true;
+                $response->data[Constants::SYNC_RESULT_CONFLICT_SIDE] = Constants::LDAP_UPDATE_CONFLICT;
             }
         } else {
             // No changes on both sides
@@ -188,7 +193,7 @@ class LdapSyncMain extends Injectable
         }
 
         // Save hashes into database
-        if (!$previousSyncUser->save()) {
+        if ($response->success && !$previousSyncUser->save()) {
             $response->success = false;
             $response->messages['error'][] = $previousSyncUser->getMessages();
         }
@@ -236,7 +241,8 @@ class LdapSyncMain extends Injectable
                     }
                     break;
                 case Constants::USER_NAME_ATTR:
-                    $userDataFromLdap[$attributeId] = preg_replace('/[^A-Za-zА-Яа-я0-9() ]/u', '', $value);
+                    // Allow all Unicode letters, numbers, spaces, and common symbols.
+                    $userDataFromLdap[$attributeId] = preg_replace('/[^\p{L}\p{N}\s\(\)]/u', '', $value);
                     break;
                 default:
                     // For other attributes, simply use the value as-is.
@@ -481,7 +487,6 @@ class LdapSyncMain extends Injectable
     }
 
 
-
     /**
      * Updates an AD user's data based on the previous synchronization.
      *
@@ -518,7 +523,7 @@ class LdapSyncMain extends Injectable
         if ($result->success) {
             foreach ($result->data as &$processedUser) {
                 if (!empty($processedUser[$avatarKey])) {
-                    unset($processedUser[$avatarKey]);
+                    $processedUser[$avatarKey]='<i class="camera retro icon"></i>';
                 }
             }
         }

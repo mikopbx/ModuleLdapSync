@@ -26,10 +26,10 @@
         <div class="field">
             <label>{{ t._('module_ldap_LdapAdminLogin') }}</label>
             <div class="equal width fields">
-                <div class="field max-width-250">
+                <div class="field">
                     {{ ldapForm.render('administrativeLogin') }}
                 </div>
-                <div class="field max-width-400">
+                <div class="field">
                     {{ ldapForm.render('administrativePasswordHidden') }}
                 </div>
             </div>

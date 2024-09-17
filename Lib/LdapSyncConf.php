@@ -90,7 +90,7 @@ class LdapSyncConf extends ConfigClass
                 $res->data = $result->data;
                 break;
             case 'GET-SERVER-CONFLICTS':
-                if ($data) {
+                if (!empty($data['id'])) {
                     $result = LdapSyncConflicts::getServerConflicts($data['id']);
                     $res->success = $result->success;
                     $res->messages = $result->messages;
@@ -101,7 +101,7 @@ class LdapSyncConf extends ConfigClass
                 }
                 break;
             case 'DELETE-SERVER-CONFLICT':
-                if ($data) {
+                if (!empty($data['recordId'])) {
                     $result = LdapSyncConflicts::deleteServerConflict($data['recordId']);
                     $res->success = $result->success;
                     $res->messages = $result->messages;
@@ -109,6 +109,17 @@ class LdapSyncConf extends ConfigClass
                 } else {
                     $res->success = false;
                     $res->messages[] = 'No record id provided';
+                }
+                break;
+            case 'DELETE-SERVER-CONFLICTS':
+                if (!empty($data['id'])) {
+                    $result = LdapSyncConflicts::deleteServerConflicts($data['id']);
+                    $res->success = $result->success;
+                    $res->messages = $result->messages;
+                    $res->data = $result->data;
+                } else {
+                    $res->success = false;
+                    $res->messages[] = 'No server id provided';
                 }
                 break;
             default:

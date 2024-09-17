@@ -42,6 +42,7 @@ class Constants
     public const HAD_CHANGES_ON_PBX = 'OnPBXSide';
     public const HAD_CHANGES_ON_AD = 'OnDomainSide';
 
+    public const SYNC_RESULT_CONFLICT_SIDE = 'CONFLICT_SIDE';
     public const PBX_UPDATE_CONFLICT = 'PBX_UPDATE_CONFLICT';
     public const LDAP_UPDATE_CONFLICT = 'LDAP_UPDATE_CONFLICT';
 }

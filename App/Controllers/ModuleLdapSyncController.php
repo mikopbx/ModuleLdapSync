@@ -71,7 +71,7 @@ class ModuleLdapSyncController extends BaseController
      */
     public function modifyAction(string $id = null): void
     {
-        $this->showModuleStatusToggle = false;
+        $this->view->showModuleStatusToggle = false;
         $footerCollection = $this->assets->collection(AssetProvider::FOOTER_JS);
         $footerCollection
             ->addJs('js/pbx/main/form.js', true)

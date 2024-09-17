@@ -78,13 +78,25 @@ const ModuleLdapSyncModify = {
 	 * jQuery object for the man tab menu.
 	 * @type {jQuery}
 	 */
-	$mainTabMenu: $('#module-ldap-sync-modify-menu'),
+	$mainTabMenu: $('#module-ldap-sync-modify-menu  .item'),
 
 	/**
 	 * jQuery object for the message no any conflicts
 	 * @type {jQuery}
 	 */
 	$noAnyConflictsPlaceholder: $('#no-any-conflicts-placeholder'),
+
+	/**
+	 * jQuery object for the button to delete all conflicts
+	 * @type {jQuery}
+	 */
+	$deleteAllConflictsButton: $('#delete-all-conflicts-button'),
+
+	/**
+	 * jQuery object for the module status toggle
+	 * @type {jQuery}
+	 */
+	$statusToggle: $('#module-status-toggle'),
 
 	/**
 	 * Validation rules for the form fields.
@@ -211,15 +223,64 @@ const ModuleLdapSyncModify = {
 			const recordId = $(e.target).closest('tr').data('value');
 			ModuleLdapSyncModify.apiCallDeleteConflict(recordId);
 		});
+		ModuleLdapSyncModify.apiCallGetConflicts();
 
+		// Handle sync users button click
+		ModuleLdapSyncModify.$deleteAllConflictsButton.on('click', function(e) {
+			e.preventDefault();
+			ModuleLdapSyncModify.apiCallDeleteConflicts();
+		});
+
+		ModuleLdapSyncModify.updateConflictsView();
 	},
 
+	/**
+	 * Handles delete sync conflicts request and delete conflicts table
+	 * @returns {*}
+	 */
+	apiCallDeleteConflicts(){
+		const serverID = ModuleLdapSyncModify.$formObj.form('get value','id');
+		if (!serverID) {
+			return;
+		}
+		$.api({
+			url: `${Config.pbxUrl}/pbxcore/api/modules/ModuleLdapSync/delete-server-conflicts`,
+			on: 'now',
+			method: 'POST',
+			beforeSend(settings) {
+				settings.data.id = serverID;
+				return settings;
+			},
+			successTest:PbxApi.successTest,
+			/**
+			 * Handles the successful response of the 'delete-server-conflicts' API request.
+			 * @param {object} response - The response object.
+			 */
+			onSuccess: function(response) {
+				$('.ui.message.ajax').remove();
+				$('#conflicts-result').remove();
+				ModuleLdapSyncModify.updateConflictsView();
+			},
+			/**
+			 * Handles the failure response of the 'delete-server-conflicts' API request.
+			 * @param {object} response - The response object.
+			 */
+			onFailure: function(response) {
+				$('.ui.message.ajax').remove();
+				UserMessage.showMultiString(response.messages);
+			},
+		})
+	},
 	/**
 	 * Handles delete sync conflict request and delete conflict row on the table
 	 * @param recordId
 	 * @returns {*}
 	 */
 	apiCallDeleteConflict(recordId){
+		if (!recordId) {
+			return;
+		}
+
 		$.api({
 			url: `${Config.pbxUrl}/pbxcore/api/modules/ModuleLdapSync/delete-server-conflict`,
 			on: 'now',
@@ -236,6 +297,7 @@ const ModuleLdapSyncModify = {
 			onSuccess: function(response) {
 				$('.ui.message.ajax').remove();
 				$(`#conflicts-result tr[data-value="${recordId}"]`).remove();
+				ModuleLdapSyncModify.updateConflictsView();
 			},
 			/**
 			 * Handles the failure response of the 'delete-server-conflict' API request.
@@ -251,12 +313,18 @@ const ModuleLdapSyncModify = {
 	 * Make an API call to get last sync conflicts
 	 */
 	apiCallGetConflicts(){
+
+		const serverID = ModuleLdapSyncModify.$formObj.form('get value','id');
+		if (!serverID) {
+			return;
+		}
+
 		$.api({
 			url: `${Config.pbxUrl}/pbxcore/api/modules/ModuleLdapSync/get-server-conflicts`,
 			on: 'now',
 			method: 'POST',
 			beforeSend(settings) {
-				settings.data.id = ModuleLdapSyncModify.$formObj.form('get value','id');
+				settings.data.id = serverID;
 				return settings;
 			},
 			successTest:PbxApi.successTest,
@@ -270,9 +338,7 @@ const ModuleLdapSyncModify = {
 				ModuleLdapSyncModify.$noAnyConflictsPlaceholder.hide();
 				const html = ModuleLdapSyncModify.buildTableFromConflictsList(response.data);
 				ModuleLdapSyncModify.$noAnyConflictsPlaceholder.after(html);
-				if ($(`#conflicts-result tr`).length===0){
-					ModuleLdapSyncModify.$noAnyConflictsPlaceholder.show();
-				}
+				ModuleLdapSyncModify.updateConflictsView();
 			},
 			/**
 			 * Handles the failure response of the 'get-server-conflicts' API request.
@@ -286,6 +352,15 @@ const ModuleLdapSyncModify = {
 		})
 	},
 
+	updateConflictsView(){
+		if ($(`#conflicts-result tbody tr`).length===0){
+			ModuleLdapSyncModify.$noAnyConflictsPlaceholder.show();
+			ModuleLdapSyncModify.$deleteAllConflictsButton.hide();
+			$('#conflicts-result').remove();
+		} else {
+			ModuleLdapSyncModify.$deleteAllConflictsButton.show();
+		}
+	},
 	/**
 	 * Make an API call to get LDAP users
 	 */
@@ -348,6 +423,7 @@ const ModuleLdapSyncModify = {
 				$('.ui.message.ajax').remove();
 				const html = ModuleLdapSyncModify.buildTableFromUsersList(response.data);
 				ModuleLdapSyncModify.$syncUsersSegment.after(html);
+				ModuleLdapSyncModify.apiCallGetConflicts();
 			},
 			/**
 			 * Handles the failure response of the 'sync-ldap-users' API request.
@@ -385,7 +461,15 @@ const ModuleLdapSyncModify = {
 		// Generate the HTML table head user data attributes
 		html += '<thead><tr>'
 		$.each(uniqueAttributes, (index, value) => {
-			html +='<th>'+index+'</th>';
+			if (index==='usersSyncResult' || index==='userHadChangesOnTheSide'){
+				html +='<th>'+ModuleLdapSyncModify.getTranslation(index)+'</th>';
+			} else {
+				let columnName = $(`input`).filter(function() {
+					return $(this).val() === index;
+				}).closest('.field').find('label').text();
+				html +='<th>'+columnName+'</th>';
+			}
+
 		});
 		html += '</tr></thead>'
 
@@ -395,7 +479,12 @@ const ModuleLdapSyncModify = {
 			html += `<tr class="${rowClass}">`;
 			$.each(uniqueAttributes, (attrIndex, attrValue) => {
 				const cellValue = user[attrIndex] || '';
-				html += '<td>'+cellValue+'</td>';
+				if (attrIndex==='usersSyncResult' || attrIndex==='userHadChangesOnTheSide'){
+					html +='<td>'+ModuleLdapSyncModify.getTranslation(cellValue)+'</td>';
+				} else {
+					html += '<td>'+cellValue+'</td>';
+				}
+
 			});
 			html += '</tr>';
 		});
@@ -414,23 +503,24 @@ const ModuleLdapSyncModify = {
 		// Generate the HTML table head conflicts data attributes
 		html += '<thead><tr>'
 		html +='<th>'+ModuleLdapSyncModify.getTranslation('ConflictTime')+'</th>';
-		html +='<th>'+ModuleLdapSyncModify.getTranslation('ConflictUserData')+'</th>';
 		html +='<th>'+ModuleLdapSyncModify.getTranslation('ConflictSide')+'</th>';
 		html +='<th>'+ModuleLdapSyncModify.getTranslation('ConflictErrorMessages')+'</th>';
+		html +='<th>'+ModuleLdapSyncModify.getTranslation('ConflictUserData')+'</th>';
 		html +='<th></th>';
-		html += '</tr></thead>'
+		html += '</tr></thead><tbody>'
 
 		// Generate the HTML table with conflicts data
 		$.each(conflicts, (index, record) => {
+			const prettyJSON = JSON.stringify(record['params'], null, 2);
 			html += `<tr class="item" data-value="${record['id']}">`;
 			html += '<td>'+record['lastTime']+'</td>';
 			html += '<td>'+ModuleLdapSyncModify.getTranslation(record['side'])+'</td>';
-			html += '<td>'+record['params']+'</td>';
 			html += '<td>'+record['errors']+'</td>';
+			html += '<td><pre>'+prettyJSON+'</pre></td>';
 			html += `<td><div class="ui icon basic button popuped delete-conflict" data-content="${ModuleLdapSyncModify.getTranslation('deleteCurrentConflict')}"><i class="icon trash red"></i></div></td>`;
 			html += '</tr>';
 		});
-		html += '</table>';
+		html += '</tbody></table>';
 		return html;
 	},
 
@@ -441,6 +531,9 @@ const ModuleLdapSyncModify = {
 	 * @returns {string} The translated text if available, or the original text.
 	 */
 	getTranslation(text){
+		if (text.length===0){
+			return text;
+		}
 		const nameTemplate = `module_ldap_${text}`;
 		const name = globalTranslate[nameTemplate];
 		if (name!==undefined) {

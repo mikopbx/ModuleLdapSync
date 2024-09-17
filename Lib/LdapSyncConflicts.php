@@ -28,26 +28,26 @@ class LdapSyncConflicts extends Injectable
     /**
      * Gets conflict records from server by server id
      *
-     * @param string $serverId
+     * @param string $serverId The ID of the LDAP server.
      * @return AnswerStructure
      */
     static public function getServerConflicts(string $serverId): AnswerStructure
     {
         $res = new AnswerStructure();
         $res->success = true;
-        $records = Conflicts::find('server_id='.$serverId);
+        $records = Conflicts::find('server_id=' . $serverId);
         if (!$records) {
             $res->success = false;
             $res->messages[] = "Records not found";
             return $res;
         }
         foreach ($records as $record) {
-            $res->data[$record->id]=[
-                'id'=>$record->id,
-                'lastTime'=>$record->lastTime,
-                'side'=>$record->side,
-                'params'=>json_decode($record->params),
-                'errors'=>json_decode($record->errors),
+            $res->data[$record->id] = [
+                'id' => $record->id,
+                'lastTime' => $record->lastTime,
+                'side' => $record->side,
+                'params' => json_decode($record->params),
+                'errors' => json_decode($record->errors),
             ];
         }
         return $res;
@@ -55,7 +55,7 @@ class LdapSyncConflicts extends Injectable
 
     /**
      * Deletes Conflict record
-     * @param string $recordId
+     * @param string $recordId - record id
      * @return AnswerStructure
      */
     static public function deleteServerConflict(string $recordId): AnswerStructure
@@ -82,6 +82,7 @@ class LdapSyncConflicts extends Injectable
      * If no record exists, it creates a new one. It then updates the record with the provided user data
      * from LDAP and any errors encountered during synchronization, and saves the record to the database.
      *
+     * @param string $ldapServerID The ID of the LDAP server.
      * @param array $userData The user data retrieved from LDAP or the local database.
      * @param array $errors An array of errors encountered during synchronization.
      * @param string $side Indicates the source of the user data.
@@ -89,10 +90,9 @@ class LdapSyncConflicts extends Injectable
      */
     public static function recordSyncConflict(string $ldapServerID, array $userData, array $errors, string $side): void
     {
-
         $paramsHash = md5(implode('', $userData));
         // Attempt to find an existing conflict record by the domain parameters hash
-        $storedRecord = Conflicts::findFirst('paramsHash=' . $paramsHash);
+        $storedRecord = Conflicts::findFirst("paramsHash='$paramsHash'");
 
         // If no existing record is found, create a new one
         if ($storedRecord === null) {
@@ -101,13 +101,30 @@ class LdapSyncConflicts extends Injectable
         }
 
         // Update the record with the user data from LDAP and the encountered errors
-        $storedRecord->lastTime=time();
+        $storedRecord->lastTime = date("Y-m-d H:i:s");
         $storedRecord->params = json_encode($userData);
-        $storedRecord->errors = json_encode($errors);
-        $storedRecord->server_id=$ldapServerID;
+        $storedRecord->errors = json_encode($errors['error'] ?? '');
+        $storedRecord->server_id = $ldapServerID;
         $storedRecord->side = $side;
 
         // Save the updated or newly created record to the database
         $storedRecord->save();
+    }
+
+
+    /**
+     * Deletes all Conflict record for the server
+     * @param string $ldapServerID - The ID of the LDAP server.
+     * @return AnswerStructure
+     */
+    static public function deleteServerConflicts(string $ldapServerID): AnswerStructure
+    {
+        $record = Conflicts::find("server_id='$ldapServerID'");
+        $res = new AnswerStructure();
+        $res->success = true;
+        foreach ($record as $conflict) {
+            $conflict->delete();
+        }
+        return $res;
     }
 }
