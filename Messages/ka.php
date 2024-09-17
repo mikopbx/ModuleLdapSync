@@ -71,7 +71,6 @@ return [
     'module_ldap_TableColumnAutoSync' => 'ავტომატური სინქრონიზაცია',
     'module_ldap_PBX_UPDATE_CONFLICT' => 'PBX',
     'module_ldap_LDAP_UPDATE_CONFLICT' => 'LDAP/AD',
-    'module_ldap_TestsTabHeader' => 'ტესტირება',
     'module_ldap_ConflictsTabHeader' => 'სინქრონიზაციის კონფლიქტები',
     'module_ldap_NoAnyConflicts' => 'პრობლემები არ მოიძებნა',
     'module_ldap_deleteCurrentConflict' => 'წაშალეთ მიმდინარე ჩანაწერი, არ ცვლის მონაცემებს არც PBX-ში და არც LDAP/AD სერვერის მხარეს',

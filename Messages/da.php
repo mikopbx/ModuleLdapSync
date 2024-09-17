@@ -69,7 +69,6 @@ return [
     'module_ldap_ValidateUserEmailAttributeIsEmpty' => 'Attributten med brugerens e-mail i domænet er ikke udfyldt',
     'module_ldap_ValidateUserAccountControlIsEmpty' => 'Attributten med attributten for brugeraktivitet i domænet er ikke udfyldt',
     'module_ldap_TableColumnAutoSync' => 'Auto-synkronisering',
-    'module_ldap_TestsTabHeader' => 'Afprøvning',
     'module_ldap_ConflictsTabHeader' => 'Synkroniseringskonflikter',
     'module_ldap_NoAnyConflicts' => 'Ingen problemer fundet',
     'module_ldap_deleteCurrentConflict' => 'Slet den aktuelle post, ændrer ikke dataene hverken i PBX eller på LDAP/AD serversiden',

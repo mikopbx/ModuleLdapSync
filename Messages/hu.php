@@ -69,7 +69,6 @@ return [
     'module_ldap_OnDomainSide' => 'a domainben',
     'module_ldap_SKIPPED' => 'nem fogadott',
     'module_ldap_UPDATED' => 'feldolgozott',
-    'module_ldap_TestsTabHeader' => 'Tesztelés',
     'module_ldap_ConflictSide' => 'Aki megtagadta',
     'module_ldap_ConflictsTabHeader' => 'Szinkronizálási ütközések',
     'module_ldap_NoAnyConflicts' => 'Nem található probléma',

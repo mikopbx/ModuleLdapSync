@@ -72,7 +72,6 @@ return [
     'module_ldap_NoAnyConflicts' => 'Heç bir problem tapılmadı',
     'module_ldap_ConflictTime' => 'Tarix',
     'module_ldap_PBX_UPDATE_CONFLICT' => 'ATS',
-    'module_ldap_TestsTabHeader' => 'Test',
     'module_ldap_ConflictsTabHeader' => 'Sinxronizasiya münaqişələri',
     'module_ldap_deleteCurrentConflict' => 'Cari girişi silin, nə PBX-də, nə də LDAP/AD server tərəfində məlumatları dəyişmir',
     'module_ldap_ConflictUserData' => 'Saxlanan data',

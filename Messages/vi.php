@@ -74,7 +74,6 @@ return [
     'module_ldap_ConflictErrorMessages' => 'Lý do từ chối',
     'module_ldap_PBX_UPDATE_CONFLICT' => 'PBX',
     'module_ldap_LDAP_UPDATE_CONFLICT' => 'LDAP/QUẢNG CÁO',
-    'module_ldap_TestsTabHeader' => 'Kiểm tra',
     'module_ldap_ConflictsTabHeader' => 'Xung đột đồng bộ hóa',
     'module_ldap_NoAnyConflicts' => 'Không tìm thấy vấn đề nào',
     'module_ldap_deleteCurrentConflict' => 'Xóa mục nhập hiện tại, không thay đổi dữ liệu trong PBX hoặc phía máy chủ LDAP/AD',

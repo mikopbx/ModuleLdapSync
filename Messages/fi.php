@@ -69,7 +69,6 @@ return [
     'module_ldap_OnDomainSide' => 'verkkotunnuksessa',
     'module_ldap_SKIPPED' => 'jäi väliin',
     'module_ldap_UPDATED' => 'käsitelty',
-    'module_ldap_TestsTabHeader' => 'Testaus',
     'module_ldap_ConflictsTabHeader' => 'Synkronointiristiriidat',
     'module_ldap_NoAnyConflicts' => 'Ei ongelmia löytynyt',
     'module_ldap_ConflictErrorMessages' => 'Syy kieltäytymiseen',

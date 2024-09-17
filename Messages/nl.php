@@ -69,7 +69,6 @@ return [
     'module_ldap_ValidateUserEmailAttributeIsEmpty' => 'Het attribuut met het e-mailadres van de gebruiker in het domein is niet gevuld',
     'module_ldap_ValidateUserAccountControlIsEmpty' => 'Het attribuut met het attribuut van gebruikersactiviteit in het domein is niet gevuld',
     'module_ldap_TableColumnAutoSync' => 'Automatisch synchroniseren',
-    'module_ldap_TestsTabHeader' => 'Testen',
     'module_ldap_ConflictErrorMessages' => 'Reden voor weigering',
     'module_ldap_PBX_UPDATE_CONFLICT' => 'Telefooncentrale',
     'module_ldap_LDAP_UPDATE_CONFLICT' => 'LDAP/AD',

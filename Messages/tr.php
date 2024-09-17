@@ -70,7 +70,6 @@ return [
     'module_ldap_EnableAutoSync' => 'Zamanlanmış senkronizasyonu etkinleştir',
     'module_ldap_TableColumnAutoSync' => 'Otomatik senkronizasyon',
     'module_ldap_deleteCurrentConflict' => 'Geçerli girişi silin, PBX\'teki veya LDAP/AD sunucusu tarafındaki verileri değiştirmez',
-    'module_ldap_TestsTabHeader' => 'Test',
     'module_ldap_ConflictsTabHeader' => 'Senkronizasyon çakışmaları',
     'module_ldap_NoAnyConflicts' => 'Hiçbir sorun bulunamadı',
     'module_ldap_ConflictTime' => 'Tarih',

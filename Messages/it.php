@@ -69,7 +69,6 @@ return [
     'module_ldap_ValidateUserEmailAttributeIsEmpty' => 'L\'attributo con l\'e-mail dell\'utente nel dominio non è compilato',
     'module_ldap_ValidateUserAccountControlIsEmpty' => 'L\'attributo con l\'attributo dell\'attività dell\'utente nel dominio non è compilato',
     'module_ldap_TableColumnAutoSync' => 'Sincronizzazione automatica',
-    'module_ldap_TestsTabHeader' => 'Test',
     'module_ldap_ConflictErrorMessages' => 'Motivo del rifiuto',
     'module_ldap_ConflictsTabHeader' => 'Conflitti di sincronizzazione',
     'module_ldap_NoAnyConflicts' => 'Nessun problema riscontrato',

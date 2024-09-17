@@ -69,7 +69,6 @@ return [
     'module_ldap_ValidateUserEmailAttributeIsEmpty' => 'Atrybut z adresem e-mail użytkownika w domenie nie jest wypełniony',
     'module_ldap_ValidateUserAccountControlIsEmpty' => 'Atrybut z atrybutem aktywności użytkownika w domenie nie jest wypełniony',
     'module_ldap_TableColumnAutoSync' => 'Automatyczna synchronizacja',
-    'module_ldap_TestsTabHeader' => 'Testowanie',
     'module_ldap_ConflictsTabHeader' => 'Konflikty synchronizacji',
     'module_ldap_NoAnyConflicts' => 'Nie znaleziono żadnych problemów',
     'module_ldap_deleteCurrentConflict' => 'Usunięcie aktualnego wpisu nie powoduje zmiany danych ani w centrali, ani po stronie serwera LDAP/AD',

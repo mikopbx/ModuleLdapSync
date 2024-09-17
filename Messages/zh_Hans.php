@@ -69,7 +69,6 @@ return [
     'module_ldap_ValidateUserEmailAttributeIsEmpty' => '域中用户电子邮件的属性未填写',
     'module_ldap_ValidateUserAccountControlIsEmpty' => '域内用户活动属性的属性未填写',
     'module_ldap_TableColumnAutoSync' => '自动同步',
-    'module_ldap_TestsTabHeader' => '测试',
     'module_ldap_ConflictsTabHeader' => '同步冲突',
     'module_ldap_NoAnyConflicts' => '没有发现问题',
     'module_ldap_deleteCurrentConflict' => '删除当前条目，不更改 PBX 或 LDAP/AD 服务器端的数据',

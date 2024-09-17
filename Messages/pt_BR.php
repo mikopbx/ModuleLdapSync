@@ -69,7 +69,6 @@ return [
     'module_ldap_EnableAutoSync' => 'Habilitar sincronização agendada',
     'module_ldap_ValidateUserMobileAttributeIsEmpty' => 'O atributo com o celular do usuário no domínio não está preenchido',
     'module_ldap_TableColumnAutoSync' => 'Sincronização automática',
-    'module_ldap_TestsTabHeader' => 'Teste',
     'module_ldap_ConflictsTabHeader' => 'Conflitos de sincronização',
     'module_ldap_LDAP_UPDATE_CONFLICT' => 'LDAP/AD',
     'module_ldap_NoAnyConflicts' => 'Nenhum problema encontrado',

@@ -69,7 +69,6 @@ return [
     'module_ldap_ValidateUserEmailAttributeIsEmpty' => 'O atributo com o e-mail do usuário no domínio não está preenchido',
     'module_ldap_EnableAutoSync' => 'Habilitar sincronização agendada',
     'module_ldap_TableColumnAutoSync' => 'Sincronização automática',
-    'module_ldap_TestsTabHeader' => 'Teste',
     'module_ldap_ConflictsTabHeader' => 'Conflitos de sincronização',
     'module_ldap_NoAnyConflicts' => 'Nenhum problema encontrado',
     'module_ldap_deleteCurrentConflict' => 'Excluir a entrada atual, não altera os dados no PBX ou no servidor LDAP/AD',

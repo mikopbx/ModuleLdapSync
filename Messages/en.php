@@ -71,7 +71,6 @@ return [
     'module_ldap_TableColumnAutoSync' => 'Auto-sync',
     'module_ldap_PBX_UPDATE_CONFLICT' => 'PBX',
     'module_ldap_LDAP_UPDATE_CONFLICT' => 'LDAP/AD',
-    'module_ldap_TestsTabHeader' => 'Testing',
     'module_ldap_ConflictsTabHeader' => 'Sync conflicts',
     'module_ldap_NoAnyConflicts' => 'No problems found',
     'module_ldap_deleteCurrentConflict' => 'Delete current entry, does not change data either in PBX or on LDAP/AD server side',

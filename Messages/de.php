@@ -71,7 +71,6 @@ return [
     'module_ldap_TableColumnAutoSync' => 'Automatische Synchronisation',
     'module_ldap_ConflictSide' => 'Wer weigerte sich',
     'module_ldap_ConflictErrorMessages' => 'Grund für die Ablehnung',
-    'module_ldap_TestsTabHeader' => 'Testen',
     'module_ldap_ConflictsTabHeader' => 'Synchronisierungskonflikte',
     'module_ldap_NoAnyConflicts' => 'Keine Probleme gefunden',
     'module_ldap_deleteCurrentConflict' => 'Löscht den aktuellen Eintrag, verändert weder die Daten in der TK-Anlage noch auf der LDAP/AD-Serverseite',

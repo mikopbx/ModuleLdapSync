@@ -69,7 +69,6 @@ return [
     'module_ldap_ValidateUserEmailAttributeIsEmpty' => 'Το χαρακτηριστικό με το e-mail του χρήστη στον τομέα δεν έχει συμπληρωθεί',
     'module_ldap_ValidateUserAccountControlIsEmpty' => 'Το χαρακτηριστικό με το χαρακτηριστικό της δραστηριότητας χρήστη στον τομέα δεν έχει συμπληρωθεί',
     'module_ldap_TableColumnAutoSync' => 'Αυτόματος συγχρονισμός',
-    'module_ldap_TestsTabHeader' => 'Δοκιμές',
     'module_ldap_ConflictsTabHeader' => 'Συγκρούσεις συγχρονισμού',
     'module_ldap_NoAnyConflicts' => 'Δεν βρέθηκαν προβλήματα',
     'module_ldap_deleteCurrentConflict' => 'Διαγράψτε την τρέχουσα καταχώρηση, δεν αλλάζει τα δεδομένα ούτε στο PBX ούτε στην πλευρά του διακομιστή LDAP/AD',

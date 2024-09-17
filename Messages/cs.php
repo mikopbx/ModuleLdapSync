@@ -70,7 +70,6 @@ return [
     'module_ldap_ValidateUserAccountControlIsEmpty' => 'Atribut s atributem aktivity uživatele v doméně není vyplněn',
     'module_ldap_TableColumnAutoSync' => 'Automatická synchronizace',
     'module_ldap_NoAnyConflicts' => 'Nebyly nalezeny žádné problémy',
-    'module_ldap_TestsTabHeader' => 'Testování',
     'module_ldap_ConflictsTabHeader' => 'Synchronizační konflikty',
     'module_ldap_deleteCurrentConflict' => 'Smazat aktuální záznam, nezmění data ani v ústředně ani na straně LDAP/AD serveru',
     'module_ldap_ConflictTime' => 'Datum',

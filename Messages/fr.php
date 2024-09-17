@@ -69,7 +69,6 @@ return [
     'module_ldap_ValidateUserExtensionAttributeIsEmpty' => 'L\'attribut avec le numéro de téléphone interne de l\'utilisateur dans le domaine n\'est pas renseigné',
     'module_ldap_ValidateUserAccountControlIsEmpty' => 'L\'attribut avec l\'attribut d\'activité de l\'utilisateur dans le domaine n\'est pas renseigné',
     'module_ldap_TableColumnAutoSync' => 'Synchronisation automatique',
-    'module_ldap_TestsTabHeader' => 'Essai',
     'module_ldap_ConflictsTabHeader' => 'Conflits de synchronisation',
     'module_ldap_NoAnyConflicts' => 'Aucun problème trouvé',
     'module_ldap_deleteCurrentConflict' => 'Supprime l\'entrée actuelle, ne modifie les données ni dans le PBX ni du côté du serveur LDAP/AD',

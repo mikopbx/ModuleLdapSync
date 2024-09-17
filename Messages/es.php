@@ -70,7 +70,6 @@ return [
     'module_ldap_EnableAutoSync' => 'Habilitar sincronización programada',
     'module_ldap_TableColumnAutoSync' => 'Sincronización automática',
     'module_ldap_PBX_UPDATE_CONFLICT' => 'PBX',
-    'module_ldap_TestsTabHeader' => 'Pruebas',
     'module_ldap_ConflictsTabHeader' => 'Conflictos de sincronización',
     'module_ldap_NoAnyConflicts' => 'No se encontraron problemas',
     'module_ldap_deleteCurrentConflict' => 'Elimina la entrada actual, no cambia los datos ni en la PBX ni en el lado del servidor LDAP/AD',

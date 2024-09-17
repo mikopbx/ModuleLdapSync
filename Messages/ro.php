@@ -69,7 +69,6 @@ return [
     'module_ldap_ValidateUserEmailAttributeIsEmpty' => 'Atributul cu e-mailul utilizatorului din domeniu nu este completat',
     'module_ldap_ValidateUserAccountControlIsEmpty' => 'Atributul cu atributul activității utilizatorului în domeniu nu este completat',
     'module_ldap_TableColumnAutoSync' => 'Auto-sincronizare',
-    'module_ldap_TestsTabHeader' => 'Testare',
     'module_ldap_ConflictTime' => 'Data',
     'module_ldap_ConflictsTabHeader' => 'Conflicte de sincronizare',
     'module_ldap_NoAnyConflicts' => 'Nu s-au găsit probleme',

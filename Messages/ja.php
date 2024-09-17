@@ -69,7 +69,6 @@ return [
     'module_ldap_ValidateUserEmailAttributeIsEmpty' => 'ドメイン内のユーザーの電子メールの属性が入力されていません',
     'module_ldap_ValidateUserAccountControlIsEmpty' => 'ドメイン内のユーザーアクティビティの属性を持つ属性が入力されていません',
     'module_ldap_TableColumnAutoSync' => '自動同期',
-    'module_ldap_TestsTabHeader' => 'テスト',
     'module_ldap_ConflictsTabHeader' => '同期の競合',
     'module_ldap_NoAnyConflicts' => '問題は見つかりませんでした',
     'module_ldap_ConflictTime' => '日付',

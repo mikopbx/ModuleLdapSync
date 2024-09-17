@@ -69,7 +69,6 @@ return [
     'module_ldap_OnDomainSide' => 'ในโดเมน',
     'module_ldap_SKIPPED' => 'พลาด',
     'module_ldap_UPDATED' => 'ประมวลผล',
-    'module_ldap_TestsTabHeader' => 'การทดสอบ',
     'module_ldap_ConflictsTabHeader' => 'ข้อขัดแย้งในการซิงโครไนซ์',
     'module_ldap_NoAnyConflicts' => 'ไม่พบปัญหา',
     'module_ldap_ConflictUserData' => 'ข้อมูลที่บันทึกไว้',
