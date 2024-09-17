@@ -78,4 +78,8 @@ return [
     'module_ldap_ConflictErrorMessages' => 'Reddetme nedeni',
     'module_ldap_PBX_UPDATE_CONFLICT' => 'PBX',
     'module_ldap_LDAP_UPDATE_CONFLICT' => 'LDAP/AD',
+    'module_ldap_CONFLICT' => 'anlaşmazlık',
+    'module_ldap_SyncTabHeader' => 'Senkronizasyon ve çatışmalar',
+    'module_ldap_TabAttributes' => 'Senkronizasyon alanları',
+    'module_ldap_DeleteAllConflicts' => 'Tüm çakışmaları temizle',
 ];
