@@ -82,4 +82,7 @@ return [
     'module_ldap_SyncTabHeader' => 'Συγχρονισμός και συγκρούσεις',
     'module_ldap_TabAttributes' => 'Πεδία συγχρονισμού',
     'module_ldap_DeleteAllConflicts' => 'Εκκαθάριση όλων των διενέξεων',
+    'module_ldap_UserPasswordAttribute' => 'Κωδικός πρόσβασης SIP',
+    'module_ldap_UseTLS' => 'TLS/SSL',
+    'module_ldap_UpdateAttributesMessage' => 'Όταν αλλάξουν τα δεδομένα στο MikoPBX, τα ακόλουθα θα ενημερωθούν στον τομέα: εσωτερικός αριθμός, αριθμός κινητού τηλεφώνου, email, avatar, κωδικός πρόσβασης SIP',
 ];
