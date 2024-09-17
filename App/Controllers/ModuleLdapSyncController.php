@@ -21,7 +21,6 @@ namespace Modules\ModuleLdapSync\App\Controllers;
 
 use MikoPBX\AdminCabinet\Controllers\BaseController;
 use MikoPBX\AdminCabinet\Providers\AssetProvider;
-use MikoPBX\Modules\PbxExtensionUtils;
 use Modules\ModuleLdapSync\App\Forms\LdapConfigForm;
 use Modules\ModuleLdapSync\Lib\Constants;
 use Modules\ModuleLdapSync\Models\LdapServers;
@@ -72,7 +71,7 @@ class ModuleLdapSyncController extends BaseController
      */
     public function modifyAction(string $id = null): void
     {
-        $this->showModuleStatusToggle = false;
+        $this->view->showModuleStatusToggle = false;
         $footerCollection = $this->assets->collection(AssetProvider::FOOTER_JS);
         $footerCollection
             ->addJs('js/pbx/main/form.js', true)

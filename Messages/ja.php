@@ -69,4 +69,13 @@ return [
     'module_ldap_ValidateUserEmailAttributeIsEmpty' => 'ドメイン内のユーザーの電子メールの属性が入力されていません',
     'module_ldap_ValidateUserAccountControlIsEmpty' => 'ドメイン内のユーザーアクティビティの属性を持つ属性が入力されていません',
     'module_ldap_TableColumnAutoSync' => '自動同期',
+    'module_ldap_ConflictsTabHeader' => '同期の競合',
+    'module_ldap_NoAnyConflicts' => '問題は見つかりませんでした',
+    'module_ldap_ConflictTime' => '日付',
+    'module_ldap_deleteCurrentConflict' => '現在のエントリを削除します。PBX または LDAP/AD サーバー側のデータは変更されません。',
+    'module_ldap_ConflictUserData' => 'セーブデータ',
+    'module_ldap_ConflictSide' => '誰が断ったのか',
+    'module_ldap_ConflictErrorMessages' => '拒否理由',
+    'module_ldap_PBX_UPDATE_CONFLICT' => 'PBX',
+    'module_ldap_LDAP_UPDATE_CONFLICT' => 'LDAP/AD',
 ];

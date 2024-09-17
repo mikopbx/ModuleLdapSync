@@ -69,4 +69,13 @@ return [
     'module_ldap_EnableAutoSync' => 'Habilitar sincronização agendada',
     'module_ldap_ValidateUserMobileAttributeIsEmpty' => 'O atributo com o celular do usuário no domínio não está preenchido',
     'module_ldap_TableColumnAutoSync' => 'Sincronização automática',
+    'module_ldap_ConflictsTabHeader' => 'Conflitos de sincronização',
+    'module_ldap_LDAP_UPDATE_CONFLICT' => 'LDAP/AD',
+    'module_ldap_NoAnyConflicts' => 'Nenhum problema encontrado',
+    'module_ldap_deleteCurrentConflict' => 'Excluir a entrada atual, não altera os dados no PBX ou no servidor LDAP/AD',
+    'module_ldap_ConflictTime' => 'Data',
+    'module_ldap_ConflictUserData' => 'Dados salvos',
+    'module_ldap_ConflictSide' => 'Quem recusou',
+    'module_ldap_ConflictErrorMessages' => 'Motivo da recusa',
+    'module_ldap_PBX_UPDATE_CONFLICT' => 'PABX',
 ];

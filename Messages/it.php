@@ -69,4 +69,13 @@ return [
     'module_ldap_ValidateUserEmailAttributeIsEmpty' => 'L\'attributo con l\'e-mail dell\'utente nel dominio non è compilato',
     'module_ldap_ValidateUserAccountControlIsEmpty' => 'L\'attributo con l\'attributo dell\'attività dell\'utente nel dominio non è compilato',
     'module_ldap_TableColumnAutoSync' => 'Sincronizzazione automatica',
+    'module_ldap_ConflictErrorMessages' => 'Motivo del rifiuto',
+    'module_ldap_ConflictsTabHeader' => 'Conflitti di sincronizzazione',
+    'module_ldap_NoAnyConflicts' => 'Nessun problema riscontrato',
+    'module_ldap_deleteCurrentConflict' => 'Elimina la voce corrente, non modifica i dati né nel PBX né sul lato server LDAP/AD',
+    'module_ldap_ConflictTime' => 'Data',
+    'module_ldap_ConflictUserData' => 'Dati salvati',
+    'module_ldap_ConflictSide' => 'Chi ha rifiutato',
+    'module_ldap_PBX_UPDATE_CONFLICT' => 'PBX',
+    'module_ldap_LDAP_UPDATE_CONFLICT' => 'LDAP/AD',
 ];

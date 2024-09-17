@@ -121,6 +121,15 @@ class LdapServers extends ModulesModelsBase
                 'alias'      => 'ADUsers',
             ]
         );
+
+        $this->hasMany(
+            'id',
+            Conflicts::class,
+            'server_id',
+            [
+                'alias'      => 'Conflicts',
+            ]
+        );
     }
 
 }

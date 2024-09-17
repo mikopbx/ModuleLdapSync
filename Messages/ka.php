@@ -69,4 +69,13 @@ return [
     'module_ldap_ValidateUserAccountControlIsEmpty' => 'დომენში მომხმარებლის აქტივობის ატრიბუტით ატრიბუტი არ არის შევსებული',
     'module_ldap_ValidateUserMobileAttributeIsEmpty' => 'დომენში მომხმარებლის მობილური ტელეფონის ატრიბუტი არ არის შევსებული',
     'module_ldap_TableColumnAutoSync' => 'ავტომატური სინქრონიზაცია',
+    'module_ldap_PBX_UPDATE_CONFLICT' => 'PBX',
+    'module_ldap_LDAP_UPDATE_CONFLICT' => 'LDAP/AD',
+    'module_ldap_ConflictsTabHeader' => 'სინქრონიზაციის კონფლიქტები',
+    'module_ldap_NoAnyConflicts' => 'პრობლემები არ მოიძებნა',
+    'module_ldap_deleteCurrentConflict' => 'წაშალეთ მიმდინარე ჩანაწერი, არ ცვლის მონაცემებს არც PBX-ში და არც LDAP/AD სერვერის მხარეს',
+    'module_ldap_ConflictTime' => 'თარიღი',
+    'module_ldap_ConflictUserData' => 'შენახული მონაცემები',
+    'module_ldap_ConflictSide' => 'ვინც უარი თქვა',
+    'module_ldap_ConflictErrorMessages' => 'უარის მიზეზი',
 ];

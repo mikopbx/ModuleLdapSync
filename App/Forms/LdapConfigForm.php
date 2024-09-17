@@ -54,7 +54,7 @@ class LdapConfigForm extends BaseForm
         ]));
 
         // AdministrativeLogin
-        $this->add(new Text('administrativeLogin', ['placeholder' => 'Domain admin login']));
+        $this->add(new Text('administrativeLogin', ['placeholder' => 'cn=admin, dc=example, dc=com']));
 
         // AdministrativePassword
         $this->add(new Password('administrativePasswordHidden', [

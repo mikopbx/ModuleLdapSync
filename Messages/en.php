@@ -69,4 +69,13 @@ return [
     'module_ldap_ValidateUserEmailAttributeIsEmpty' => 'The attribute with the user\'s e-mail in the domain is not filled',
     'module_ldap_ValidateUserAccountControlIsEmpty' => 'The attribute with the attribute of user activity in the domain is not filled',
     'module_ldap_TableColumnAutoSync' => 'Auto-sync',
+    'module_ldap_PBX_UPDATE_CONFLICT' => 'PBX',
+    'module_ldap_LDAP_UPDATE_CONFLICT' => 'LDAP/AD',
+    'module_ldap_ConflictsTabHeader' => 'Sync conflicts',
+    'module_ldap_NoAnyConflicts' => 'No problems found',
+    'module_ldap_deleteCurrentConflict' => 'Delete current entry, does not change data either in PBX or on LDAP/AD server side',
+    'module_ldap_ConflictTime' => 'Date',
+    'module_ldap_ConflictUserData' => 'Stored data',
+    'module_ldap_ConflictSide' => 'Who refused?',
+    'module_ldap_ConflictErrorMessages' => 'Reason for refusal',
 ];

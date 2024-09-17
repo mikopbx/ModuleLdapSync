@@ -69,4 +69,13 @@ return [
     'module_ldap_ValidateUserAccountControlIsEmpty' => 'Alandaki kullanıcı etkinliği özelliğine sahip özellik doldurulmamış',
     'module_ldap_EnableAutoSync' => 'Zamanlanmış senkronizasyonu etkinleştir',
     'module_ldap_TableColumnAutoSync' => 'Otomatik senkronizasyon',
+    'module_ldap_deleteCurrentConflict' => 'Geçerli girişi silin, PBX\'teki veya LDAP/AD sunucusu tarafındaki verileri değiştirmez',
+    'module_ldap_ConflictsTabHeader' => 'Senkronizasyon çakışmaları',
+    'module_ldap_NoAnyConflicts' => 'Hiçbir sorun bulunamadı',
+    'module_ldap_ConflictTime' => 'Tarih',
+    'module_ldap_ConflictUserData' => 'Kaydedilen veriler',
+    'module_ldap_ConflictSide' => 'Kim reddetti',
+    'module_ldap_ConflictErrorMessages' => 'Reddetme nedeni',
+    'module_ldap_PBX_UPDATE_CONFLICT' => 'PBX',
+    'module_ldap_LDAP_UPDATE_CONFLICT' => 'LDAP/AD',
 ];

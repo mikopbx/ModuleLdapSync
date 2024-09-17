@@ -23,6 +23,7 @@ use LdapRecord\Container;
 use MikoPBX\Common\Handlers\CriticalErrorsHandler;
 use MikoPBX\Common\Providers\ManagedCacheProvider;
 
+
 include_once __DIR__.'/../vendor/autoload.php';
 
 /**
@@ -184,30 +185,58 @@ class LdapSyncConnector extends \Phalcon\Di\Injectable
             }
             $requestAttributes = array_values($this->userAttributes);
 
-            $page = $this->redis->getAdapter()->incr($this->redisKeyPrefix . '-users-list:page');
+            $page = (int) $this->redis->getAdapter()->incr($this->redisKeyPrefix . '-users-list:page');
+            $itemsPerPage = 20;
 
-            $users = $query->select($requestAttributes)->slice($page, 20);
+            if (is_a($this->userModelClass,\LdapRecord\Models\ActiveDirectory\User::class)){
+                $items = $query->select($requestAttributes)->slice($page, $itemsPerPage)->items();
+            } else {
+                $items = $query->select($requestAttributes)->get();
+            }
 
-            if ($page >= $users->lastPage()){
-                // Stop paginating
+
+            // If the server returned more records than requested, apply client-side pagination
+            if ($items->count() > $itemsPerPage) {
+                // Convert the result to an array for easier manipulation
+                $allUsers = $items->toArray();
+
+                // Calculate the offset and take the required number of records
+                $offset = ($page - 1) * $itemsPerPage;
+                $paginatedUsers = array_slice($allUsers, $offset, $itemsPerPage);
+            } else {
+                // Use the result returned by the server if it fits within the limit
+                $paginatedUsers = $items->toArray();
+            }
+
+            // Check if we've reached the last page
+            if (count($paginatedUsers) < $itemsPerPage) {
+                // Delete the Redis key if we're at the last page
                 $this->redis->getAdapter()->del($this->redisKeyPrefix . '-users-list:page');
-            };
+            }
 
-            foreach ($users->items() as $user) {
+            foreach ($paginatedUsers as $user) {
                 $record = [];
                 foreach ($requestAttributes as $attribute){
                     if ($user->hasAttribute($attribute)){
                         if ($attribute===$this->userAttributes[Constants::USER_AVATAR_ATTR]) {
                             $binData = $user->getFirstAttribute($attribute);
                             $record[$attribute] = 'data:image/jpeg;base64,'.base64_encode($binData);
+                        } elseIf (
+                                !is_a($user, \LdapRecord\Models\ActiveDirectory\User::class)
+                                &&
+                                $attribute===$this->userAttributes[Constants::USER_ACCOUNT_CONTROL_ATTR]
+                                ) {
+                            $record[Constants::USER_DISABLED] = true;
                         } else {
                             $record[$attribute]= $user->getFirstAttribute($attribute);
                         }
-
                     }
                 }
                 $record[Constants::USER_GUID_ATTR] = $user->getConvertedGuid();
-                $record[Constants::USER_DISABLED] = $user->isDisabled();
+                if (is_a($user, \LdapRecord\Models\ActiveDirectory\User::class)){
+                    $record[Constants::USER_DISABLED] = $user->isDisabled();
+                }
+
                 uksort($record, function($a, $b){
                     return $a>$this->userAttributes[Constants::USER_NAME_ATTR];
                 });
