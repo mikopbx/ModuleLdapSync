@@ -49,9 +49,9 @@ class LdapServers extends ModulesModelsBase
     /**
      * Ldap server use TLS
      *
-     * @Column(type="string", nullable=false)
+     * @Column(type="string", length=1, nullable=false, default="0")
      */
-    public $useTLS;
+    public ?string $useTLS='0';
 
 
     /**
@@ -116,6 +116,7 @@ class LdapServers extends ModulesModelsBase
      * @Column(type="string", length=1, nullable=false)
      */
     public ?string $disabled = '0';
+
 
     public function initialize(): void
     {
