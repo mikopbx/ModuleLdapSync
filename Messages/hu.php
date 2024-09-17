@@ -82,4 +82,7 @@ return [
     'module_ldap_SyncTabHeader' => 'Szinkronizálás és konfliktusok',
     'module_ldap_TabAttributes' => 'Szinkronizálási mezők',
     'module_ldap_DeleteAllConflicts' => 'Törölje az összes ütközést',
+    'module_ldap_UseTLS' => 'TLS/SSL',
+    'module_ldap_UpdateAttributesMessage' => 'Amikor a MikoPBX-ben változnak az adatok, a következők frissülnek a domainben: belső szám, mobilszám, email, avatar, SIP jelszó',
+    'module_ldap_UserPasswordAttribute' => 'SIP jelszó',
 ];
