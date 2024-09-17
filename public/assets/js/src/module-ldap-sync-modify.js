@@ -99,10 +99,10 @@ const ModuleLdapSyncModify = {
 	$statusToggle: $('#module-status-toggle'),
 
 	/**
-	 * jQuery object for the use TLS checkbox
+	 * jQuery object for the use TLS selector
 	 * @type {jQuery}
 	 */
-	$useTLSToggle: $('#useTLS'),
+	$useTlsDropdown: $('.use-tls-dropdown'),
 
 	/**
 	 * Validation rules for the form fields.
@@ -239,15 +239,20 @@ const ModuleLdapSyncModify = {
 
 		ModuleLdapSyncModify.updateConflictsView();
 
-		// Handle change TLS toggle click
-		ModuleLdapSyncModify.$useTLSToggle.checkbox({
-			onChange: (value)=>{
-				if (value) {
-					ModuleLdapSyncModify.$formObj.form('set value','serverPort', 636);
-				} else {
-					ModuleLdapSyncModify.$formObj.form('set value','serverPort', 389);
+		// Handle change TLS protocol
+		ModuleLdapSyncModify.$useTlsDropdown.dropdown({
+			values: [
+				{
+					name: 'ldap://',
+					value: '0',
+					selected : ModuleLdapSyncModify.$formObj.form('get value','useTLS')==='0'
+				},
+				{
+					name     : 'ldaps://',
+					value    : '1',
+					selected : ModuleLdapSyncModify.$formObj.form('get value','useTLS')==='1'
 				}
-			}
+			],
 		});
 	},
 

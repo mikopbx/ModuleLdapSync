@@ -53,12 +53,8 @@ class LdapConfigForm extends BaseForm
             'value' =>$entity->serverPort ?? '389'
         ]));
 
-        // Use TLS checkbox
-        $checkArr = [];
-        if ($entity->useTLS === '1') {
-            $checkArr['checked'] = 'checked';
-        }
-        $this->add(new Check('useTLS', $checkArr));
+        // Use TLS dropdown
+        $this->add(new hidden('useTLS'));
 
         // AdministrativeLogin
         $this->add(new Text('administrativeLogin', ['placeholder' => 'cn=admin, dc=example, dc=com']));

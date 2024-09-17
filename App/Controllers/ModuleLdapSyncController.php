@@ -121,9 +121,6 @@ class ModuleLdapSyncController extends BaseController
                 case 'disabled':
                     $serverConfig->$name = $data['autosync']==='1'?'0':'1';
                     break;
-                case 'useTLS':
-                    $serverConfig->$name = $data['useTLS']==='1'?'0':'1';
-                    break;
                 case 'administrativePassword':
                     if (isset($data['administrativePasswordHidden'])
                         && $data['administrativePasswordHidden'] !== Constants::HIDDEN_PASSWORD) {
