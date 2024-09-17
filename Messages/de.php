@@ -78,4 +78,8 @@ return [
     'module_ldap_ConflictUserData' => 'Gespeicherte Daten',
     'module_ldap_PBX_UPDATE_CONFLICT' => 'Telefonanlage',
     'module_ldap_LDAP_UPDATE_CONFLICT' => 'LDAP/AD',
+    'module_ldap_CONFLICT' => 'Konflikt',
+    'module_ldap_SyncTabHeader' => 'Synchronisation und Konflikte',
+    'module_ldap_TabAttributes' => 'Synchronisierungsfelder',
+    'module_ldap_DeleteAllConflicts' => 'Beseitigen Sie alle Konflikte',
 ];
