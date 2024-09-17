@@ -78,4 +78,8 @@ return [
     'module_ldap_ConflictErrorMessages' => 'Λόγος άρνησης',
     'module_ldap_PBX_UPDATE_CONFLICT' => 'PBX',
     'module_ldap_LDAP_UPDATE_CONFLICT' => 'ΛΔΑΠ/ΑΔ',
+    'module_ldap_CONFLICT' => 'σύγκρουση',
+    'module_ldap_SyncTabHeader' => 'Συγχρονισμός και συγκρούσεις',
+    'module_ldap_TabAttributes' => 'Πεδία συγχρονισμού',
+    'module_ldap_DeleteAllConflicts' => 'Εκκαθάριση όλων των διενέξεων',
 ];

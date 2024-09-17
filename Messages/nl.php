@@ -78,4 +78,8 @@ return [
     'module_ldap_ConflictTime' => 'Datum',
     'module_ldap_ConflictUserData' => 'Opgeslagen gegevens',
     'module_ldap_ConflictSide' => 'Wie weigerde',
+    'module_ldap_DeleteAllConflicts' => 'Wis alle conflicten',
+    'module_ldap_CONFLICT' => 'conflict',
+    'module_ldap_SyncTabHeader' => 'Synchronisatie en conflicten',
+    'module_ldap_TabAttributes' => 'Synchronisatievelden',
 ];

@@ -78,4 +78,8 @@ return [
     'module_ldap_ConflictSide' => 'Chi ha rifiutato',
     'module_ldap_PBX_UPDATE_CONFLICT' => 'PBX',
     'module_ldap_LDAP_UPDATE_CONFLICT' => 'LDAP/AD',
+    'module_ldap_CONFLICT' => 'conflitto',
+    'module_ldap_SyncTabHeader' => 'Sincronizzazione e conflitti',
+    'module_ldap_TabAttributes' => 'Campi di sincronizzazione',
+    'module_ldap_DeleteAllConflicts' => 'Cancella tutti i conflitti',
 ];

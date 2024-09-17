@@ -78,4 +78,8 @@ return [
     'module_ldap_ConflictErrorMessages' => 'Az elutasítás oka',
     'module_ldap_PBX_UPDATE_CONFLICT' => 'PBX',
     'module_ldap_LDAP_UPDATE_CONFLICT' => 'LDAP/AD',
+    'module_ldap_CONFLICT' => 'konfliktus',
+    'module_ldap_SyncTabHeader' => 'Szinkronizálás és konfliktusok',
+    'module_ldap_TabAttributes' => 'Szinkronizálási mezők',
+    'module_ldap_DeleteAllConflicts' => 'Törölje az összes ütközést',
 ];

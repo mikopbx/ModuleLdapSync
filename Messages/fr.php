@@ -78,4 +78,8 @@ return [
     'module_ldap_ConflictErrorMessages' => 'Motif du refus',
     'module_ldap_PBX_UPDATE_CONFLICT' => 'PBX',
     'module_ldap_LDAP_UPDATE_CONFLICT' => 'LDAP/ANNONCE',
+    'module_ldap_CONFLICT' => 'conflit',
+    'module_ldap_SyncTabHeader' => 'Synchronisation et conflits',
+    'module_ldap_TabAttributes' => 'Champs de synchronisation',
+    'module_ldap_DeleteAllConflicts' => 'Effacer tous les conflits',
 ];

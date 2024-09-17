@@ -78,4 +78,8 @@ return [
     'module_ldap_ConflictErrorMessages' => 'เหตุผลในการปฏิเสธ',
     'module_ldap_PBX_UPDATE_CONFLICT' => 'ตู้สาขา',
     'module_ldap_LDAP_UPDATE_CONFLICT' => 'แอลดีเอพี/โฆษณา',
+    'module_ldap_CONFLICT' => 'ขัดแย้ง',
+    'module_ldap_SyncTabHeader' => 'การซิงโครไนซ์และความขัดแย้ง',
+    'module_ldap_TabAttributes' => 'ฟิลด์การซิงโครไนซ์',
+    'module_ldap_DeleteAllConflicts' => 'เคลียร์ข้อขัดแย้งทั้งหมด',
 ];

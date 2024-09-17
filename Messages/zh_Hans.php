@@ -78,4 +78,8 @@ return [
     'module_ldap_ConflictErrorMessages' => '拒绝原因',
     'module_ldap_PBX_UPDATE_CONFLICT' => '集团电话',
     'module_ldap_LDAP_UPDATE_CONFLICT' => 'LDAP/AD',
+    'module_ldap_CONFLICT' => '冲突',
+    'module_ldap_SyncTabHeader' => '同步和冲突',
+    'module_ldap_TabAttributes' => '同步字段',
+    'module_ldap_DeleteAllConflicts' => '清除所有冲突',
 ];

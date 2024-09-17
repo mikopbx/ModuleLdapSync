@@ -78,4 +78,8 @@ return [
     'module_ldap_ConflictErrorMessages' => 'Powód odmowy',
     'module_ldap_PBX_UPDATE_CONFLICT' => 'centrala telefoniczna',
     'module_ldap_LDAP_UPDATE_CONFLICT' => 'LDAP/AD',
+    'module_ldap_CONFLICT' => 'konflikt',
+    'module_ldap_SyncTabHeader' => 'Synchronizacja i konflikty',
+    'module_ldap_TabAttributes' => 'Pola synchronizacji',
+    'module_ldap_DeleteAllConflicts' => 'Usuń wszystkie konflikty',
 ];

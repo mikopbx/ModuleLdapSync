@@ -78,4 +78,8 @@ return [
     'module_ldap_ConflictSide' => 'Quem recusou',
     'module_ldap_ConflictErrorMessages' => 'Motivo da recusa',
     'module_ldap_PBX_UPDATE_CONFLICT' => 'PABX',
+    'module_ldap_CONFLICT' => 'conflito',
+    'module_ldap_SyncTabHeader' => 'Sincronização e conflitos',
+    'module_ldap_TabAttributes' => 'Campos de sincronização',
+    'module_ldap_DeleteAllConflicts' => 'Limpe todos os conflitos',
 ];
