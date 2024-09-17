@@ -78,4 +78,8 @@ return [
     'module_ldap_ConflictErrorMessages' => 'Důvod odmítnutí',
     'module_ldap_PBX_UPDATE_CONFLICT' => 'PBX',
     'module_ldap_LDAP_UPDATE_CONFLICT' => 'LDAP/AD',
+    'module_ldap_CONFLICT' => 'konflikt',
+    'module_ldap_SyncTabHeader' => 'Synchronizace a konflikty',
+    'module_ldap_TabAttributes' => 'Synchronizační pole',
+    'module_ldap_DeleteAllConflicts' => 'Vymažte všechny konflikty',
 ];
