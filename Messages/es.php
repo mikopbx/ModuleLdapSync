@@ -78,4 +78,8 @@ return [
     'module_ldap_ConflictSide' => 'quien se negó',
     'module_ldap_ConflictErrorMessages' => 'Motivo del rechazo',
     'module_ldap_LDAP_UPDATE_CONFLICT' => 'LDAP/AD',
+    'module_ldap_CONFLICT' => 'conflicto',
+    'module_ldap_SyncTabHeader' => 'Sincronización y conflictos',
+    'module_ldap_TabAttributes' => 'Campos de sincronización',
+    'module_ldap_DeleteAllConflicts' => 'Borrar todos los conflictos',
 ];
