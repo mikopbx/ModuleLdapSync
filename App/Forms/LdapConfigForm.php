@@ -53,6 +53,13 @@ class LdapConfigForm extends BaseForm
             'value' =>$entity->serverPort ?? '389'
         ]));
 
+        // Use TLS checkbox
+        $checkArr = [];
+        if ($entity->useTLS === '1') {
+            $checkArr['checked'] = 'checked';
+        }
+        $this->add(new Check('useTLS', $checkArr));
+
         // AdministrativeLogin
         $this->add(new Text('administrativeLogin', ['placeholder' => 'cn=admin, dc=example, dc=com']));
 
@@ -132,6 +139,12 @@ class LdapConfigForm extends BaseForm
         $this->add(new Text(Constants::USER_ACCOUNT_CONTROL_ATTR, [
             'placeholder' => 'userAccountControl',
             'value' => $attributes[Constants::USER_ACCOUNT_CONTROL_ATTR] ?? 'userAccountControl'
+        ]));
+
+        //  UserPasswordAttribute
+        $this->add(new Text(Constants::USER_PASSWORD_ATTR, [
+            'placeholder' => 'sipPassword',
+            'value' => $attributes[Constants::USER_PASSWORD_ATTR]
         ]));
 
         // OrganizationUnit

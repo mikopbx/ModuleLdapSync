@@ -17,6 +17,14 @@
                     {{ ldapForm.render('serverPort') }}
                 </div>
             </div>
+            <div class="field">
+                <div class="ui segment">
+                    <div class="ui toggle checkbox">
+                        {{ ldapForm.render('useTLS') }}
+                        <label for="useTLS">{{ t._('module_ldap_UseTLS') }}</label>
+                    </div>
+                </div>
+            </div>
             <div class="eight wide field">
                 <label for="baseDN">{{ t._('module_ldap_LdapBaseDN') }}</label>
                 {{ ldapForm.render('baseDN') }}
@@ -44,6 +52,7 @@
         </div>
 
         <div class="field">
+            <div class="ui info message"><div class="content"><p>{{ t._('module_ldap_UpdateAttributesMessage')}}</p>></div></div>
             <div class="ui segment">
                 <div class="ui toggle checkbox">
                     {{ ldapForm.render('updateAttributes') }}

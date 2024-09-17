@@ -48,6 +48,13 @@ class LdapSyncConnector extends \Phalcon\Di\Injectable
     private string $serverPort;
 
     /**
+     * Use TLS for LDAP connection.
+     *
+     * @var bool
+     */
+    private bool $useTLS;
+
+    /**
      * The base DN (Distinguished Name) for LDAP operations.
      *
      * @var string
@@ -115,6 +122,7 @@ class LdapSyncConnector extends \Phalcon\Di\Injectable
         // Initialize properties from provided LDAP credentials
         $this->serverName = $ldapCredentials['serverName'];
         $this->serverPort = $ldapCredentials['serverPort'];
+        $this->useTLS = $ldapCredentials['useTLS']==='1';
         $this->baseDN = $ldapCredentials['baseDN'];
         $this->administrativeLogin = $ldapCredentials['administrativeLogin'];
         $this->administrativePassword = $ldapCredentials['administrativePassword'];
@@ -135,6 +143,7 @@ class LdapSyncConnector extends \Phalcon\Di\Injectable
             'username' => $this->administrativeLogin,
             'password' => $this->administrativePassword,
             'timeout'  => 15,
+            'use_tls'  => $this->useTLS,
         ]);
 
         $this->redis = $this->getDI()->getShared(ManagedCacheProvider::SERVICE_NAME);
@@ -284,6 +293,7 @@ class LdapSyncConnector extends \Phalcon\Di\Injectable
                 Constants::USER_MOBILE_ATTR,
                 Constants::USER_EMAIL_ATTR,
                 Constants::USER_AVATAR_ATTR,
+                Constants::USER_PASSWORD_ATTR,
             ];
 
             // Query LDAP for the user

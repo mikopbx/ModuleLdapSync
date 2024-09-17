@@ -99,6 +99,12 @@ const ModuleLdapSyncModify = {
 	$statusToggle: $('#module-status-toggle'),
 
 	/**
+	 * jQuery object for the use TLS checkbox
+	 * @type {jQuery}
+	 */
+	$useTLSToggle: $('#useTLS'),
+
+	/**
 	 * Validation rules for the form fields.
 	 * @type {Object}
 	 */
@@ -232,6 +238,17 @@ const ModuleLdapSyncModify = {
 		});
 
 		ModuleLdapSyncModify.updateConflictsView();
+
+		// Handle change TLS toggle click
+		ModuleLdapSyncModify.$useTLSToggle.checkbox({
+			onChange: (value)=>{
+				if (value) {
+					ModuleLdapSyncModify.$formObj.form('set value','serverPort', 636);
+				} else {
+					ModuleLdapSyncModify.$formObj.form('set value','serverPort', 389);
+				}
+			}
+		});
 	},
 
 	/**

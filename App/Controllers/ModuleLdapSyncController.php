@@ -83,6 +83,7 @@ class ModuleLdapSyncController extends BaseController
         if (!$serverConfig) {
             $serverConfig = new LdapServers();
             $serverConfig->disabled = '1';
+            $serverConfig->useTLS = '0';
         }
 
         $this->view->setVar('hiddenAttributes', json_encode([
@@ -120,6 +121,9 @@ class ModuleLdapSyncController extends BaseController
                 case 'disabled':
                     $serverConfig->$name = $data['autosync']==='1'?'0':'1';
                     break;
+                case 'useTLS':
+                    $serverConfig->$name = $data['useTLS']==='1'?'0':'1';
+                    break;
                 case 'administrativePassword':
                     if (isset($data['administrativePasswordHidden'])
                         && $data['administrativePasswordHidden'] !== Constants::HIDDEN_PASSWORD) {
@@ -142,6 +146,7 @@ class ModuleLdapSyncController extends BaseController
             Constants::USER_EXTENSION_ATTR => $data[Constants::USER_EXTENSION_ATTR],
             Constants::USER_AVATAR_ATTR => $data[Constants::USER_AVATAR_ATTR],
             Constants::USER_ACCOUNT_CONTROL_ATTR => $data[Constants::USER_ACCOUNT_CONTROL_ATTR],
+            Constants::USER_PASSWORD_ATTR => $data[Constants::USER_PASSWORD_ATTR],
         ];
         $serverConfig->attributes = json_encode($attributes);
 

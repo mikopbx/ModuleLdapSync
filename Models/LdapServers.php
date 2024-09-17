@@ -45,6 +45,15 @@ class LdapServers extends ModulesModelsBase
      */
     public $serverPort;
 
+
+    /**
+     * Ldap server use TLS
+     *
+     * @Column(type="string", nullable=false)
+     */
+    public $useTLS;
+
+
     /**
      * Login of user with read rights on the domain
      *

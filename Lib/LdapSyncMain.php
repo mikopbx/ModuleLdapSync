@@ -408,6 +408,8 @@ class LdapSyncMain extends Injectable
 
         $dataStructure->sip_transport = trim($dataStructure->sip_transport);
 
+        $dataStructure->sip_secret = $userDataFromLdap[Constants::USER_PASSWORD_ATTR] ?? $dataStructure->sip_secret;
+
         // Save user data through the CORE API
         $restAnswer = $di->get(PBXCoreRESTClientProvider::SERVICE_NAME, [
             '/pbxcore/api/extensions/saveRecord',

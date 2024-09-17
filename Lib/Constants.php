@@ -28,6 +28,7 @@ class Constants
     public const USER_EXTENSION_ATTR = 'userExtensionAttribute';
     public const USER_EMAIL_ATTR = 'userEmailAttribute';
     public const USER_AVATAR_ATTR = 'userAvatarAttribute';
+    public const USER_PASSWORD_ATTR = 'userPasswordAttribute';
     public const USER_GUID_ATTR = 'ObjectGUID';
     public const USER_ACCOUNT_CONTROL_ATTR = 'userAccountControl';
     public const USER_DISABLED = 'userDisabled';
