@@ -69,4 +69,13 @@ return [
     'module_ldap_ValidateUserEmailAttributeIsEmpty' => '域中用户电子邮件的属性未填写',
     'module_ldap_ValidateUserAccountControlIsEmpty' => '域内用户活动属性的属性未填写',
     'module_ldap_TableColumnAutoSync' => '自动同步',
+    'module_ldap_ConflictsTabHeader' => '同步冲突',
+    'module_ldap_NoAnyConflicts' => '没有发现问题',
+    'module_ldap_deleteCurrentConflict' => '删除当前条目，不更改 PBX 或 LDAP/AD 服务器端的数据',
+    'module_ldap_ConflictTime' => '日期',
+    'module_ldap_ConflictUserData' => '已保存的数据',
+    'module_ldap_ConflictSide' => '谁拒绝了',
+    'module_ldap_ConflictErrorMessages' => '拒绝原因',
+    'module_ldap_PBX_UPDATE_CONFLICT' => '集团电话',
+    'module_ldap_LDAP_UPDATE_CONFLICT' => 'LDAP/AD',
 ];

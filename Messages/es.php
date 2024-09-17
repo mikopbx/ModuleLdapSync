@@ -69,4 +69,13 @@ return [
     'module_ldap_ValidateUserAccountControlIsEmpty' => 'El atributo con el atributo de actividad del usuario en el dominio no está completo',
     'module_ldap_EnableAutoSync' => 'Habilitar sincronización programada',
     'module_ldap_TableColumnAutoSync' => 'Sincronización automática',
+    'module_ldap_PBX_UPDATE_CONFLICT' => 'PBX',
+    'module_ldap_ConflictsTabHeader' => 'Conflictos de sincronización',
+    'module_ldap_NoAnyConflicts' => 'No se encontraron problemas',
+    'module_ldap_deleteCurrentConflict' => 'Elimina la entrada actual, no cambia los datos ni en la PBX ni en el lado del servidor LDAP/AD',
+    'module_ldap_ConflictTime' => 'Fecha',
+    'module_ldap_ConflictUserData' => 'Datos guardados',
+    'module_ldap_ConflictSide' => 'quien se negó',
+    'module_ldap_ConflictErrorMessages' => 'Motivo del rechazo',
+    'module_ldap_LDAP_UPDATE_CONFLICT' => 'LDAP/AD',
 ];

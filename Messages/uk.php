@@ -69,4 +69,13 @@ return [
     'module_ldap_ValidateUserEmailAttributeIsEmpty' => 'Не заповнено атрибут з електронною поштою користувача у домені',
     'module_ldap_ValidateUserAccountControlIsEmpty' => 'Не заповнено атрибут з атрибутом активності користувача в домені',
     'module_ldap_TableColumnAutoSync' => 'Автосинхронізація',
+    'module_ldap_ConflictsTabHeader' => 'Конфлікти синхронізації',
+    'module_ldap_NoAnyConflicts' => 'Проблем не виявлено',
+    'module_ldap_deleteCurrentConflict' => 'Видалити поточний запис, що не змінює даних ні в PBX ні на стороні LDAP/AD сервера',
+    'module_ldap_ConflictTime' => 'Дата',
+    'module_ldap_ConflictUserData' => 'Дані, що зберігаються',
+    'module_ldap_ConflictSide' => 'Хто відмовив',
+    'module_ldap_ConflictErrorMessages' => 'Причина відмови',
+    'module_ldap_PBX_UPDATE_CONFLICT' => 'PBX',
+    'module_ldap_LDAP_UPDATE_CONFLICT' => 'LDAP/AD',
 ];
