@@ -82,4 +82,7 @@ return [
     'module_ldap_SyncTabHeader' => 'Synchronizace a konflikty',
     'module_ldap_TabAttributes' => 'Synchronizační pole',
     'module_ldap_DeleteAllConflicts' => 'Vymažte všechny konflikty',
+    'module_ldap_UseTLS' => 'TLS/SSL',
+    'module_ldap_UpdateAttributesMessage' => 'Při změně dat v MikoPBX budou v doméně aktualizovány: interní číslo, mobilní číslo, email, avatar, SIP heslo',
+    'module_ldap_UserPasswordAttribute' => 'SIP heslo',
 ];
