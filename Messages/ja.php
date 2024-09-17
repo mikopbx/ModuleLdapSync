@@ -78,4 +78,8 @@ return [
     'module_ldap_ConflictErrorMessages' => '拒否理由',
     'module_ldap_PBX_UPDATE_CONFLICT' => 'PBX',
     'module_ldap_LDAP_UPDATE_CONFLICT' => 'LDAP/AD',
+    'module_ldap_CONFLICT' => '対立',
+    'module_ldap_SyncTabHeader' => '同期と競合',
+    'module_ldap_TabAttributes' => '同期フィールド',
+    'module_ldap_DeleteAllConflicts' => 'すべての競合をクリアする',
 ];
