@@ -78,4 +78,8 @@ return [
     'module_ldap_ConflictUserData' => 'Tallennetut tiedot',
     'module_ldap_ConflictSide' => 'Kuka kieltäytyi',
     'module_ldap_LDAP_UPDATE_CONFLICT' => 'LDAP/AD',
+    'module_ldap_CONFLICT' => 'konflikti',
+    'module_ldap_SyncTabHeader' => 'Synkronointi ja ristiriidat',
+    'module_ldap_TabAttributes' => 'Synkronointikentät',
+    'module_ldap_DeleteAllConflicts' => 'Tyhjennä kaikki ristiriidat',
 ];
