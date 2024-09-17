@@ -78,4 +78,8 @@ return [
     'module_ldap_ConflictUserData' => 'შენახული მონაცემები',
     'module_ldap_ConflictSide' => 'ვინც უარი თქვა',
     'module_ldap_ConflictErrorMessages' => 'უარის მიზეზი',
+    'module_ldap_CONFLICT' => 'კონფლიქტი',
+    'module_ldap_SyncTabHeader' => 'სინქრონიზაცია და კონფლიქტები',
+    'module_ldap_TabAttributes' => 'სინქრონიზაციის ველები',
+    'module_ldap_DeleteAllConflicts' => 'გაასუფთავეთ ყველა კონფლიქტი',
 ];
