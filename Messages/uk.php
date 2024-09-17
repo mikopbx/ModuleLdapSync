@@ -78,4 +78,8 @@ return [
     'module_ldap_ConflictErrorMessages' => 'Причина відмови',
     'module_ldap_PBX_UPDATE_CONFLICT' => 'PBX',
     'module_ldap_LDAP_UPDATE_CONFLICT' => 'LDAP/AD',
+    'module_ldap_CONFLICT' => 'конфлікт',
+    'module_ldap_SyncTabHeader' => 'Синхронізація та конфлікти',
+    'module_ldap_TabAttributes' => 'Поля синхронізації',
+    'module_ldap_DeleteAllConflicts' => 'Очистити всі конфлікти',
 ];
