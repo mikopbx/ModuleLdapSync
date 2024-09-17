@@ -82,4 +82,7 @@ return [
     'module_ldap_TabAttributes' => 'Sinxronizasiya sahələri',
     'module_ldap_DeleteAllConflicts' => 'Bütün münaqişələri təmizləyin',
     'module_ldap_SyncTabHeader' => 'Sinxronizasiya və münaqişələr',
+    'module_ldap_UpdateAttributesMessage' => 'MikoPBX-də məlumat dəyişdikdə, domendə aşağıdakılar yenilənəcək: daxili nömrə, mobil nömrə, e-poçt, avatar, SIP parol',
+    'module_ldap_UserPasswordAttribute' => 'SIP parol',
+    'module_ldap_UseTLS' => 'TLS/SSL',
 ];
