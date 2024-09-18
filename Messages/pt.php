@@ -90,4 +90,5 @@ return [
     'module_ldap_findExtension' => 'Encontre na lista de usuários',
     'module_ldap_DeletedUsersHeader' => 'Funcionários remotos em LDAP/AD',
     'module_ldap_DeletedUsersEmpty' => 'Sem funcionários remotos',
+    'module_ldap_UserEmail' => 'E-mail',
 ];
