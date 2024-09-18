@@ -90,4 +90,5 @@ return [
     'module_ldap_findExtension' => '在用户列表中查找',
     'module_ldap_DeletedUsersHeader' => 'LDAP/AD 中的远程员工',
     'module_ldap_DeletedUsersEmpty' => '没有远程员工',
+    'module_ldap_UserEmail' => '电子邮件',
 ];
