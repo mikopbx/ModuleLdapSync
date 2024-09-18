@@ -90,4 +90,5 @@ return [
     'module_ldap_findExtension' => 'Găsiți în lista de utilizatori',
     'module_ldap_DeletedUsersHeader' => 'Angajații la distanță în LDAP/AD',
     'module_ldap_DeletedUsersEmpty' => 'Fără angajați la distanță',
+    'module_ldap_UserEmail' => 'E-mail',
 ];
