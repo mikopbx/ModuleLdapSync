@@ -85,4 +85,9 @@ return [
     'module_ldap_UserPasswordAttribute' => 'SIP密码',
     'module_ldap_UseTLS' => '传输层安全/SSL',
     'module_ldap_UpdateAttributesMessage' => '当 MikoPBX 中的数据发生变化时，以下内容将在域中更新：内部号码、手机号码、电子邮件、头像、SIP 密码',
+    'module_ldap_UserName' => '用户名',
+    'module_ldap_UserNumber' => '分机号码',
+    'module_ldap_findExtension' => '在用户列表中查找',
+    'module_ldap_DeletedUsersHeader' => 'LDAP/AD 中的远程员工',
+    'module_ldap_DeletedUsersEmpty' => '没有远程员工',
 ];
