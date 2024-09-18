@@ -85,4 +85,9 @@ return [
     'module_ldap_UserPasswordAttribute' => 'SIP-adgangskode',
     'module_ldap_UseTLS' => 'TLS/SSL',
     'module_ldap_UpdateAttributesMessage' => 'Når data ændres i MikoPBX, vil følgende blive opdateret i domænet: internt nummer, mobilnummer, e-mail, avatar, SIP-adgangskode',
+    'module_ldap_UserName' => 'Brugernavn',
+    'module_ldap_UserNumber' => 'Lokalnummer',
+    'module_ldap_findExtension' => 'Find i listen over brugere',
+    'module_ldap_DeletedUsersHeader' => 'Medarbejdere fjernbetjening i LDAP/AD',
+    'module_ldap_DeletedUsersEmpty' => 'Ingen fjernmedarbejdere',
 ];
