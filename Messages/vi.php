@@ -90,4 +90,5 @@ return [
     'module_ldap_findExtension' => 'Tìm trong danh sách người dùng',
     'module_ldap_DeletedUsersHeader' => 'Nhân viên làm việc từ xa trong LDAP/AD',
     'module_ldap_DeletedUsersEmpty' => 'Không có nhân viên từ xa',
+    'module_ldap_UserEmail' => 'E-mail',
 ];
