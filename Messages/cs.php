@@ -90,4 +90,5 @@ return [
     'module_ldap_findExtension' => 'Najděte v seznamu uživatelů',
     'module_ldap_DeletedUsersHeader' => 'Zaměstnanci vzdálení v LDAP/AD',
     'module_ldap_DeletedUsersEmpty' => 'Žádní vzdálení zaměstnanci',
+    'module_ldap_UserEmail' => 'E-mail',
 ];
