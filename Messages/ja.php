@@ -90,4 +90,5 @@ return [
     'module_ldap_findExtension' => 'ユーザーのリストから検索',
     'module_ldap_DeletedUsersHeader' => 'LDAP/AD でリモートにいる従業員',
     'module_ldap_DeletedUsersEmpty' => 'リモート従業員はいない',
+    'module_ldap_UserEmail' => '電子メール',
 ];
