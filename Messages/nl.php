@@ -90,4 +90,5 @@ return [
     'module_ldap_findExtension' => 'Zoek in de lijst met gebruikers',
     'module_ldap_DeletedUsersHeader' => 'Medewerkers op afstand in LDAP/AD',
     'module_ldap_DeletedUsersEmpty' => 'Geen externe medewerkers',
+    'module_ldap_UserEmail' => 'E-mail',
 ];
