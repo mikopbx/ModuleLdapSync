@@ -86,4 +86,9 @@ return [
     'module_ldap_LDAP_UPDATE_CONFLICT'=>'LDAP/AD',
     'module_ldap_UserPasswordAttribute'=>'Пароль SIP',
     'module_ldap_UseTLS'=>'TLS/SSL',
+    'module_ldap_UserName'=>'Имя пользователя',
+    'module_ldap_UserNumber'=>'Внутренний номер',
+    'module_ldap_findExtension'=>'Найти в списке пользователей',
+    'module_ldap_DeletedUsersHeader'=>'Удаленные в LDAP/AD сотрудники',
+    'module_ldap_DeletedUsersEmpty'=>'Нет удаленных сотрудников',
 ];

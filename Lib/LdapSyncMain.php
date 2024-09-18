@@ -20,6 +20,7 @@
 namespace Modules\ModuleLdapSync\Lib;
 
 use MikoPBX\Common\Models\Extensions;
+use MikoPBX\Common\Models\Sip;
 use MikoPBX\Common\Models\Users;
 use MikoPBX\Common\Providers\PBXCoreRESTClientProvider;
 use MikoPBX\Modules\Logger;
@@ -159,6 +160,9 @@ class LdapSyncMain extends Injectable
         if ($previousSyncUser->domainParamsHash !== $domainParamsHash
             || $userDataFromMikoPBX === []
         ) {
+            // Save user disabled status
+            $previousSyncUser->disabled=($userDataFromLdap[Constants::USER_DISABLED]??false)?'1':'0';
+
             // 5. Changes on domain side, need update PBX info first
             $response = self::createUpdateUser($userDataFromLdap);
             if ($response->success) {
@@ -290,12 +294,19 @@ class LdapSyncMain extends Injectable
                 Constants::USER_MOBILE_ATTR => 'ExtensionsExternal.number',
                 Constants::USER_EMAIL_ATTR => 'Users.email',
                 Constants::USER_AVATAR_ATTR => 'Users.avatar',
+                Constants::USER_PASSWORD_ATTR => 'Sip.secret',
             ],
             'joins' => [
                 'Extensions' => [
                     0 => Extensions::class,
                     1 => 'Extensions.userid=Users.id AND Extensions.type="' . Extensions::TYPE_SIP . '"',
                     2 => 'Extensions',
+                    3 => 'INNER',
+                ],
+                'Sip' => [
+                    0 => Sip::class,
+                    1 => 'Sip.extension=Extensions.number',
+                    2 => 'Sip',
                     3 => 'INNER',
                 ],
                 'ExtensionsExternal' => [
@@ -558,6 +569,7 @@ class LdapSyncMain extends Injectable
             Constants::USER_EXTENSION_ATTR => $postData[Constants::USER_EXTENSION_ATTR],
             Constants::USER_ACCOUNT_CONTROL_ATTR => $postData[Constants::USER_ACCOUNT_CONTROL_ATTR],
             Constants::USER_AVATAR_ATTR => $postData[Constants::USER_AVATAR_ATTR],
+            Constants::USER_PASSWORD_ATTR => $postData[Constants::USER_PASSWORD_ATTR],
         ];
 
         // Construct and return LDAP credentials

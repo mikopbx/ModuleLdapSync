@@ -20,6 +20,7 @@
 
 namespace Modules\ModuleLdapSync\Lib;
 
+use Modules\ModuleLdapSync\Models\ADUsers;
 use Modules\ModuleLdapSync\Models\Conflicts;
 use Phalcon\Di\Injectable;
 
@@ -127,4 +128,5 @@ class LdapSyncConflicts extends Injectable
         }
         return $res;
     }
+
 }

@@ -105,6 +105,13 @@ const ModuleLdapSyncModify = {
 	$useTlsDropdown: $('.use-tls-dropdown'),
 
 	/**
+	 * jQuery object for the message no any disabled users
+	 * @type {jQuery}
+	 */
+	$noAnyDisabledUsersPlaceholder: $('#no-any-disabled-users-placeholder'),
+
+
+	/**
 	 * Validation rules for the form fields.
 	 * @type {Object}
 	 */
@@ -254,6 +261,96 @@ const ModuleLdapSyncModify = {
 				}
 			],
 		});
+
+
+		ModuleLdapSyncModify.updateDisabledUsersView();
+		ModuleLdapSyncModify.apiCallGetDisabledUsers();
+
+		// Handle find user button click
+		$('body').on('click', '.find-user', function(e) {
+			e.preventDefault();
+			const recordId = $(e.target).closest('tr').data('value');
+			const searchValue =  `id:${recordId}`;
+			window.location.href = `${globalRootUrl}extensions/index/?search=${encodeURIComponent(searchValue)}`;
+		});
+	},
+
+	/**
+	 * Make an API call to get disabled/deleted users
+	 */
+	apiCallGetDisabledUsers(){
+		const serverID = ModuleLdapSyncModify.$formObj.form('get value','id');
+		if (!serverID) {
+			return;
+		}
+
+		$.api({
+			url: `${Config.pbxUrl}/pbxcore/api/modules/ModuleLdapSync/get-disabled-ldap-users`,
+			on: 'now',
+			method: 'POST',
+			beforeSend(settings) {
+				settings.data.id = serverID;
+				return settings;
+			},
+			successTest:PbxApi.successTest,
+			/**
+			 * Handles the successful response of the 'get-disabled-ldap-users' API request.
+			 * @param {object} response - The response object.
+			 */
+			onSuccess: function(response) {
+				$('#disabled-users-result').remove();
+				$('.ui.message.ajax').remove();
+				ModuleLdapSyncModify.$noAnyDisabledUsersPlaceholder.hide();
+				const html = ModuleLdapSyncModify.buildTableFromDisabledUsersList(response.data);
+				ModuleLdapSyncModify.$noAnyDisabledUsersPlaceholder.after(html);
+				ModuleLdapSyncModify.updateDisabledUsersView();
+			},
+			/**
+			 * Handles the failure response of the 'get-disabled-ldap-users' API request.
+			 * @param {object} response - The response object.
+			 */
+			onFailure: function(response) {
+				$('.ui.message.ajax').remove();
+				$('#disabled-users-result').remove();
+				UserMessage.showMultiString(response.messages);
+				ModuleLdapSyncModify.updateDisabledUsersView();
+			},
+		})
+	},
+	/**
+	 * Build table from the disabled users list
+	 *
+	 * @param {Array} records - The list of disabled users
+	 * @returns {string} The HTML table
+	 */
+	buildTableFromDisabledUsersList(records){
+		let html = '<table class="ui very compact selectable table" id="disabled-users-result">';
+		// Generate the HTML table head conflicts data attributes
+		html += '<thead><tr>'
+		html +='<th>'+ModuleLdapSyncModify.getTranslation('UserName')+'</th>';
+		html +='<th>'+ModuleLdapSyncModify.getTranslation('UserNumber')+'</th>';
+		html +='<th></th>';
+		html += '</tr></thead><tbody>'
+
+		// Generate the HTML table with conflicts data
+		$.each(records, (index, record) => {
+			html += `<tr class="item" data-value="${record['id']}">`;
+			html += '<td>'+record['number']+'</td>';
+			html += '<td>'+record['name']+'</td>';
+			html += `<td><div class="ui icon basic button popuped find-user" data-content="${ModuleLdapSyncModify.getTranslation('findExtension')}"><i class="icon user outline"></i></div></td>`;
+			html += '</tr>';
+		});
+		html += '</tbody></table>';
+		return html;
+	},
+	/**
+	 * Update the disabled users view.
+	 */
+	updateDisabledUsersView(){
+		if ($(`#disabled-users-result tbody tr`).length===0){
+			ModuleLdapSyncModify.$noAnyDisabledUsersPlaceholder.show();
+			$('#disabled-users-result').remove();
+		}
 	},
 
 	/**
@@ -335,7 +432,6 @@ const ModuleLdapSyncModify = {
 	 * Make an API call to get last sync conflicts
 	 */
 	apiCallGetConflicts(){
-
 		const serverID = ModuleLdapSyncModify.$formObj.form('get value','id');
 		if (!serverID) {
 			return;
@@ -374,6 +470,10 @@ const ModuleLdapSyncModify = {
 		})
 	},
 
+	/**
+	 * Update the conflicts view.
+	 * @return {void}
+	 */
 	updateConflictsView(){
 		if ($(`#conflicts-result tbody tr`).length===0){
 			ModuleLdapSyncModify.$noAnyConflictsPlaceholder.show();
