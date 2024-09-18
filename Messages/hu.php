@@ -90,4 +90,5 @@ return [
     'module_ldap_findExtension' => 'Keresse meg a felhasználók listájában',
     'module_ldap_DeletedUsersHeader' => 'Az LDAP/AD-ben távoli alkalmazottak',
     'module_ldap_DeletedUsersEmpty' => 'Nincsenek távoli alkalmazottak',
+    'module_ldap_UserEmail' => 'Email',
 ];
