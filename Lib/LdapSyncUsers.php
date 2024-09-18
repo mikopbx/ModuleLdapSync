@@ -38,27 +38,41 @@ class LdapSyncUsers extends Injectable
     {
         $res = new AnswerStructure();
         $res->success = true;
+
         $parameters=[
             'models' => [
                 'ADUsers' => ADUsers::class,
             ],
             'columns'=>[
-                'id'=>'ADUsers.id',
-                'extension_id'=>'Extensions.id',
-                'number'=>'Extensions.number',
-                'name'=>'Users.username',
+                'id'=>'ADUsers.user_id',
             ],
             'conditions'=>'server_id=:server_id: and disabled=1',
-            'binds'=>[
-                'server_id'=>$serverId
+            'bind'=>[
+                'server_id'=>intval($serverId)
             ],
+        ];
+        $selectedUsers = Di::getDefault()->get('modelsManager')->createBuilder($parameters)
+            ->getQuery()
+            ->execute();
+        if (empty($selectedUsers->toArray())){
+            $res->data=[];
+            return $res;
+        }
+        $arrIDS =  array_column($selectedUsers->toArray(), 'id');
+
+        $parameters=[
+            'models' => [
+                'Users' => Users::class,
+            ],
+            'columns'=>[
+                'extension_id'=>'Extensions.id',
+                'number'=>'Extensions.number',
+                'email'=>'Users.email',
+                'name'=>'Users.username',
+            ],
+            'conditions' => 'Users.id IN ({ids:array})',
+            'bind' => ['ids' => $arrIDS],
             'joins' => [
-                'Users' => [
-                    0 => Users::class,
-                    1 => 'Users.id = ADUsers.user_id',
-                    2 => 'Users',
-                    3 => 'INNER',
-                ],
                 'Extensions' => [
                     0 => Extensions::class,
                     1 => 'Extensions.userid=Users.id AND Extensions.type="' . Extensions::TYPE_SIP . '"',
@@ -71,10 +85,10 @@ class LdapSyncUsers extends Injectable
             ->getQuery()
             ->execute();
         foreach ($records as $record) {
-            $res->data[$record->id] = [
-                'id' => $record->id,
+            $res->data[$record->extension_id] = [
                 'extension_id' => $record->extension_id,
                 'number' => $record->number,
+                'email' => $record->email,
                 'name' => $record->name,
             ];
         }

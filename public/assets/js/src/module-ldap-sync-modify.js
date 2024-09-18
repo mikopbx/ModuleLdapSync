@@ -267,11 +267,11 @@ const ModuleLdapSyncModify = {
 		ModuleLdapSyncModify.apiCallGetDisabledUsers();
 
 		// Handle find user button click
-		$('body').on('click', '.find-user', function(e) {
+		$('body').on('click', 'tr.find-user-row', function(e) {
 			e.preventDefault();
 			const recordId = $(e.target).closest('tr').data('value');
 			const searchValue =  `id:${recordId}`;
-			window.location.href = `${globalRootUrl}extensions/index/?search=${encodeURIComponent(searchValue)}`;
+			window.open( `${globalRootUrl}extensions/index/?search=${encodeURIComponent(searchValue)}`, '_blank');
 		});
 	},
 
@@ -329,15 +329,15 @@ const ModuleLdapSyncModify = {
 		html += '<thead><tr>'
 		html +='<th>'+ModuleLdapSyncModify.getTranslation('UserName')+'</th>';
 		html +='<th>'+ModuleLdapSyncModify.getTranslation('UserNumber')+'</th>';
-		html +='<th></th>';
+		html +='<th>'+ModuleLdapSyncModify.getTranslation('UserEmail')+'</th>';
 		html += '</tr></thead><tbody>'
 
 		// Generate the HTML table with conflicts data
 		$.each(records, (index, record) => {
-			html += `<tr class="item" data-value="${record['id']}">`;
+			html += `<tr class="item find-user-row" data-value="${record['extension_id']}">`;
+			html += '<td><i class="icon user outline"></i>'+record['name']+'</td>';
 			html += '<td>'+record['number']+'</td>';
-			html += '<td>'+record['name']+'</td>';
-			html += `<td><div class="ui icon basic button popuped find-user" data-content="${ModuleLdapSyncModify.getTranslation('findExtension')}"><i class="icon user outline"></i></div></td>`;
+			html += '<td>'+record['email']+'</td>';
 			html += '</tr>';
 		});
 		html += '</tbody></table>';
@@ -546,6 +546,7 @@ const ModuleLdapSyncModify = {
 				const html = ModuleLdapSyncModify.buildTableFromUsersList(response.data);
 				ModuleLdapSyncModify.$syncUsersSegment.after(html);
 				ModuleLdapSyncModify.apiCallGetConflicts();
+				ModuleLdapSyncModify.apiCallGetDisabledUsers();
 			},
 			/**
 			 * Handles the failure response of the 'sync-ldap-users' API request.
@@ -597,19 +598,29 @@ const ModuleLdapSyncModify = {
 
 		// Generate the HTML table with user data
 		$.each(usersList, (index, user) => {
-			const rowClass = user[ModuleLdapSyncModify.userDisabledAttribute]===true?'disabled':'item';
+			// Determine the row class based on whether the user is disabled
+			let rowClass = user[ModuleLdapSyncModify.userDisabledAttribute] === true ? 'disabled' : 'item';
+
+			// Check if usersSyncResult is 'conflict' and add a class to highlight the row
+			if (user['usersSyncResult'] === 'CONFLICT') {
+				rowClass += ' negative';
+			} else if(user['usersSyncResult'] === 'UPDATED'){
+				rowClass += ' positive';
+			}
+
 			html += `<tr class="${rowClass}">`;
+
 			$.each(uniqueAttributes, (attrIndex, attrValue) => {
 				const cellValue = user[attrIndex] || '';
-				if (attrIndex==='usersSyncResult' || attrIndex==='userHadChangesOnTheSide'){
-					html +='<td>'+ModuleLdapSyncModify.getTranslation(cellValue)+'</td>';
+				if (attrIndex === 'usersSyncResult' || attrIndex === 'userHadChangesOnTheSide') {
+					html += '<td>' + ModuleLdapSyncModify.getTranslation(cellValue) + '</td>';
 				} else {
-					html += '<td>'+cellValue+'</td>';
+					html += '<td>' + cellValue + '</td>';
 				}
-
 			});
 			html += '</tr>';
 		});
+
 		html += '</table>';
 		return html;
 	},

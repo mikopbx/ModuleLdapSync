@@ -88,7 +88,8 @@ return [
     'module_ldap_UseTLS'=>'TLS/SSL',
     'module_ldap_UserName'=>'Имя пользователя',
     'module_ldap_UserNumber'=>'Внутренний номер',
+    'module_ldap_UserEmail'=>'Email',
     'module_ldap_findExtension'=>'Найти в списке пользователей',
-    'module_ldap_DeletedUsersHeader'=>'Удаленные в LDAP/AD сотрудники',
-    'module_ldap_DeletedUsersEmpty'=>'Нет удаленных сотрудников',
+    'module_ldap_DeletedUsersHeader'=>'Отключенные в LDAP/AD сотрудники',
+    'module_ldap_DeletedUsersEmpty'=>'Нет отключенных сотрудников',
 ];

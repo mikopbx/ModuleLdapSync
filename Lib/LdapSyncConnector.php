@@ -144,6 +144,10 @@ class LdapSyncConnector extends \Phalcon\Di\Injectable
             'password' => $this->administrativePassword,
             'timeout'  => 15,
             'use_tls'  => $this->useTLS,
+            'options' => [
+                // See: http://php.net/ldap_set_option
+                LDAP_OPT_X_TLS_REQUIRE_CERT => LDAP_OPT_X_TLS_ALLOW
+            ]
         ]);
 
         $this->redis = $this->getDI()->getShared(ManagedCacheProvider::SERVICE_NAME);

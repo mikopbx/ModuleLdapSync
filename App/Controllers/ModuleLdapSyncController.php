@@ -144,6 +144,7 @@ class ModuleLdapSyncController extends BaseController
             Constants::USER_AVATAR_ATTR => $data[Constants::USER_AVATAR_ATTR],
             Constants::USER_ACCOUNT_CONTROL_ATTR => $data[Constants::USER_ACCOUNT_CONTROL_ATTR],
             Constants::USER_PASSWORD_ATTR => $data[Constants::USER_PASSWORD_ATTR],
+            Constants::USER_DISABLED=>Constants::USER_DISABLED
         ];
         $serverConfig->attributes = json_encode($attributes);
 

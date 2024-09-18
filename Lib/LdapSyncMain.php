@@ -44,8 +44,8 @@ class LdapSyncMain extends Injectable
     public static function syncAllUsers(): void
     {
         $serversList = LdapServers::find('disabled=0')->toArray();
-        foreach ($serversList as $server) {
-            self::syncUsersPerServer($server);
+        foreach ($serversList as $ldapCredentials) {
+            self::syncUsersPerServer($ldapCredentials);
         }
     }
 
@@ -154,6 +154,9 @@ class LdapSyncMain extends Injectable
         } else {
             $userDataFromMikoPBX = [];
         }
+        // Sort the array by keys to ensure consistent ordering
+        ksort($userDataFromMikoPBX);
+
         $localParamsHash = md5(implode('', $userDataFromMikoPBX));
 
         // 4. Compare data hash with stored value
@@ -162,6 +165,14 @@ class LdapSyncMain extends Injectable
         ) {
             // Save user disabled status
             $previousSyncUser->disabled=($userDataFromLdap[Constants::USER_DISABLED]??false)?'1':'0';
+
+            // Do not create disabled users
+            if ($userDataFromLdap[Constants::USER_DISABLED]===true && $userDataFromMikoPBX===[]){
+                $response = new AnswerStructure();
+                $response->data[Constants::USER_SYNC_RESULT] = Constants::SYNC_RESULT_SKIPPED;
+                $response->success = true;
+                return $response;
+            }
 
             // 5. Changes on domain side, need update PBX info first
             $response = self::createUpdateUser($userDataFromLdap);
@@ -222,7 +233,7 @@ class LdapSyncMain extends Injectable
             // Get the value for the attribute from the LDAP data.
             $value = $userFromLdap[$attributeName] ?? '';
             // Skip empty attributes.
-            if (empty($value)) {
+            if (empty($value)&&$value!==false) {
                 continue;
             }
 
@@ -336,16 +347,16 @@ class LdapSyncMain extends Injectable
      */
     public static function createUpdateUser(array $userDataFromLdap): AnswerStructure
     {
+        $pbxUserData = self::findUserInMikoPBX($userDataFromLdap);
+
         if ($userDataFromLdap[Constants::USER_DISABLED] ?? false) {
             $result = new AnswerStructure();
             $result->success = true;
-            $result->data = $userDataFromLdap;
+            $result->data = $pbxUserData;
             $result->data[Constants::USER_SYNC_RESULT] = Constants::SYNC_RESULT_SKIPPED;
             $result->messages = ['info' => 'The user is disabled on domain side. Skipped.'];
             return $result;
         }
-
-        $pbxUserData = self::findUserInMikoPBX($userDataFromLdap);
 
         // Get user data from the API
         $di = Di::getDefault();
@@ -413,13 +424,18 @@ class LdapSyncMain extends Injectable
             }
         }
 
+        // Check provided sip password
+        $sipPassword = $userDataFromLdap[Constants::USER_PASSWORD_ATTR] ?? $dataStructure->sip_secret;
+        if (!empty($sipPassword) && $sipPassword!=$dataStructure->sip_secret ) {
+            $dataStructure->sip_secret = $sipPassword;
+        }
+
         $dataStructure->user_username = $userDataFromLdap[Constants::USER_NAME_ATTR] ?? $dataStructure->user_username;
 
         $dataStructure->user_avatar = $userDataFromLdap[Constants::USER_AVATAR_ATTR] ?? $dataStructure->user_avatar;
 
         $dataStructure->sip_transport = trim($dataStructure->sip_transport);
 
-        $dataStructure->sip_secret = $userDataFromLdap[Constants::USER_PASSWORD_ATTR] ?? $dataStructure->sip_secret;
 
         // Save user data through the CORE API
         $restAnswer = $di->get(PBXCoreRESTClientProvider::SERVICE_NAME, [
@@ -567,9 +583,10 @@ class LdapSyncMain extends Injectable
             Constants::USER_NAME_ATTR => $postData[Constants::USER_NAME_ATTR],
             Constants::USER_MOBILE_ATTR => $postData[Constants::USER_MOBILE_ATTR],
             Constants::USER_EXTENSION_ATTR => $postData[Constants::USER_EXTENSION_ATTR],
-            Constants::USER_ACCOUNT_CONTROL_ATTR => $postData[Constants::USER_ACCOUNT_CONTROL_ATTR],
             Constants::USER_AVATAR_ATTR => $postData[Constants::USER_AVATAR_ATTR],
+            Constants::USER_ACCOUNT_CONTROL_ATTR => $postData[Constants::USER_ACCOUNT_CONTROL_ATTR],
             Constants::USER_PASSWORD_ATTR => $postData[Constants::USER_PASSWORD_ATTR],
+            Constants::USER_DISABLED=>Constants::USER_DISABLED
         ];
 
         // Construct and return LDAP credentials
@@ -585,6 +602,7 @@ class LdapSyncMain extends Injectable
             'organizationalUnit' => $postData['organizationalUnit'],
             'userFilter' => $postData['userFilter'],
             'updateAttributes' => $postData['updateAttributes'],
+            'useTLS'=> $postData['useTLS'],
         ];
     }
 
