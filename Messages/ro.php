@@ -85,4 +85,9 @@ return [
     'module_ldap_UserPasswordAttribute' => 'parola SIP',
     'module_ldap_UpdateAttributesMessage' => 'Când datele se modifică în MikoPBX, următoarele vor fi actualizate în domeniu: număr intern, număr de mobil, e-mail, avatar, parolă SIP',
     'module_ldap_UseTLS' => 'TLS/SSL',
+    'module_ldap_UserName' => 'Nume de utilizator',
+    'module_ldap_UserNumber' => 'Numărul de extensie',
+    'module_ldap_findExtension' => 'Găsiți în lista de utilizatori',
+    'module_ldap_DeletedUsersHeader' => 'Angajații la distanță în LDAP/AD',
+    'module_ldap_DeletedUsersEmpty' => 'Fără angajați la distanță',
 ];
