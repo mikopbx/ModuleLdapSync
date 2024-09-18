@@ -90,4 +90,5 @@ return [
     'module_ldap_findExtension' => 'იპოვეთ მომხმარებელთა სიაში',
     'module_ldap_DeletedUsersHeader' => 'თანამშრომლები დისტანციურად LDAP/AD-ში',
     'module_ldap_DeletedUsersEmpty' => 'არ არის დისტანციური თანამშრომლები',
+    'module_ldap_UserEmail' => 'ელფოსტა',
 ];
