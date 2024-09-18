@@ -90,4 +90,5 @@ return [
     'module_ldap_findExtension' => 'Etsi käyttäjäluettelosta',
     'module_ldap_DeletedUsersHeader' => 'Etätyöntekijät LDAP/AD:ssä',
     'module_ldap_DeletedUsersEmpty' => 'Ei etätyöntekijöitä',
+    'module_ldap_UserEmail' => 'Sähköposti',
 ];
