@@ -85,4 +85,9 @@ return [
     'module_ldap_UserPasswordAttribute' => 'SIP-wachtwoord',
     'module_ldap_UseTLS' => 'TLS/SSL',
     'module_ldap_UpdateAttributesMessage' => 'Wanneer gegevens in MikoPBX veranderen, wordt in het domein het volgende bijgewerkt: intern nummer, mobiel nummer, e-mail, avatar, SIP-wachtwoord',
+    'module_ldap_UserName' => 'Gebruikersnaam',
+    'module_ldap_UserNumber' => 'Extensienummer',
+    'module_ldap_findExtension' => 'Zoek in de lijst met gebruikers',
+    'module_ldap_DeletedUsersHeader' => 'Medewerkers op afstand in LDAP/AD',
+    'module_ldap_DeletedUsersEmpty' => 'Geen externe medewerkers',
 ];
