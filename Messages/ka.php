@@ -85,4 +85,9 @@ return [
     'module_ldap_UseTLS' => 'TLS/SSL',
     'module_ldap_UpdateAttributesMessage' => 'როდესაც მონაცემები იცვლება MikoPBX-ში, შემდეგი განახლდება დომენში: შიდა ნომერი, მობილურის ნომერი, ელფოსტა, ავატარი, SIP პაროლი.',
     'module_ldap_UserPasswordAttribute' => 'SIP პაროლი',
+    'module_ldap_UserName' => 'მომხმარებლის სახელი',
+    'module_ldap_UserNumber' => 'გაფართოების ნომერი',
+    'module_ldap_findExtension' => 'იპოვეთ მომხმარებელთა სიაში',
+    'module_ldap_DeletedUsersHeader' => 'თანამშრომლები დისტანციურად LDAP/AD-ში',
+    'module_ldap_DeletedUsersEmpty' => 'არ არის დისტანციური თანამშრომლები',
 ];
