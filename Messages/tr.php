@@ -90,4 +90,5 @@ return [
     'module_ldap_findExtension' => 'Kullanıcı listesinde bul',
     'module_ldap_DeletedUsersHeader' => 'LDAP/AD\'de uzaktaki çalışanlar',
     'module_ldap_DeletedUsersEmpty' => 'Uzak çalışan yok',
+    'module_ldap_UserEmail' => 'E-posta',
 ];
