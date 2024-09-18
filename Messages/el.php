@@ -90,4 +90,5 @@ return [
     'module_ldap_findExtension' => 'Βρείτε στη λίστα των χρηστών',
     'module_ldap_DeletedUsersHeader' => 'Εργαζόμενοι εξ αποστάσεως σε LDAP/AD',
     'module_ldap_DeletedUsersEmpty' => 'Όχι απομακρυσμένοι υπάλληλοι',
+    'module_ldap_UserEmail' => 'E-mail',
 ];
