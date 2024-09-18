@@ -90,4 +90,5 @@ return [
     'module_ldap_findExtension' => 'Hitta i listan över användare',
     'module_ldap_DeletedUsersHeader' => 'Anställda på distans i LDAP/AD',
     'module_ldap_DeletedUsersEmpty' => 'Inga distansanställda',
+    'module_ldap_UserEmail' => 'E-post',
 ];
