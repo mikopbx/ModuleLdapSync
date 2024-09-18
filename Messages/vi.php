@@ -85,4 +85,9 @@ return [
     'module_ldap_UserPasswordAttribute' => 'mật khẩu SIP',
     'module_ldap_UpdateAttributesMessage' => 'Khi dữ liệu trong MikoPBX thay đổi, các thông tin sau sẽ được cập nhật trong miền: số nội bộ, số di động, email, hình đại diện, mật khẩu SIP',
     'module_ldap_UseTLS' => 'TLS/SSL',
+    'module_ldap_UserName' => 'Tên người dùng',
+    'module_ldap_UserNumber' => 'Số máy nhánh',
+    'module_ldap_findExtension' => 'Tìm trong danh sách người dùng',
+    'module_ldap_DeletedUsersHeader' => 'Nhân viên làm việc từ xa trong LDAP/AD',
+    'module_ldap_DeletedUsersEmpty' => 'Không có nhân viên từ xa',
 ];
