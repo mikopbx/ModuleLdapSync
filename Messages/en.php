@@ -85,4 +85,9 @@ return [
     'module_ldap_UpdateAttributesMessage' => 'When changing data in MikoPBX, the domain will update: internal number, mobile number, email, avatar, SIP password',
     'module_ldap_UserPasswordAttribute' => 'SIP Password',
     'module_ldap_UseTLS' => 'TLS/SSL',
+    'module_ldap_UserName' => 'Username',
+    'module_ldap_UserNumber' => 'Internal number',
+    'module_ldap_findExtension' => 'Find in user list',
+    'module_ldap_DeletedUsersHeader' => 'Remote employees in LDAP/AD',
+    'module_ldap_DeletedUsersEmpty' => 'No remote employees',
 ];
