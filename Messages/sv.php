@@ -85,4 +85,9 @@ return [
     'module_ldap_UpdateAttributesMessage' => 'När data ändras i MikoPBX kommer följande att uppdateras i domänen: internnummer, mobilnummer, e-post, avatar, SIP-lösenord',
     'module_ldap_UserPasswordAttribute' => 'SIP-lösenord',
     'module_ldap_UseTLS' => 'TLS/SSL',
+    'module_ldap_UserName' => 'Användarnamn',
+    'module_ldap_UserNumber' => 'Anknytningsnummer',
+    'module_ldap_findExtension' => 'Hitta i listan över användare',
+    'module_ldap_DeletedUsersHeader' => 'Anställda på distans i LDAP/AD',
+    'module_ldap_DeletedUsersEmpty' => 'Inga distansanställda',
 ];
