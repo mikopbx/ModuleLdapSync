@@ -90,4 +90,5 @@ return [
     'module_ldap_findExtension' => 'ค้นหาในรายการผู้ใช้',
     'module_ldap_DeletedUsersHeader' => 'พนักงานระยะไกลใน LDAP/AD',
     'module_ldap_DeletedUsersEmpty' => 'ไม่มีพนักงานที่อยู่ห่างไกล',
+    'module_ldap_UserEmail' => 'อีเมล',
 ];
