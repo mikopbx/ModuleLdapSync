@@ -85,4 +85,9 @@ return [
     'module_ldap_UseTLS' => 'TLS/SSL',
     'module_ldap_UpdateAttributesMessage' => 'Amikor a MikoPBX-ben változnak az adatok, a következők frissülnek a domainben: belső szám, mobilszám, email, avatar, SIP jelszó',
     'module_ldap_UserPasswordAttribute' => 'SIP jelszó',
+    'module_ldap_UserName' => 'Felhasználónév',
+    'module_ldap_UserNumber' => 'Kiterjesztés száma',
+    'module_ldap_findExtension' => 'Keresse meg a felhasználók listájában',
+    'module_ldap_DeletedUsersHeader' => 'Az LDAP/AD-ben távoli alkalmazottak',
+    'module_ldap_DeletedUsersEmpty' => 'Nincsenek távoli alkalmazottak',
 ];
