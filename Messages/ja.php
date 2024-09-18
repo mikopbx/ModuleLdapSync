@@ -82,4 +82,7 @@ return [
     'module_ldap_SyncTabHeader' => '同期と競合',
     'module_ldap_TabAttributes' => '同期フィールド',
     'module_ldap_DeleteAllConflicts' => 'すべての競合をクリアする',
+    'module_ldap_UserPasswordAttribute' => 'SIPパスワード',
+    'module_ldap_UseTLS' => 'TLS/SSL',
+    'module_ldap_UpdateAttributesMessage' => 'MikoPBX でデータが変更されると、ドメイン内で内部番号、携帯電話番号、電子メール、アバター、SIP パスワードが更新されます。',
 ];

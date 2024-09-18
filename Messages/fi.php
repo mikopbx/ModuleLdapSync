@@ -82,4 +82,7 @@ return [
     'module_ldap_SyncTabHeader' => 'Synkronointi ja ristiriidat',
     'module_ldap_TabAttributes' => 'Synkronointikentät',
     'module_ldap_DeleteAllConflicts' => 'Tyhjennä kaikki ristiriidat',
+    'module_ldap_UseTLS' => 'TLS/SSL',
+    'module_ldap_UpdateAttributesMessage' => 'Kun tiedot muuttuvat MikoPBX:ssä, verkkotunnuksessa päivitetään seuraavat tiedot: sisäinen numero, matkapuhelinnumero, sähköposti, avatar, SIP-salasana',
+    'module_ldap_UserPasswordAttribute' => 'SIP-salasana',
 ];

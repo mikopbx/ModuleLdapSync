@@ -82,4 +82,7 @@ return [
     'module_ldap_SyncTabHeader' => '同步和冲突',
     'module_ldap_TabAttributes' => '同步字段',
     'module_ldap_DeleteAllConflicts' => '清除所有冲突',
+    'module_ldap_UserPasswordAttribute' => 'SIP密码',
+    'module_ldap_UseTLS' => '传输层安全/SSL',
+    'module_ldap_UpdateAttributesMessage' => '当 MikoPBX 中的数据发生变化时，以下内容将在域中更新：内部号码、手机号码、电子邮件、头像、SIP 密码',
 ];

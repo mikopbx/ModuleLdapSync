@@ -82,4 +82,7 @@ return [
     'module_ldap_CONFLICT' => 'conflict',
     'module_ldap_SyncTabHeader' => 'Synchronisatie en conflicten',
     'module_ldap_TabAttributes' => 'Synchronisatievelden',
+    'module_ldap_UserPasswordAttribute' => 'SIP-wachtwoord',
+    'module_ldap_UseTLS' => 'TLS/SSL',
+    'module_ldap_UpdateAttributesMessage' => 'Wanneer gegevens in MikoPBX veranderen, wordt in het domein het volgende bijgewerkt: intern nummer, mobiel nummer, e-mail, avatar, SIP-wachtwoord',
 ];

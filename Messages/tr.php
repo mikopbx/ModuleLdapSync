@@ -82,4 +82,7 @@ return [
     'module_ldap_SyncTabHeader' => 'Senkronizasyon ve çatışmalar',
     'module_ldap_TabAttributes' => 'Senkronizasyon alanları',
     'module_ldap_DeleteAllConflicts' => 'Tüm çakışmaları temizle',
+    'module_ldap_UpdateAttributesMessage' => 'MikoPBX\'te veriler değiştiğinde alanda aşağıdakiler güncellenecektir: dahili numara, cep telefonu numarası, e-posta, avatar, SIP şifresi',
+    'module_ldap_UserPasswordAttribute' => 'SIP şifresi',
+    'module_ldap_UseTLS' => 'TLS/SSL',
 ];

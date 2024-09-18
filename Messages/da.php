@@ -82,4 +82,7 @@ return [
     'module_ldap_SyncTabHeader' => 'Synkronisering og konflikter',
     'module_ldap_TabAttributes' => 'Synkroniseringsfelter',
     'module_ldap_DeleteAllConflicts' => 'Ryd alle konflikter',
+    'module_ldap_UserPasswordAttribute' => 'SIP-adgangskode',
+    'module_ldap_UseTLS' => 'TLS/SSL',
+    'module_ldap_UpdateAttributesMessage' => 'Når data ændres i MikoPBX, vil følgende blive opdateret i domænet: internt nummer, mobilnummer, e-mail, avatar, SIP-adgangskode',
 ];

@@ -82,4 +82,7 @@ return [
     'module_ldap_SyncTabHeader' => 'Synchronisation und Konflikte',
     'module_ldap_TabAttributes' => 'Synchronisierungsfelder',
     'module_ldap_DeleteAllConflicts' => 'Beseitigen Sie alle Konflikte',
+    'module_ldap_UserPasswordAttribute' => 'SIP-Passwort',
+    'module_ldap_UseTLS' => 'TLS/SSL',
+    'module_ldap_UpdateAttributesMessage' => 'Wenn sich Daten in MikoPBX ändern, wird Folgendes in der Domäne aktualisiert: interne Nummer, Mobiltelefonnummer, E-Mail, Avatar, SIP-Passwort',
 ];

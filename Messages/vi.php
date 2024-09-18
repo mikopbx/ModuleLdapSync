@@ -82,4 +82,7 @@ return [
     'module_ldap_SyncTabHeader' => 'Đồng bộ hóa và xung đột',
     'module_ldap_TabAttributes' => 'Các trường đồng bộ hóa',
     'module_ldap_DeleteAllConflicts' => 'Xóa mọi xung đột',
+    'module_ldap_UserPasswordAttribute' => 'mật khẩu SIP',
+    'module_ldap_UpdateAttributesMessage' => 'Khi dữ liệu trong MikoPBX thay đổi, các thông tin sau sẽ được cập nhật trong miền: số nội bộ, số di động, email, hình đại diện, mật khẩu SIP',
+    'module_ldap_UseTLS' => 'TLS/SSL',
 ];

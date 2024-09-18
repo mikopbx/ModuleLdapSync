@@ -82,4 +82,7 @@ return [
     'module_ldap_SyncTabHeader' => 'การซิงโครไนซ์และความขัดแย้ง',
     'module_ldap_TabAttributes' => 'ฟิลด์การซิงโครไนซ์',
     'module_ldap_DeleteAllConflicts' => 'เคลียร์ข้อขัดแย้งทั้งหมด',
+    'module_ldap_UserPasswordAttribute' => 'รหัสผ่าน SIP',
+    'module_ldap_UseTLS' => 'TLS/SSL',
+    'module_ldap_UpdateAttributesMessage' => 'เมื่อข้อมูลเปลี่ยนแปลงใน MikoPBX ข้อมูลต่อไปนี้จะได้รับการอัปเดตในโดเมน: หมายเลขภายใน หมายเลขโทรศัพท์มือถือ อีเมล อวตาร รหัสผ่าน SIP',
 ];

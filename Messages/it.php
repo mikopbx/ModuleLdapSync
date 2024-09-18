@@ -82,4 +82,7 @@ return [
     'module_ldap_SyncTabHeader' => 'Sincronizzazione e conflitti',
     'module_ldap_TabAttributes' => 'Campi di sincronizzazione',
     'module_ldap_DeleteAllConflicts' => 'Cancella tutti i conflitti',
+    'module_ldap_UpdateAttributesMessage' => 'Quando cambiano i dati nel MikoPBX, nel dominio verranno aggiornati: numero interno, numero di cellulare, email, avatar, password SIP',
+    'module_ldap_UserPasswordAttribute' => 'Password SIP',
+    'module_ldap_UseTLS' => 'TLS/SSL',
 ];
