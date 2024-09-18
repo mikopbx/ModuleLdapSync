@@ -90,4 +90,5 @@ return [
     'module_ldap_findExtension' => 'Find i listen over brugere',
     'module_ldap_DeletedUsersHeader' => 'Medarbejdere fjernbetjening i LDAP/AD',
     'module_ldap_DeletedUsersEmpty' => 'Ingen fjernmedarbejdere',
+    'module_ldap_UserEmail' => 'E-mail',
 ];
