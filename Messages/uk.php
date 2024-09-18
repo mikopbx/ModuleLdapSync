@@ -90,4 +90,5 @@ return [
     'module_ldap_findExtension' => 'Знайти у списку користувачів',
     'module_ldap_DeletedUsersHeader' => 'Видалені в LDAP/AD співробітники',
     'module_ldap_DeletedUsersEmpty' => 'Немає віддалених співробітників',
+    'module_ldap_UserEmail' => 'Email',
 ];
