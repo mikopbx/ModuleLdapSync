@@ -32,8 +32,8 @@ class Constants
     public const USER_GUID_ATTR = 'ObjectGUID';
     public const USER_ACCOUNT_CONTROL_ATTR = 'userAccountControl';
     public const USER_DISABLED = 'userDisabled';
-
     public const USER_SYNC_RESULT = 'usersSyncResult';
+    public const EXTENSION_ID_IN_MIKOPBX = 'extensionIdInMikoPBX';
     public const SYNC_RESULT_UPDATED = 'UPDATED';
     public const SYNC_RESULT_SKIPPED = 'SKIPPED';
 
@@ -46,4 +46,5 @@ class Constants
     public const SYNC_RESULT_CONFLICT_SIDE = 'CONFLICT_SIDE';
     public const PBX_UPDATE_CONFLICT = 'PBX_UPDATE_CONFLICT';
     public const LDAP_UPDATE_CONFLICT = 'LDAP_UPDATE_CONFLICT';
+    public const CONFLICT_DATA= 'CONFLICT_DATA';
 }

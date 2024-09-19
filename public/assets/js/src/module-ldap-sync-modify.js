@@ -266,12 +266,19 @@ const ModuleLdapSyncModify = {
 		ModuleLdapSyncModify.updateDisabledUsersView();
 		ModuleLdapSyncModify.apiCallGetDisabledUsers();
 
-		// Handle find user button click
+		// Handle find user in conflict row click
 		$('body').on('click', 'tr.find-user-row', function(e) {
 			e.preventDefault();
 			const recordId = $(e.target).closest('tr').data('value');
 			const searchValue =  `id:${recordId}`;
 			window.open( `${globalRootUrl}extensions/index/?search=${encodeURIComponent(searchValue)}`, '_blank');
+		});
+
+		// Handle open user in sync table row click
+		$('body').on('click', 'tr.open-user-row', function(e) {
+			e.preventDefault();
+			const recordId = $(e.target).closest('tr').data('value');
+			window.open( `${globalRootUrl}extensions/modify/${encodeURIComponent(recordId)}`, '_blank');
 		});
 	},
 
@@ -568,6 +575,7 @@ const ModuleLdapSyncModify = {
 	 * @returns {string} The HTML table
 	 */
 	buildTableFromUsersList(usersList){
+
 		let html = '<table class="ui very compact selectable table" id="ldap-result">';
 		const uniqueAttributes = {};
 
@@ -608,7 +616,7 @@ const ModuleLdapSyncModify = {
 				rowClass += ' positive';
 			}
 
-			html += `<tr class="${rowClass}">`;
+			html += `<tr data-value="${user['extensionIdInMikoPBX']}" class="${rowClass} open-user-row">`;
 
 			$.each(uniqueAttributes, (attrIndex, attrValue) => {
 				const cellValue = user[attrIndex] || '';

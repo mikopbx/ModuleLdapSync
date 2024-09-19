@@ -86,15 +86,18 @@ class LdapSyncMain extends Injectable
             // Remove avatar data from arrays to prevent memory leaks and overloading the beanstalk
             $avatarKey = $connector->userAttributes[Constants::USER_AVATAR_ATTR];
             if (!empty($processedUser[$avatarKey])) {
-                $processedUser[$avatarKey]='base64picture...';
+                $processedUser[$avatarKey] = 'base64picture...';
             }
 
             if (!empty($result->data[Constants::USER_SYNC_RESULT])) {
                 $processedUser[Constants::USER_SYNC_RESULT] = $result->data[Constants::USER_SYNC_RESULT];
 
                 if ($result->data[Constants::USER_SYNC_RESULT] === Constants::SYNC_RESULT_CONFLICT) {
-                    LdapSyncConflicts::recordSyncConflict($ldapCredentials['id'], $processedUser, $result->messages, $result->data[Constants::SYNC_RESULT_CONFLICT_SIDE]);
+                    LdapSyncConflicts::recordSyncConflict($ldapCredentials['id'], $result->data[Constants::CONFLICT_DATA], $result->messages, $result->data[Constants::SYNC_RESULT_CONFLICT_SIDE]);
                 }
+            }
+            if (!empty($result->data[Constants::EXTENSION_ID_IN_MIKOPBX])) {
+                $processedUser[Constants::EXTENSION_ID_IN_MIKOPBX] = $result->data[Constants::EXTENSION_ID_IN_MIKOPBX];
             }
 
             if ($result->success) {
@@ -108,7 +111,7 @@ class LdapSyncMain extends Injectable
             }
 
             if (!empty($processedUser[$avatarKey])) {
-                $processedUser[$avatarKey]='<i class="camera retro icon"></i>';
+                $processedUser[$avatarKey] = '<i class="camera retro icon"></i>';
             }
             $processedUsers[] = $processedUser;
         }
@@ -164,10 +167,10 @@ class LdapSyncMain extends Injectable
             || $userDataFromMikoPBX === []
         ) {
             // Save user disabled status
-            $previousSyncUser->disabled=($userDataFromLdap[Constants::USER_DISABLED]??false)?'1':'0';
+            $previousSyncUser->disabled = ($userDataFromLdap[Constants::USER_DISABLED] ?? false) ? '1' : '0';
 
             // Do not create disabled users
-            if ($userDataFromLdap[Constants::USER_DISABLED]===true && $userDataFromMikoPBX===[]){
+            if ($userDataFromLdap[Constants::USER_DISABLED] === true && $userDataFromMikoPBX === []) {
                 $response = new AnswerStructure();
                 $response->data[Constants::USER_SYNC_RESULT] = Constants::SYNC_RESULT_SKIPPED;
                 $response->success = true;
@@ -175,7 +178,7 @@ class LdapSyncMain extends Injectable
             }
 
             // 5. Changes on domain side, need update PBX info first
-            $response = self::createUpdateUser($userDataFromLdap);
+            $response = self::createUpdateUser($userDataFromLdap, $previousSyncUser->user_id);
             if ($response->success) {
                 $response->data[Constants::USER_HAD_CHANGES_ON] = Constants::HAD_CHANGES_ON_PBX;
                 $response->data[Constants::USER_SYNC_RESULT] = Constants::SYNC_RESULT_UPDATED;
@@ -184,6 +187,8 @@ class LdapSyncMain extends Injectable
             } else {
                 $response->data[Constants::USER_SYNC_RESULT] = Constants::SYNC_RESULT_CONFLICT;
                 $response->data[Constants::SYNC_RESULT_CONFLICT_SIDE] = Constants::PBX_UPDATE_CONFLICT;
+                $response->data[Constants::CONFLICT_DATA]=$userDataFromLdap;
+                unset($response->data[Constants::CONFLICT_DATA][Constants::USER_AVATAR_ATTR]);
             }
         } elseif (
             $previousSyncUser->localParamsHash !== $localParamsHash
@@ -198,13 +203,22 @@ class LdapSyncMain extends Injectable
             } else {
                 $response->data[Constants::USER_SYNC_RESULT] = Constants::SYNC_RESULT_CONFLICT;
                 $response->data[Constants::SYNC_RESULT_CONFLICT_SIDE] = Constants::LDAP_UPDATE_CONFLICT;
+                $response->data[Constants::CONFLICT_DATA]=$userDataFromMikoPBX;
+                unset($response->data[Constants::CONFLICT_DATA][Constants::USER_AVATAR_ATTR]);
             }
         } else {
             // No changes on both sides
             $response = new AnswerStructure();
             $response->data[Constants::USER_SYNC_RESULT] = Constants::SYNC_RESULT_SKIPPED;
+            if (isset($userDataFromMikoPBX[Constants::EXTENSION_ID_IN_MIKOPBX])){
+                $response->data[Constants::EXTENSION_ID_IN_MIKOPBX] = $userDataFromMikoPBX[Constants::EXTENSION_ID_IN_MIKOPBX];
+            }
             $response->success = true;
             return $response;
+        }
+
+        if (isset($userDataFromMikoPBX[Constants::EXTENSION_ID_IN_MIKOPBX])){
+            $response->data[Constants::EXTENSION_ID_IN_MIKOPBX] = $userDataFromMikoPBX[Constants::EXTENSION_ID_IN_MIKOPBX];
         }
 
         // Save hashes into database
@@ -233,7 +247,7 @@ class LdapSyncMain extends Injectable
             // Get the value for the attribute from the LDAP data.
             $value = $userFromLdap[$attributeName] ?? '';
             // Skip empty attributes.
-            if (empty($value)&&$value!==false) {
+            if (empty($value) && $value !== false) {
                 continue;
             }
 
@@ -306,6 +320,7 @@ class LdapSyncMain extends Injectable
                 Constants::USER_EMAIL_ATTR => 'Users.email',
                 Constants::USER_AVATAR_ATTR => 'Users.avatar',
                 Constants::USER_PASSWORD_ATTR => 'Sip.secret',
+                Constants::EXTENSION_ID_IN_MIKOPBX=>'Extensions.id',
             ],
             'joins' => [
                 'Extensions' => [
@@ -343,11 +358,12 @@ class LdapSyncMain extends Injectable
      * Creates or updates a user using provided data.
      *
      * @param array $userDataFromLdap - User data to be created or updated.
+     * @param ?string $currentUserId The current user id.
      * @return AnswerStructure
      */
-    public static function createUpdateUser(array $userDataFromLdap): AnswerStructure
+    public static function createUpdateUser(array $userDataFromLdap, string $currentUserId = null): AnswerStructure
     {
-        $pbxUserData = self::findUserInMikoPBX($userDataFromLdap);
+        $pbxUserData = self::findUserInMikoPBX($userDataFromLdap, $currentUserId);
 
         if ($userDataFromLdap[Constants::USER_DISABLED] ?? false) {
             $result = new AnswerStructure();
@@ -393,7 +409,7 @@ class LdapSyncMain extends Injectable
                 PBXCoreRESTClientProvider::HTTP_METHOD_GET,
                 ['number' => $mobileFromDomain]
             ]);
-            if ($restAnswer->success && $restAnswer->data['userId'] == $pbxUserData['user_id']) {
+            if ($restAnswer->success || $restAnswer->data['userId'] == $pbxUserData['user_id']) {
                 // Update mobile number and forwarding settings
                 $oldMobileNumber = $dataStructure->mobile_number;
                 $dataStructure->mobile_number = $mobileFromDomain;
@@ -426,7 +442,7 @@ class LdapSyncMain extends Injectable
 
         // Check provided sip password
         $sipPassword = $userDataFromLdap[Constants::USER_PASSWORD_ATTR] ?? $dataStructure->sip_secret;
-        if (!empty($sipPassword) && $sipPassword!=$dataStructure->sip_secret ) {
+        if (!empty($sipPassword) && $sipPassword != $dataStructure->sip_secret) {
             $dataStructure->sip_secret = $sipPassword;
         }
 
@@ -451,9 +467,10 @@ class LdapSyncMain extends Injectable
      * Find a user extension id in the MikoPBX DB based on LDAP data.
      *
      * @param array $userDataFromLdap The LDAP user data.
+     * @param ?string $currentUserId The current user id.
      * @return array The user data if found, otherwise an empty array.
      */
-    public static function findUserInMikoPBX(array $userDataFromLdap): array
+    public static function findUserInMikoPBX(array $userDataFromLdap, string $currentUserId = null): array
     {
         $parameters = [
             'models' => [
@@ -477,28 +494,34 @@ class LdapSyncMain extends Injectable
             ],
         ];
 
-        foreach ($userDataFromLdap as $index => $value) {
-            if (!empty($value)) {
-                switch ($index) {
-                    case Constants::USER_EMAIL_ATTR:
-                        $parameters['conditions'] = $parameters['conditions'] . ' OR Users.email=:email:';
-                        $parameters['bind']['email'] = $value;
-                        break;
-                    case Constants::USER_MOBILE_ATTR:
-                        $parameters['conditions'] = $parameters['conditions'] . ' OR Extensions.number = :mobile:';
-                        $parameters['bind']['mobile'] = $value;
-                        break;
-                    case Constants::USER_EXTENSION_ATTR:
-                        $parameters['conditions'] = $parameters['conditions'] . ' OR Extensions.number = :number:';
-                        $parameters['bind']['number'] = $value;
-                        break;
-                    case Constants::USER_NAME_ATTR:
-                        $parameters['conditions'] = $parameters['conditions'] . ' OR Users.username=:username:';
-                        $parameters['bind']['username'] = $value;
-                        break;
+        if (!empty($currentUserId)) {
+            $parameters['conditions'] = ' OR Users.id=:user_id:';
+            $parameters['bind']['user_id'] = $currentUserId;
+        } else {
+            foreach ($userDataFromLdap as $index => $value) {
+                if (!empty($value)) {
+                    switch ($index) {
+                        case Constants::USER_EMAIL_ATTR:
+                            $parameters['conditions'] = $parameters['conditions'] . ' OR Users.email=:email:';
+                            $parameters['bind']['email'] = $value;
+                            break;
+                        case Constants::USER_MOBILE_ATTR:
+                            $parameters['conditions'] = $parameters['conditions'] . ' OR Extensions.number = :mobile:';
+                            $parameters['bind']['mobile'] = $value;
+                            break;
+                        case Constants::USER_EXTENSION_ATTR:
+                            $parameters['conditions'] = $parameters['conditions'] . ' OR Extensions.number = :number:';
+                            $parameters['bind']['number'] = $value;
+                            break;
+                        case Constants::USER_NAME_ATTR:
+                            $parameters['conditions'] = $parameters['conditions'] . ' OR Users.username=:username:';
+                            $parameters['bind']['username'] = $value;
+                            break;
+                    }
                 }
             }
         }
+
         $parameters['conditions'] = '(' . substr($parameters['conditions'], 3) . ') AND Extensions.type="' . Extensions::TYPE_SIP . '"';
         $userDataFromMikoPBX = null;
         if (!empty($parameters['bind'])) {
@@ -552,7 +575,7 @@ class LdapSyncMain extends Injectable
         if ($result->success) {
             foreach ($result->data as &$processedUser) {
                 if (!empty($processedUser[$avatarKey])) {
-                    $processedUser[$avatarKey]='<i class="camera retro icon"></i>';
+                    $processedUser[$avatarKey] = '<i class="camera retro icon"></i>';
                 }
             }
         }
@@ -586,7 +609,7 @@ class LdapSyncMain extends Injectable
             Constants::USER_AVATAR_ATTR => $postData[Constants::USER_AVATAR_ATTR],
             Constants::USER_ACCOUNT_CONTROL_ATTR => $postData[Constants::USER_ACCOUNT_CONTROL_ATTR],
             Constants::USER_PASSWORD_ATTR => $postData[Constants::USER_PASSWORD_ATTR],
-            Constants::USER_DISABLED=>Constants::USER_DISABLED
+            Constants::USER_DISABLED => Constants::USER_DISABLED
         ];
 
         // Construct and return LDAP credentials
@@ -602,7 +625,7 @@ class LdapSyncMain extends Injectable
             'organizationalUnit' => $postData['organizationalUnit'],
             'userFilter' => $postData['userFilter'],
             'updateAttributes' => $postData['updateAttributes'],
-            'useTLS'=> $postData['useTLS'],
+            'useTLS' => $postData['useTLS'],
         ];
     }
 

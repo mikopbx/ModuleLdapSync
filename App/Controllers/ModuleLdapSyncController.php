@@ -89,7 +89,8 @@ class ModuleLdapSyncController extends BaseController
         $this->view->setVar('hiddenAttributes', json_encode([
             Constants::USER_ACCOUNT_CONTROL_ATTR,
             Constants::USER_GUID_ATTR,
-            Constants::USER_DISABLED
+            Constants::USER_DISABLED,
+            Constants::EXTENSION_ID_IN_MIKOPBX
         ]));
         $this->view->setVar('userDisabledAttribute', Constants::USER_DISABLED);
         $this->view->setVar('ldapForm', new LdapConfigForm($serverConfig));
