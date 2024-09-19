@@ -314,10 +314,13 @@ class LdapSyncConnector extends \Phalcon\Di\Injectable
                         $base64Data = substr($base64Image, strpos($base64Image, ',') + 1);
                         $binaryData = base64_decode($base64Data);
                         $user->{$this->userAttributes[$attribute]} = $binaryData;
+                    } elseif ($attribute===Constants::USER_MOBILE_ATTR){
+                        if (preg_replace('/\D/', '', $user->getFirstAttribute($this->userAttributes[$attribute]))!==$value) {
+                            $user->{$this->userAttributes[$attribute]} = $value;
+                        }
                     } else {
                         $user->{$this->userAttributes[$attribute]}=$value;
                     }
-
                 }
             }
             $user->save();
@@ -327,6 +330,9 @@ class LdapSyncConnector extends \Phalcon\Di\Injectable
         } catch (\LdapRecord\Exceptions\InsufficientAccessException $e) {
             $res->messages['info'][]= 'User '.$newUserData[Constants::USER_NAME_ATTR].' was not updated on server '.$this->serverName.' because of insufficient access rights';
             $res->success = true;
+        } catch (\LdapRecord\LdapRecordException $e) {
+            $res->messages['error'][]= $e->getDetailedError()->getDiagnosticMessage();
+            $res->success = false;
         } catch (\Throwable $e) {
             $res->messages['error'][] = CriticalErrorsHandler::handleExceptionWithSyslog($e);
             $res->success = false;
