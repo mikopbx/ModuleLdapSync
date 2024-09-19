@@ -308,7 +308,9 @@ class LdapSyncConnector extends \Phalcon\Di\Injectable
                 return $res;
             }
             foreach ($newUserData as $attribute=>$value){
-                if (!empty($value) and in_array($attribute, $updatableAttributes)){
+                if (!empty($value)
+                    AND isset($this->userAttributes[$attribute])
+                    AND in_array($attribute, $updatableAttributes)){
                     if ($attribute===Constants::USER_AVATAR_ATTR){
                         $base64Image = $value;
                         $base64Data = substr($base64Image, strpos($base64Image, ',') + 1);
