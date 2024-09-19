@@ -53,6 +53,9 @@ class LdapConfigForm extends BaseForm
             'value' =>$entity->serverPort ?? '389'
         ]));
 
+        // Use TLS dropdown
+        $this->add(new hidden('useTLS'));
+
         // AdministrativeLogin
         $this->add(new Text('administrativeLogin', ['placeholder' => 'cn=admin, dc=example, dc=com']));
 
@@ -132,6 +135,12 @@ class LdapConfigForm extends BaseForm
         $this->add(new Text(Constants::USER_ACCOUNT_CONTROL_ATTR, [
             'placeholder' => 'userAccountControl',
             'value' => $attributes[Constants::USER_ACCOUNT_CONTROL_ATTR] ?? 'userAccountControl'
+        ]));
+
+        //  UserPasswordAttribute
+        $this->add(new Text(Constants::USER_PASSWORD_ATTR, [
+            'placeholder' => 'sipPassword',
+            'value' => $attributes[Constants::USER_PASSWORD_ATTR]
         ]));
 
         // OrganizationUnit

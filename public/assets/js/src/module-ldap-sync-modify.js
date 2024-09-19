@@ -99,6 +99,19 @@ const ModuleLdapSyncModify = {
 	$statusToggle: $('#module-status-toggle'),
 
 	/**
+	 * jQuery object for the use TLS selector
+	 * @type {jQuery}
+	 */
+	$useTlsDropdown: $('.use-tls-dropdown'),
+
+	/**
+	 * jQuery object for the message no any disabled users
+	 * @type {jQuery}
+	 */
+	$noAnyDisabledUsersPlaceholder: $('#no-any-disabled-users-placeholder'),
+
+
+	/**
 	 * Validation rules for the form fields.
 	 * @type {Object}
 	 */
@@ -232,6 +245,112 @@ const ModuleLdapSyncModify = {
 		});
 
 		ModuleLdapSyncModify.updateConflictsView();
+
+		// Handle change TLS protocol
+		ModuleLdapSyncModify.$useTlsDropdown.dropdown({
+			values: [
+				{
+					name: 'ldap://',
+					value: '0',
+					selected : ModuleLdapSyncModify.$formObj.form('get value','useTLS')==='0'
+				},
+				{
+					name     : 'ldaps://',
+					value    : '1',
+					selected : ModuleLdapSyncModify.$formObj.form('get value','useTLS')==='1'
+				}
+			],
+		});
+
+
+		ModuleLdapSyncModify.updateDisabledUsersView();
+		ModuleLdapSyncModify.apiCallGetDisabledUsers();
+
+		// Handle find user button click
+		$('body').on('click', 'tr.find-user-row', function(e) {
+			e.preventDefault();
+			const recordId = $(e.target).closest('tr').data('value');
+			const searchValue =  `id:${recordId}`;
+			window.open( `${globalRootUrl}extensions/index/?search=${encodeURIComponent(searchValue)}`, '_blank');
+		});
+	},
+
+	/**
+	 * Make an API call to get disabled/deleted users
+	 */
+	apiCallGetDisabledUsers(){
+		const serverID = ModuleLdapSyncModify.$formObj.form('get value','id');
+		if (!serverID) {
+			return;
+		}
+
+		$.api({
+			url: `${Config.pbxUrl}/pbxcore/api/modules/ModuleLdapSync/get-disabled-ldap-users`,
+			on: 'now',
+			method: 'POST',
+			beforeSend(settings) {
+				settings.data.id = serverID;
+				return settings;
+			},
+			successTest:PbxApi.successTest,
+			/**
+			 * Handles the successful response of the 'get-disabled-ldap-users' API request.
+			 * @param {object} response - The response object.
+			 */
+			onSuccess: function(response) {
+				$('#disabled-users-result').remove();
+				$('.ui.message.ajax').remove();
+				ModuleLdapSyncModify.$noAnyDisabledUsersPlaceholder.hide();
+				const html = ModuleLdapSyncModify.buildTableFromDisabledUsersList(response.data);
+				ModuleLdapSyncModify.$noAnyDisabledUsersPlaceholder.after(html);
+				ModuleLdapSyncModify.updateDisabledUsersView();
+			},
+			/**
+			 * Handles the failure response of the 'get-disabled-ldap-users' API request.
+			 * @param {object} response - The response object.
+			 */
+			onFailure: function(response) {
+				$('.ui.message.ajax').remove();
+				$('#disabled-users-result').remove();
+				UserMessage.showMultiString(response.messages);
+				ModuleLdapSyncModify.updateDisabledUsersView();
+			},
+		})
+	},
+	/**
+	 * Build table from the disabled users list
+	 *
+	 * @param {Array} records - The list of disabled users
+	 * @returns {string} The HTML table
+	 */
+	buildTableFromDisabledUsersList(records){
+		let html = '<table class="ui very compact selectable table" id="disabled-users-result">';
+		// Generate the HTML table head conflicts data attributes
+		html += '<thead><tr>'
+		html +='<th>'+ModuleLdapSyncModify.getTranslation('UserName')+'</th>';
+		html +='<th>'+ModuleLdapSyncModify.getTranslation('UserNumber')+'</th>';
+		html +='<th>'+ModuleLdapSyncModify.getTranslation('UserEmail')+'</th>';
+		html += '</tr></thead><tbody>'
+
+		// Generate the HTML table with conflicts data
+		$.each(records, (index, record) => {
+			html += `<tr class="item find-user-row" data-value="${record['extension_id']}">`;
+			html += '<td><i class="icon user outline"></i>'+record['name']+'</td>';
+			html += '<td>'+record['number']+'</td>';
+			html += '<td>'+record['email']+'</td>';
+			html += '</tr>';
+		});
+		html += '</tbody></table>';
+		return html;
+	},
+	/**
+	 * Update the disabled users view.
+	 */
+	updateDisabledUsersView(){
+		if ($(`#disabled-users-result tbody tr`).length===0){
+			ModuleLdapSyncModify.$noAnyDisabledUsersPlaceholder.show();
+			$('#disabled-users-result').remove();
+		}
 	},
 
 	/**
@@ -313,7 +432,6 @@ const ModuleLdapSyncModify = {
 	 * Make an API call to get last sync conflicts
 	 */
 	apiCallGetConflicts(){
-
 		const serverID = ModuleLdapSyncModify.$formObj.form('get value','id');
 		if (!serverID) {
 			return;
@@ -352,6 +470,10 @@ const ModuleLdapSyncModify = {
 		})
 	},
 
+	/**
+	 * Update the conflicts view.
+	 * @return {void}
+	 */
 	updateConflictsView(){
 		if ($(`#conflicts-result tbody tr`).length===0){
 			ModuleLdapSyncModify.$noAnyConflictsPlaceholder.show();
@@ -424,6 +546,7 @@ const ModuleLdapSyncModify = {
 				const html = ModuleLdapSyncModify.buildTableFromUsersList(response.data);
 				ModuleLdapSyncModify.$syncUsersSegment.after(html);
 				ModuleLdapSyncModify.apiCallGetConflicts();
+				ModuleLdapSyncModify.apiCallGetDisabledUsers();
 			},
 			/**
 			 * Handles the failure response of the 'sync-ldap-users' API request.
@@ -475,19 +598,29 @@ const ModuleLdapSyncModify = {
 
 		// Generate the HTML table with user data
 		$.each(usersList, (index, user) => {
-			const rowClass = user[ModuleLdapSyncModify.userDisabledAttribute]===true?'disabled':'item';
+			// Determine the row class based on whether the user is disabled
+			let rowClass = user[ModuleLdapSyncModify.userDisabledAttribute] === true ? 'disabled' : 'item';
+
+			// Check if usersSyncResult is 'conflict' and add a class to highlight the row
+			if (user['usersSyncResult'] === 'CONFLICT') {
+				rowClass += ' negative';
+			} else if(user['usersSyncResult'] === 'UPDATED'){
+				rowClass += ' positive';
+			}
+
 			html += `<tr class="${rowClass}">`;
+
 			$.each(uniqueAttributes, (attrIndex, attrValue) => {
 				const cellValue = user[attrIndex] || '';
-				if (attrIndex==='usersSyncResult' || attrIndex==='userHadChangesOnTheSide'){
-					html +='<td>'+ModuleLdapSyncModify.getTranslation(cellValue)+'</td>';
+				if (attrIndex === 'usersSyncResult' || attrIndex === 'userHadChangesOnTheSide') {
+					html += '<td>' + ModuleLdapSyncModify.getTranslation(cellValue) + '</td>';
 				} else {
-					html += '<td>'+cellValue+'</td>';
+					html += '<td>' + cellValue + '</td>';
 				}
-
 			});
 			html += '</tr>';
 		});
+
 		html += '</table>';
 		return html;
 	},

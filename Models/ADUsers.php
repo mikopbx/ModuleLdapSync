@@ -69,6 +69,14 @@ class ADUsers extends ModulesModelsBase
     public $domainParamsHash;
 
 
+    /**
+     * Disabled/Deleted on LDAP/SERVER
+     *
+     * @Column(type="string", nullable=true)
+     */
+    public ?string $disabled='0';
+
+
     public function initialize(): void
     {
         $this->setSource('m_ModuleLdapSync_Users');

@@ -25,6 +25,11 @@
             {{ ldapForm.render('userAvatarAttribute') }}
             <label for="userAvatarAttribute">{{ t._('module_ldap_UserAvatarAttribute') }}</label>
         </div>
+
+        <div class="inline field">
+            {{ ldapForm.render('userPasswordAttribute') }}
+            <label for="userPasswordAttribute">{{ t._('module_ldap_UserPasswordAttribute') }}</label>
+        </div>
     </div>
 </div>
 <div class="field">

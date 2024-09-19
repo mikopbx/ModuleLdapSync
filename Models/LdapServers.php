@@ -45,6 +45,15 @@ class LdapServers extends ModulesModelsBase
      */
     public $serverPort;
 
+
+    /**
+     * Ldap server use TLS
+     *
+     * @Column(type="string", length=1, nullable=false, default="0")
+     */
+    public ?string $useTLS='0';
+
+
     /**
      * Login of user with read rights on the domain
      *
@@ -107,6 +116,7 @@ class LdapServers extends ModulesModelsBase
      * @Column(type="string", length=1, nullable=false)
      */
     public ?string $disabled = '0';
+
 
     public function initialize(): void
     {

@@ -82,6 +82,17 @@ class LdapSyncConf extends ConfigClass
                 $res->messages = $result->messages;
                 $res->data = $result->data;
                 break;
+            case 'GET-DISABLED-LDAP-USERS':
+                if (!empty($data['id'])) {
+                    $result = LdapSyncUsers::getDisabledUsers($data['id']);
+                    $res->success = $result->success;
+                    $res->messages = $result->messages;
+                    $res->data = $result->data;
+                } else {
+                    $res->success = false;
+                    $res->messages[] = 'No server id provided';
+                }
+                break;
             case 'SYNC-LDAP-USERS':
                 $ldapCredentials = LdapSyncMain::postDataToLdapCredentials($data);
                 $result = LdapSyncMain::syncUsersPerServer($ldapCredentials);

@@ -7,9 +7,17 @@
         </div>
 
         <div class="fields">
+            {{ ldapForm.render('useTLS') }}
             <div class="six wide field">
                 <label for="serverName">{{ t._('module_ldap_LdapServerName') }}</label>
-                {{ ldapForm.render('serverName') }}
+                <div class="ui left labeled input">
+                    <div class="ui dropdown label use-tls-dropdown">
+                        {{ ldapForm.render('useTLS') }}
+                        <div class="text">ldap://</div>
+                        <i class="dropdown icon"></i>
+                    </div>
+                    {{ ldapForm.render('serverName') }}
+                </div>
             </div>
             <div class="two wide field">
                 <label for="serverPort">{{ t._('module_ldap_LdapServerPort') }}</label>
@@ -44,6 +52,11 @@
         </div>
 
         <div class="field">
+            <div class="ui info message">
+                <div class="content">
+                    <p>{{ t._('module_ldap_UpdateAttributesMessage')}}</p>
+                </div>
+            </div>
             <div class="ui segment">
                 <div class="ui toggle checkbox">
                     {{ ldapForm.render('updateAttributes') }}

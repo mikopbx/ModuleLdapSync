@@ -16,3 +16,11 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
+/** More extensions on one page */
+#disabled-users-result td {
+    padding: .1em .6em;
+}
+
+#disabled-users-result th {
+    padding: .4em .6em;
+}
