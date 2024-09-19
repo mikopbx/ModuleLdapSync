@@ -85,4 +85,10 @@ return [
     'module_ldap_UserPasswordAttribute' => 'SIPパスワード',
     'module_ldap_UseTLS' => 'TLS/SSL',
     'module_ldap_UpdateAttributesMessage' => 'MikoPBX でデータが変更されると、ドメイン内で内部番号、携帯電話番号、電子メール、アバター、SIP パスワードが更新されます。',
+    'module_ldap_UserName' => 'ユーザー名',
+    'module_ldap_UserNumber' => '内線番号',
+    'module_ldap_findExtension' => 'ユーザーのリストから検索',
+    'module_ldap_DeletedUsersHeader' => 'LDAP/AD でリモートにいる従業員',
+    'module_ldap_DeletedUsersEmpty' => 'リモート従業員はいない',
+    'module_ldap_UserEmail' => '電子メール',
 ];

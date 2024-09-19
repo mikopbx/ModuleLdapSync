@@ -85,4 +85,10 @@ return [
     'module_ldap_UpdateAttributesMessage' => 'MikoPBX-də məlumat dəyişdikdə, domendə aşağıdakılar yenilənəcək: daxili nömrə, mobil nömrə, e-poçt, avatar, SIP parol',
     'module_ldap_UserPasswordAttribute' => 'SIP parol',
     'module_ldap_UseTLS' => 'TLS/SSL',
+    'module_ldap_UserName' => 'İstifadəçi adı',
+    'module_ldap_UserNumber' => 'Uzatma nömrəsi',
+    'module_ldap_findExtension' => 'İstifadəçilər siyahısında tapın',
+    'module_ldap_DeletedUsersHeader' => 'LDAP/AD-də uzaqdan işləyən işçilər',
+    'module_ldap_DeletedUsersEmpty' => 'Uzaqdan işçilər yoxdur',
+    'module_ldap_UserEmail' => 'E-poçt',
 ];

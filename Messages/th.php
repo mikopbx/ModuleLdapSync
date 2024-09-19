@@ -85,4 +85,10 @@ return [
     'module_ldap_UserPasswordAttribute' => 'รหัสผ่าน SIP',
     'module_ldap_UseTLS' => 'TLS/SSL',
     'module_ldap_UpdateAttributesMessage' => 'เมื่อข้อมูลเปลี่ยนแปลงใน MikoPBX ข้อมูลต่อไปนี้จะได้รับการอัปเดตในโดเมน: หมายเลขภายใน หมายเลขโทรศัพท์มือถือ อีเมล อวตาร รหัสผ่าน SIP',
+    'module_ldap_UserName' => 'ชื่อผู้ใช้',
+    'module_ldap_UserNumber' => 'หมายเลขต่อขยาย',
+    'module_ldap_findExtension' => 'ค้นหาในรายการผู้ใช้',
+    'module_ldap_DeletedUsersHeader' => 'พนักงานระยะไกลใน LDAP/AD',
+    'module_ldap_DeletedUsersEmpty' => 'ไม่มีพนักงานที่อยู่ห่างไกล',
+    'module_ldap_UserEmail' => 'อีเมล',
 ];

@@ -85,4 +85,10 @@ return [
     'module_ldap_UpdateAttributesMessage' => 'При зміні даних у MikoPBX в домені оновлюватимуться: внутрішній номер, мобільний номер, email, аватар, пароль SIP',
     'module_ldap_UserPasswordAttribute' => 'Пароль SIP',
     'module_ldap_UseTLS' => 'TLS/SSL',
+    'module_ldap_UserName' => 'Ім\'я користувача',
+    'module_ldap_UserNumber' => 'Внутрішній номер',
+    'module_ldap_findExtension' => 'Знайти у списку користувачів',
+    'module_ldap_DeletedUsersHeader' => 'Видалені в LDAP/AD співробітники',
+    'module_ldap_DeletedUsersEmpty' => 'Немає віддалених співробітників',
+    'module_ldap_UserEmail' => 'Email',
 ];

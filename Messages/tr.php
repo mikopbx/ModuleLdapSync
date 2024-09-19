@@ -85,4 +85,10 @@ return [
     'module_ldap_UpdateAttributesMessage' => 'MikoPBX\'te veriler değiştiğinde alanda aşağıdakiler güncellenecektir: dahili numara, cep telefonu numarası, e-posta, avatar, SIP şifresi',
     'module_ldap_UserPasswordAttribute' => 'SIP şifresi',
     'module_ldap_UseTLS' => 'TLS/SSL',
+    'module_ldap_UserName' => 'Kullanıcı adı',
+    'module_ldap_UserNumber' => 'Dahili numara',
+    'module_ldap_findExtension' => 'Kullanıcı listesinde bul',
+    'module_ldap_DeletedUsersHeader' => 'LDAP/AD\'de uzaktaki çalışanlar',
+    'module_ldap_DeletedUsersEmpty' => 'Uzak çalışan yok',
+    'module_ldap_UserEmail' => 'E-posta',
 ];

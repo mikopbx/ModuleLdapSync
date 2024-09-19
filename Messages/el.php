@@ -85,4 +85,10 @@ return [
     'module_ldap_UserPasswordAttribute' => 'Κωδικός πρόσβασης SIP',
     'module_ldap_UseTLS' => 'TLS/SSL',
     'module_ldap_UpdateAttributesMessage' => 'Όταν αλλάξουν τα δεδομένα στο MikoPBX, τα ακόλουθα θα ενημερωθούν στον τομέα: εσωτερικός αριθμός, αριθμός κινητού τηλεφώνου, email, avatar, κωδικός πρόσβασης SIP',
+    'module_ldap_UserName' => 'Όνομα χρήστη',
+    'module_ldap_UserNumber' => 'Αριθμός επέκτασης',
+    'module_ldap_findExtension' => 'Βρείτε στη λίστα των χρηστών',
+    'module_ldap_DeletedUsersHeader' => 'Εργαζόμενοι εξ αποστάσεως σε LDAP/AD',
+    'module_ldap_DeletedUsersEmpty' => 'Όχι απομακρυσμένοι υπάλληλοι',
+    'module_ldap_UserEmail' => 'E-mail',
 ];

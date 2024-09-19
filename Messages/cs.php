@@ -85,4 +85,10 @@ return [
     'module_ldap_UseTLS' => 'TLS/SSL',
     'module_ldap_UpdateAttributesMessage' => 'Při změně dat v MikoPBX budou v doméně aktualizovány: interní číslo, mobilní číslo, email, avatar, SIP heslo',
     'module_ldap_UserPasswordAttribute' => 'SIP heslo',
+    'module_ldap_UserName' => 'Uživatelské jméno',
+    'module_ldap_UserNumber' => 'Číslo pobočky',
+    'module_ldap_findExtension' => 'Najděte v seznamu uživatelů',
+    'module_ldap_DeletedUsersHeader' => 'Zaměstnanci vzdálení v LDAP/AD',
+    'module_ldap_DeletedUsersEmpty' => 'Žádní vzdálení zaměstnanci',
+    'module_ldap_UserEmail' => 'E-mail',
 ];
