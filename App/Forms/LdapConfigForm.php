@@ -84,7 +84,7 @@ class LdapConfigForm extends BaseForm
             'DirectoryServer' => 'DirectoryServer',
             'FreeIPA' => 'FreeIPA',
         ];
-        $extension = new Select(
+        $ldapType = new Select(
             'ldapType', $types, [
                 'using' => [
                     'id',
@@ -95,7 +95,7 @@ class LdapConfigForm extends BaseForm
                 'class' => "ui selection dropdown select-ldap-field",
             ]
         );
-        $this->add($extension);
+        $this->add($ldapType);
 
 
         $attributes = json_decode($entity->attributes??'', true);
