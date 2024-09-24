@@ -212,7 +212,9 @@ const ModuleLdapSyncModify = {
 	 * Initializes the module.
 	 */
 	initialize() {
-		ModuleLdapSyncModify.$ldapTypeDropdown.dropdown();
+		ModuleLdapSyncModify.$ldapTypeDropdown.dropdown({
+			onChange: ModuleLdapSyncModify.onChangeLdapType,
+		});
 
 		ModuleLdapSyncModify.initializeForm();
 
@@ -280,6 +282,25 @@ const ModuleLdapSyncModify = {
 			const recordId = $(e.target).closest('tr').data('value');
 			window.open( `${globalRootUrl}extensions/modify/${encodeURIComponent(recordId)}`, '_blank');
 		});
+	},
+
+	/**
+	 * Handles change LDAP dropdown.
+	 */
+	onChangeLdapType(value){
+		if(value==='OpenLDAP'){
+			ModuleLdapSyncModify.$formObj.form('set value','userIdAttribute','uid');
+			ModuleLdapSyncModify.$formObj.form('set value','administrativeLogin','cn=admin,dc=example,dc=com');
+			ModuleLdapSyncModify.$formObj.form('set value','userFilter','(objectClass=inetOrgPerson)');
+			ModuleLdapSyncModify.$formObj.form('set value','baseDN','dc=example,dc=com');
+			ModuleLdapSyncModify.$formObj.form('set value','organizationalUnit','ou=users, dc=domain, dc=com');
+		} else if(value==='ActiveDirectory'){
+			ModuleLdapSyncModify.$formObj.form('set value','administrativeLogin','admin');
+			ModuleLdapSyncModify.$formObj.form('set value','userIdAttribute','samaccountname')
+			ModuleLdapSyncModify.$formObj.form('set value','userFilter','(&(objectClass=user)(objectCategory=PERSON))');
+			ModuleLdapSyncModify.$formObj.form('set value','baseDN','dc=example,dc=com');
+			ModuleLdapSyncModify.$formObj.form('set value','organizationalUnit','ou=users, dc=domain, dc=com');
+		}
 	},
 
 	/**
