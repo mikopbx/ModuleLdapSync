@@ -28,7 +28,6 @@ use MikoPBX\PBXCoreREST\Lib\Extensions\DataStructure;
 use Modules\ModuleLdapSync\Lib\Workers\WorkerLdapSync;
 use Modules\ModuleLdapSync\Models\ADUsers;
 use Modules\ModuleLdapSync\Models\LdapServers;
-use Phalcon\Di;
 use Phalcon\Di\Injectable;
 
 /**
@@ -344,7 +343,8 @@ class LdapSyncMain extends Injectable
             ],
         ];
         // Build and execute the query to fetch user information.
-        $result = Di::getDefault()->get('modelsManager')->createBuilder($parameters)
+        $di=MikoPBXVersion::getDefaultDi();
+        $result = $di->get('modelsManager')->createBuilder($parameters)
             ->getQuery()
             ->getSingleResult();
 
@@ -375,7 +375,7 @@ class LdapSyncMain extends Injectable
         }
 
         // Get user data from the API
-        $di = Di::getDefault();
+        $di=MikoPBXVersion::getDefaultDi();
         $restAnswer = $di->get(PBXCoreRESTClientProvider::SERVICE_NAME, [
             '/pbxcore/api/extensions/getRecord',
             PBXCoreRESTClientProvider::HTTP_METHOD_GET,
@@ -525,7 +525,8 @@ class LdapSyncMain extends Injectable
         $parameters['conditions'] = '(' . substr($parameters['conditions'], 3) . ') AND Extensions.type="' . Extensions::TYPE_SIP . '"';
         $userDataFromMikoPBX = null;
         if (!empty($parameters['bind'])) {
-            $userDataFromMikoPBX = Di::getDefault()->get('modelsManager')->createBuilder($parameters)
+            $di=MikoPBXVersion::getDefaultDi();
+            $userDataFromMikoPBX = $di->get('modelsManager')->createBuilder($parameters)
                 ->getQuery()
                 ->getSingleResult();
         }
@@ -628,5 +629,6 @@ class LdapSyncMain extends Injectable
             'useTLS' => $postData['useTLS'],
         ];
     }
+
 
 }

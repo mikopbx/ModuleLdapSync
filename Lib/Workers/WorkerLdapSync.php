@@ -19,11 +19,10 @@
 
 namespace Modules\ModuleLdapSync\Lib\Workers;
 
-
 use MikoPBX\Common\Providers\ManagedCacheProvider;
 use MikoPBX\Core\Workers\WorkerBase;
 use Modules\ModuleLdapSync\Lib\LdapSyncMain;
-use Phalcon\Di;
+use Modules\ModuleLdapSync\Lib\MikoPBXVersion;
 
 require_once 'Globals.php';
 
@@ -76,7 +75,8 @@ class WorkerLdapSync extends WorkerBase
      */
     public static function increaseSyncFrequency():void
     {
-        $managedCache = Di::getDefault()->get(ManagedCacheProvider::SERVICE_NAME);
+        $di=MikoPBXVersion::getDefaultDi();
+        $managedCache = $di->get(ManagedCacheProvider::SERVICE_NAME);
         // Decrease sync interval to 5 minutes if changes occur
         $managedCache->set(self::CACHE_KEY, time()-3300, 86400);
     }

@@ -23,7 +23,6 @@ namespace Modules\ModuleLdapSync\Lib;
 use MikoPBX\Common\Models\Extensions;
 use MikoPBX\Common\Models\Users;
 use Modules\ModuleLdapSync\Models\ADUsers;
-use Phalcon\Di;
 use Phalcon\Di\Injectable;
 
 class LdapSyncUsers extends Injectable
@@ -51,7 +50,9 @@ class LdapSyncUsers extends Injectable
                 'server_id'=>intval($serverId)
             ],
         ];
-        $selectedUsers = Di::getDefault()->get('modelsManager')->createBuilder($parameters)
+
+        $di=MikoPBXVersion::getDefaultDi();
+        $selectedUsers = $di->get('modelsManager')->createBuilder($parameters)
             ->getQuery()
             ->execute();
         if (empty($selectedUsers->toArray())){
@@ -81,7 +82,10 @@ class LdapSyncUsers extends Injectable
                 ],
             ],
         ];
-        $records = Di::getDefault()->get('modelsManager')->createBuilder($parameters)
+
+        $di=MikoPBXVersion::getDefaultDi();
+
+        $records = $di->get('modelsManager')->createBuilder($parameters)
             ->getQuery()
             ->execute();
         foreach ($records as $record) {

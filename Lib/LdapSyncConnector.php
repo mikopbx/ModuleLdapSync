@@ -22,6 +22,7 @@ namespace Modules\ModuleLdapSync\Lib;
 use LdapRecord\Container;
 use MikoPBX\Common\Handlers\CriticalErrorsHandler;
 use MikoPBX\Common\Providers\ManagedCacheProvider;
+use Phalcon\Di\Injectable;
 
 
 include_once __DIR__.'/../vendor/autoload.php';
@@ -30,7 +31,7 @@ include_once __DIR__.'/../vendor/autoload.php';
  * Class LdapSyncConnector
  * Handles synchronization and interaction with LDAP server.
  */
-class LdapSyncConnector extends \Phalcon\Di\Injectable
+class LdapSyncConnector extends Injectable
 {
     /**
      * The name or ip of the LDAP server.

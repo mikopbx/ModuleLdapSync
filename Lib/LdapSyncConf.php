@@ -32,9 +32,9 @@ class LdapSyncConf extends ConfigClass
     /**
      * Receive information about mikopbx main database changes
      *
-     * @param $data
+     * @param mixed $data
      */
-    public function modelsEventChangeData($data): void
+    public function modelsEventChangeData(mixed $data): void
     {
         // Somebody changes LdapServers, we will restart all workers
         if (

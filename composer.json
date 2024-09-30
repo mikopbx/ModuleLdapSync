@@ -2,7 +2,7 @@
     "name": "mikopbx/moduletemplate",
     "description": "ModuleLdapSync",
     "require": {
-        "php": "7.4.*",
+        "php": "^7.4 || ^8.0",
         "directorytree/ldaprecord": "*"
     },
     "autoload": {
@@ -55,7 +55,7 @@
     "config": {
         "sort-packages": true,
         "platform": {
-            "php": "7.4.6"
+            "php": "^7.4 || ^8.0"
         }
     }
 }
