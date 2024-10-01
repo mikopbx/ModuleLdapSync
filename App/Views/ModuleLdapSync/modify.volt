@@ -1,4 +1,4 @@
-{{ form(['method': 'post', 'action' : 'module-ldap-sync/module-ldap-sync/save', 'role': 'form', 'class': 'ui large info form','id':'module-ldap-sync-form'] }}
+<form method="post" action="module-ldap-sync/module-ldap-sync/save" role="form" class="ui large info form" id="module-ldap-sync-form">
 
 {{ ldapForm.render('id') }}
 
@@ -20,7 +20,7 @@
     </div>
 
 {{ partial("partials/submitbutton",['indexurl':'module-ldap-sync/module-ldap-sync/index']) }}
-{{ endform() }}
+</form>
 
 <script type="text/javascript">
     var module_ldap_hiddenAttributes = '{{ hiddenAttributes }}';
