@@ -34,7 +34,7 @@ class LdapSyncConf extends ConfigClass
      *
      * @param mixed $data
      */
-    public function modelsEventChangeData(mixed $data): void
+    public function modelsEventChangeData($data): void
     {
         // Somebody changes LdapServers, we will restart all workers
         if (
