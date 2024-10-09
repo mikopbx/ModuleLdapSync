@@ -252,7 +252,7 @@ class LdapSyncConnector extends Injectable
                 }
 
                 uksort($record, function($a, $b){
-                    return $a>$this->userAttributes[Constants::USER_NAME_ATTR];
+                    return strcmp($a, $this->userAttributes[Constants::USER_NAME_ATTR]);
                 });
                 if (!empty($record)){
                     $listOfAvailableUsers[] = $record;
@@ -260,7 +260,7 @@ class LdapSyncConnector extends Injectable
             }
             // Sort the array based on the name value
             usort($listOfAvailableUsers, function($a, $b){
-                return $a[$this->userAttributes[Constants::USER_NAME_ATTR]] > $b[$this->userAttributes[Constants::USER_NAME_ATTR]];
+                return strcmp($a[$this->userAttributes[Constants::USER_NAME_ATTR]] , $b[$this->userAttributes[Constants::USER_NAME_ATTR]]);
             });
 
             $res->data = $listOfAvailableUsers;

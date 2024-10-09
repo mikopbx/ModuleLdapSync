@@ -49,7 +49,7 @@ class ModuleLdapSyncController extends BaseController
             ->addJs('js/cache/'.$this->moduleUniqueID.'/module-ldap-sync-index.js', true);
 
         $servers = LdapServers::find();
-        $serversList = null;
+        $serversList = [];
         foreach ($servers as $server){
             $serversList[]=[
                 'id'=>$server->id,
