@@ -1,4 +1,5 @@
 <?php
+
 /*
  * MikoPBX - free phone system for small business
  * Copyright © 2017-2023 Alexey Portnov and Nikolay Beketov
@@ -27,7 +28,6 @@ use Phalcon\Forms\Element\Password;
 use Phalcon\Forms\Element\Select;
 use Phalcon\Forms\Element\Text;
 
-
 class LdapConfigForm extends BaseForm
 {
     public function initialize($entity = null, $options = null): void
@@ -36,11 +36,7 @@ class LdapConfigForm extends BaseForm
         $this->add(new Hidden('id'));
 
         // Autosync checkbox
-        $checkArr = [];
-        if ($entity->disabled === '0') {
-            $checkArr['checked'] = 'checked';
-        }
-        $this->add(new Check('autosync', $checkArr));
+        $this->addCheckBox('autosync', intval($entity->disabled) !== 0);
 
         // ServerHost
         $this->add(new Text('serverName', [
@@ -50,7 +46,7 @@ class LdapConfigForm extends BaseForm
         // ServerPort
         $this->add(new Text('serverPort', [
             'placeholder' => '389',
-            'value' =>$entity->serverPort ?? '389'
+            'value' => $entity->serverPort ?? '389'
         ]));
 
         // Use TLS dropdown
@@ -85,7 +81,9 @@ class LdapConfigForm extends BaseForm
 //            'FreeIPA' => 'FreeIPA',
         ];
         $ldapType = new Select(
-            'ldapType', $types, [
+            'ldapType',
+            $types,
+            [
                 'using' => [
                     'id',
                     'name',
@@ -98,7 +96,7 @@ class LdapConfigForm extends BaseForm
         $this->add($ldapType);
 
 
-        $attributes = json_decode($entity->attributes??'', true);
+        $attributes = json_decode($entity->attributes ?? '', true);
 
 
         // UserNameAttribute
@@ -149,11 +147,24 @@ class LdapConfigForm extends BaseForm
         ]));
 
         // UpdateAttributes checkbox
-        $checkArr = [];
-        if ($entity->updateAttributes === '1') {
-            $checkArr['checked'] = 'checked';
-        }
-        $this->add(new Check('updateAttributes', $checkArr));
+        $this->addCheckBox('updateAttributes', intval($entity->updateAttributes) === 1);
+    }
 
+    /**
+     * Adds a checkbox to the form field with the given name.
+     * Can be deleted if the module depends on MikoPBX later than 2024.3.0
+     *
+     * @param string $fieldName The name of the form field.
+     * @param bool $checked Indicates whether the checkbox is checked by default.
+     * @param string $checkedValue The value assigned to the checkbox when it is checked.
+     * @return void
+     */
+    public function addCheckBox(string $fieldName, bool $checked, string $checkedValue = 'on'): void
+    {
+        $checkAr = ['value' => null];
+        if ($checked) {
+            $checkAr = ['checked' => $checkedValue,'value' => $checkedValue];
+        }
+        $this->add(new Check($fieldName, $checkAr));
     }
 }
