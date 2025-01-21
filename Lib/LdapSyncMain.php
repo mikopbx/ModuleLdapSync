@@ -169,7 +169,7 @@ class LdapSyncMain extends Injectable
             $previousSyncUser->disabled = ($userDataFromLdap[Constants::USER_DISABLED] ?? false) ? '1' : '0';
 
             // Do not create disabled users
-            if ($userDataFromLdap[Constants::USER_DISABLED] === true && $userDataFromMikoPBX === []) {
+            if ($previousSyncUser->disabled === '1' && $userDataFromMikoPBX === []) {
                 $response = new AnswerStructure();
                 $response->data[Constants::USER_SYNC_RESULT] = Constants::SYNC_RESULT_SKIPPED;
                 $response->success = true;
@@ -428,7 +428,7 @@ class LdapSyncMain extends Injectable
         }
 
         // Check if provided email is available
-        $email = $userDataFromLdap[Constants::USER_EMAIL_ATTR];
+        $email = $userDataFromLdap[Constants::USER_EMAIL_ATTR]??null;
         if (!empty($email) && $email !== $dataStructure->user_email) {
             $restAnswer = $di->get(PBXCoreRESTClientProvider::SERVICE_NAME, [
                 '/pbxcore/api/users/available',
