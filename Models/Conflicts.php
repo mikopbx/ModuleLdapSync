@@ -19,10 +19,7 @@
 
 namespace Modules\ModuleLdapSync\Models;
 
-use MikoPBX\Common\Models\Users;
 use MikoPBX\Modules\Models\ModulesModelsBase;
-use Phalcon\Mvc\Model\Relation;
-
 class Conflicts extends ModulesModelsBase
 {
 

@@ -1,3 +1,4 @@
 .idea
 /.idea/
 vendor/
+.DS_Store

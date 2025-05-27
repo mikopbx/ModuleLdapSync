@@ -22,6 +22,7 @@ namespace Modules\ModuleLdapSync\Lib;
 use LdapRecord\Container;
 use MikoPBX\Common\Handlers\CriticalErrorsHandler;
 use MikoPBX\Common\Providers\ManagedCacheProvider;
+use Phalcon\Di\Injectable;
 
 
 include_once __DIR__.'/../vendor/autoload.php';
@@ -30,7 +31,7 @@ include_once __DIR__.'/../vendor/autoload.php';
  * Class LdapSyncConnector
  * Handles synchronization and interaction with LDAP server.
  */
-class LdapSyncConnector extends \Phalcon\Di\Injectable
+class LdapSyncConnector extends Injectable
 {
     /**
      * The name or ip of the LDAP server.
@@ -251,7 +252,7 @@ class LdapSyncConnector extends \Phalcon\Di\Injectable
                 }
 
                 uksort($record, function($a, $b){
-                    return $a>$this->userAttributes[Constants::USER_NAME_ATTR];
+                    return strcmp($a, $this->userAttributes[Constants::USER_NAME_ATTR]);
                 });
                 if (!empty($record)){
                     $listOfAvailableUsers[] = $record;
@@ -259,7 +260,7 @@ class LdapSyncConnector extends \Phalcon\Di\Injectable
             }
             // Sort the array based on the name value
             usort($listOfAvailableUsers, function($a, $b){
-                return $a[$this->userAttributes[Constants::USER_NAME_ATTR]] > $b[$this->userAttributes[Constants::USER_NAME_ATTR]];
+                return strcmp($a[$this->userAttributes[Constants::USER_NAME_ATTR]] , $b[$this->userAttributes[Constants::USER_NAME_ATTR]]);
             });
 
             $res->data = $listOfAvailableUsers;

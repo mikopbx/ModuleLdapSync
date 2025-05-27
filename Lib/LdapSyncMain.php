@@ -28,7 +28,6 @@ use MikoPBX\PBXCoreREST\Lib\Extensions\DataStructure;
 use Modules\ModuleLdapSync\Lib\Workers\WorkerLdapSync;
 use Modules\ModuleLdapSync\Models\ADUsers;
 use Modules\ModuleLdapSync\Models\LdapServers;
-use Phalcon\Di;
 use Phalcon\Di\Injectable;
 
 /**
@@ -170,7 +169,7 @@ class LdapSyncMain extends Injectable
             $previousSyncUser->disabled = ($userDataFromLdap[Constants::USER_DISABLED] ?? false) ? '1' : '0';
 
             // Do not create disabled users
-            if ($userDataFromLdap[Constants::USER_DISABLED] === true && $userDataFromMikoPBX === []) {
+            if ($previousSyncUser->disabled === '1' && $userDataFromMikoPBX === []) {
                 $response = new AnswerStructure();
                 $response->data[Constants::USER_SYNC_RESULT] = Constants::SYNC_RESULT_SKIPPED;
                 $response->success = true;
@@ -344,7 +343,8 @@ class LdapSyncMain extends Injectable
             ],
         ];
         // Build and execute the query to fetch user information.
-        $result = Di::getDefault()->get('modelsManager')->createBuilder($parameters)
+        $di=MikoPBXVersion::getDefaultDi();
+        $result = $di->get('modelsManager')->createBuilder($parameters)
             ->getQuery()
             ->getSingleResult();
 
@@ -375,7 +375,7 @@ class LdapSyncMain extends Injectable
         }
 
         // Get user data from the API
-        $di = Di::getDefault();
+        $di=MikoPBXVersion::getDefaultDi();
         $restAnswer = $di->get(PBXCoreRESTClientProvider::SERVICE_NAME, [
             '/pbxcore/api/extensions/getRecord',
             PBXCoreRESTClientProvider::HTTP_METHOD_GET,
@@ -428,7 +428,7 @@ class LdapSyncMain extends Injectable
         }
 
         // Check if provided email is available
-        $email = $userDataFromLdap[Constants::USER_EMAIL_ATTR];
+        $email = $userDataFromLdap[Constants::USER_EMAIL_ATTR]??null;
         if (!empty($email) && $email !== $dataStructure->user_email) {
             $restAnswer = $di->get(PBXCoreRESTClientProvider::SERVICE_NAME, [
                 '/pbxcore/api/users/available',
@@ -525,7 +525,8 @@ class LdapSyncMain extends Injectable
         $parameters['conditions'] = '(' . substr($parameters['conditions'], 3) . ') AND Extensions.type="' . Extensions::TYPE_SIP . '"';
         $userDataFromMikoPBX = null;
         if (!empty($parameters['bind'])) {
-            $userDataFromMikoPBX = Di::getDefault()->get('modelsManager')->createBuilder($parameters)
+            $di=MikoPBXVersion::getDefaultDi();
+            $userDataFromMikoPBX = $di->get('modelsManager')->createBuilder($parameters)
                 ->getQuery()
                 ->getSingleResult();
         }
@@ -628,5 +629,6 @@ class LdapSyncMain extends Injectable
             'useTLS' => $postData['useTLS'],
         ];
     }
+
 
 }

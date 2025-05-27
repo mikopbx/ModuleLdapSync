@@ -32,7 +32,7 @@ class LdapSyncConf extends ConfigClass
     /**
      * Receive information about mikopbx main database changes
      *
-     * @param $data
+     * @param mixed $data
      */
     public function modelsEventChangeData($data): void
     {
