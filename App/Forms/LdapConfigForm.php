@@ -36,7 +36,7 @@ class LdapConfigForm extends BaseForm
         $this->add(new Hidden('id'));
 
         // Autosync checkbox
-        $this->addCheckBox('autosync', intval($entity->disabled) !== 0);
+        $this->addCheckBox('autosync', intval($entity->disabled) === 0);
 
         // ServerHost
         $this->add(new Text('serverName', [
