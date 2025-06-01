@@ -42,7 +42,7 @@ return [
     'module_ldap_LdapAttributesHeader' => 'Attributes in the domain for matching with data in MikoPBX',
     'module_ldap_UserExtensionAttribute' => 'User extension number',
     'module_ldap_UserMobileAttribute' => 'Mobile phone',
-    'module_ldap_UserEmailAttribute' => 'E-mail address',
+    'module_ldap_UserEmailAttribute' => 'Email address',
     'module_ldap_UserAvatarAttribute' => 'Photo attribute',
     'module_ldap_UpdateAttributes' => 'Update data in the domain when changing it in MikoPBX (write rights required)',
     'module_ldap_LdapOrganizationalUnit' => 'Subdivision',
