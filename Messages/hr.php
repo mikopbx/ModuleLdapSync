@@ -17,12 +17,12 @@ return [
  * You should have received a copy of the GNU General Public License along with this program.
  * If not, see <https://www.gnu.org/licenses/>.
  */
-    'repModuleLdapSync' => 'Sinkronizacija s LDAP/AD - %repesent%',
-    'mo_ModuleModuleLdapSync' => 'Sinkronizacija s LDAP/AD',
-    'BreadcrumbModuleLdapSync' => 'Sinkronizacija s LDAP/AD',
-    'SubHeaderModuleLdapSync' => 'Modul omogućuje učitavanje korisnika s domene',
-    'module_ldap_LdapServerConnectionHeader' => 'Postavke povezivanja s kontrolerom domene',
-    'module_ldap_EnableAutoSync' => 'Omogući planiranu sinkronizaciju',
+    'repModuleLdapSync' => 'Sinkronizacija s LDAP/AD-om - %repesent%',
+    'mo_ModuleModuleLdapSync' => 'Sinkronizacija s LDAP/AD-om',
+    'BreadcrumbModuleLdapSync' => 'Sinkronizacija s LDAP/AD-om',
+    'SubHeaderModuleLdapSync' => 'Modul vam omogućuje učitavanje korisnika iz domene',
+    'module_ldap_LdapServerConnectionHeader' => 'Parametri povezivanja kontrolera domene',
+    'module_ldap_EnableAutoSync' => 'Omogući zakazanu sinkronizaciju',
     'module_ldap_AddServer' => 'Dodaj poslužitelj',
     'module_ldap_AddServerShort' => 'Dodati',
     'module_ldap_NoAnyServers' => 'Nema konfiguriranih poslužitelja',
