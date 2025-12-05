@@ -24,7 +24,6 @@ use MikoPBX\Common\Models\Sip;
 use MikoPBX\Common\Models\Users;
 use MikoPBX\Common\Providers\PBXCoreRESTClientProvider;
 use MikoPBX\Modules\Logger;
-use MikoPBX\PBXCoreREST\Lib\Extensions\DataStructure;
 use Modules\ModuleLdapSync\Lib\Workers\WorkerLdapSync;
 use Modules\ModuleLdapSync\Models\ADUsers;
 use Modules\ModuleLdapSync\Models\LdapServers;
@@ -355,13 +354,13 @@ class LdapSyncMain extends Injectable
     }
 
     /**
-     * Creates or updates a user using provided data.
+     * Creates or updates a user using provided data via REST API v3.
      *
      * @param array $userDataFromLdap - User data to be created or updated.
      * @param ?string $currentUserId The current user id.
      * @return AnswerStructure
      */
-    public static function createUpdateUser(array $userDataFromLdap, string $currentUserId = null): AnswerStructure
+    public static function createUpdateUser(array $userDataFromLdap, ?string $currentUserId = null): AnswerStructure
     {
         $pbxUserData = self::findUserInMikoPBX($userDataFromLdap, $currentUserId);
 
@@ -374,91 +373,134 @@ class LdapSyncMain extends Injectable
             return $result;
         }
 
-        // Get user data from the API
-        $di=MikoPBXVersion::getDefaultDi();
-        $restAnswer = $di->get(PBXCoreRESTClientProvider::SERVICE_NAME, [
-            '/pbxcore/api/extensions/getRecord',
-            PBXCoreRESTClientProvider::HTTP_METHOD_GET,
-            ['id' => $pbxUserData['extension_id'] ?? '']
-        ]);
+        $di = MikoPBXVersion::getDefaultDi();
+        $isNewEmployee = empty($pbxUserData['user_id']);
+
+        // Get existing employee data or defaults for new employee
+        if ($isNewEmployee) {
+            // Get default template for new employee
+            $restAnswer = $di->get(PBXCoreRESTClientProvider::SERVICE_NAME, [
+                '/pbxcore/api/v3/employees:getDefault',
+                PBXCoreRESTClientProvider::HTTP_METHOD_GET
+            ]);
+        } else {
+            // Get existing employee data by user_id
+            $restAnswer = $di->get(PBXCoreRESTClientProvider::SERVICE_NAME, [
+                '/pbxcore/api/v3/employees/' . $pbxUserData['user_id'],
+                PBXCoreRESTClientProvider::HTTP_METHOD_GET
+            ]);
+        }
+
         if (!$restAnswer->success) {
             return new AnswerStructure($restAnswer);
         }
 
-        // Create a new data structure for user data
-        $dataStructure = new DataStructure($restAnswer->data);
+        $employeeData = $restAnswer->data;
 
         // Check if provided phone number is available
-        $number = $userDataFromLdap[Constants::USER_EXTENSION_ATTR];
-        if (!empty($number) && $number !== $dataStructure->number) {
+        $number = $userDataFromLdap[Constants::USER_EXTENSION_ATTR] ?? null;
+        if (!empty($number) && $number !== ($employeeData['number'] ?? '')) {
             $restAnswer = $di->get(PBXCoreRESTClientProvider::SERVICE_NAME, [
-                '/pbxcore/api/extensions/available',
-                PBXCoreRESTClientProvider::HTTP_METHOD_GET,
-                ['number' => $number]
+                '/pbxcore/api/v3/extensions:available',
+                PBXCoreRESTClientProvider::HTTP_METHOD_POST,
+                ['number' => $number],
+                ['Content-Type' => 'application/json']
             ]);
-            if ($restAnswer->success || $restAnswer->data['userId'] == $pbxUserData['user_id']) {
-                $dataStructure->number = $number;
+            if ($restAnswer->success || ($restAnswer->data['userId'] ?? null) == $pbxUserData['user_id']) {
+                $employeeData['number'] = $number;
             }
         }
 
         // Check if provided mobile number is available
-        $mobileFromDomain = $userDataFromLdap[Constants::USER_MOBILE_ATTR];
-        if (!empty($mobileFromDomain) && $mobileFromDomain !== $dataStructure->mobile_number) {
+        $mobileFromDomain = $userDataFromLdap[Constants::USER_MOBILE_ATTR] ?? null;
+        if (!empty($mobileFromDomain) && $mobileFromDomain !== ($employeeData['mobile_number'] ?? '')) {
             $restAnswer = $di->get(PBXCoreRESTClientProvider::SERVICE_NAME, [
-                '/pbxcore/api/extensions/available',
-                PBXCoreRESTClientProvider::HTTP_METHOD_GET,
-                ['number' => $mobileFromDomain]
+                '/pbxcore/api/v3/extensions:available',
+                PBXCoreRESTClientProvider::HTTP_METHOD_POST,
+                ['number' => $mobileFromDomain],
+                ['Content-Type' => 'application/json']
             ]);
-            if ($restAnswer->success || $restAnswer->data['userId'] == $pbxUserData['user_id']) {
+            if ($restAnswer->success || ($restAnswer->data['userId'] ?? null) == $pbxUserData['user_id']) {
                 // Update mobile number and forwarding settings
-                $oldMobileNumber = $dataStructure->mobile_number;
-                $dataStructure->mobile_number = $mobileFromDomain;
-                $dataStructure->mobile_dialstring = $mobileFromDomain;
+                $oldMobileNumber = $employeeData['mobile_number'] ?? '';
+                $employeeData['mobile_number'] = $mobileFromDomain;
+                $employeeData['mobile_dialstring'] = $mobileFromDomain;
 
-                if ($oldMobileNumber === $dataStructure->fwd_forwardingonunavailable) {
-                    $dataStructure->fwd_forwardingonunavailable = $mobileFromDomain;
+                if ($oldMobileNumber === ($employeeData['fwd_forwardingonunavailable'] ?? '')) {
+                    $employeeData['fwd_forwardingonunavailable'] = $mobileFromDomain;
                 }
-                if ($oldMobileNumber === $dataStructure->fwd_forwarding) {
-                    $dataStructure->fwd_forwarding = $mobileFromDomain;
+                if ($oldMobileNumber === ($employeeData['fwd_forwarding'] ?? '')) {
+                    $employeeData['fwd_forwarding'] = $mobileFromDomain;
                 }
-                if ($oldMobileNumber === $dataStructure->fwd_forwardingonbusy) {
-                    $dataStructure->fwd_forwardingonbusy = $mobileFromDomain;
+                if ($oldMobileNumber === ($employeeData['fwd_forwardingonbusy'] ?? '')) {
+                    $employeeData['fwd_forwardingonbusy'] = $mobileFromDomain;
                 }
             }
         }
 
         // Check if provided email is available
-        $email = $userDataFromLdap[Constants::USER_EMAIL_ATTR]??null;
-        if (!empty($email) && $email !== $dataStructure->user_email) {
+        $email = $userDataFromLdap[Constants::USER_EMAIL_ATTR] ?? null;
+        if (!empty($email) && $email !== ($employeeData['user_email'] ?? '')) {
             $restAnswer = $di->get(PBXCoreRESTClientProvider::SERVICE_NAME, [
-                '/pbxcore/api/users/available',
+                '/pbxcore/api/v3/users:available',
                 PBXCoreRESTClientProvider::HTTP_METHOD_GET,
                 ['email' => $email]
             ]);
-            if ($restAnswer->success || $restAnswer->data['userId'] == $pbxUserData['user_id']) {
-                $dataStructure->user_email = $email;
+            if ($restAnswer->success || ($restAnswer->data['userId'] ?? null) == $pbxUserData['user_id']) {
+                $employeeData['user_email'] = $email;
             }
         }
 
-        // Check provided sip password
-        $sipPassword = $userDataFromLdap[Constants::USER_PASSWORD_ATTR] ?? $dataStructure->sip_secret;
-        if (!empty($sipPassword) && $sipPassword != $dataStructure->sip_secret) {
-            $dataStructure->sip_secret = $sipPassword;
+        // Update SIP password if provided
+        $sipPassword = $userDataFromLdap[Constants::USER_PASSWORD_ATTR] ?? null;
+        if (!empty($sipPassword) && $sipPassword !== ($employeeData['sip_secret'] ?? '')) {
+            $employeeData['sip_secret'] = $sipPassword;
         }
 
-        $dataStructure->user_username = $userDataFromLdap[Constants::USER_NAME_ATTR] ?? $dataStructure->user_username;
+        // Update username
+        if (!empty($userDataFromLdap[Constants::USER_NAME_ATTR])) {
+            $employeeData['user_username'] = $userDataFromLdap[Constants::USER_NAME_ATTR];
+        }
 
-        $dataStructure->user_avatar = $userDataFromLdap[Constants::USER_AVATAR_ATTR] ?? $dataStructure->user_avatar;
+        // Update avatar
+        if (!empty($userDataFromLdap[Constants::USER_AVATAR_ATTR])) {
+            $employeeData['user_avatar'] = $userDataFromLdap[Constants::USER_AVATAR_ATTR];
+        }
 
-        $dataStructure->sip_transport = trim($dataStructure->sip_transport);
+        // Trim transport value
+        if (isset($employeeData['sip_transport'])) {
+            $employeeData['sip_transport'] = trim($employeeData['sip_transport']);
+        }
 
+        // Remove read-only fields before saving
+        unset(
+            $employeeData['extensions_length'],
+            $employeeData['sip_networkfilterid_represent'],
+            $employeeData['fwd_forwarding_represent'],
+            $employeeData['fwd_forwardingonbusy_represent'],
+            $employeeData['fwd_forwardingonunavailable_represent'],
+            $employeeData['represent'],
+            $employeeData['search_index']
+        );
 
-        // Save user data through the CORE API
-        $restAnswer = $di->get(PBXCoreRESTClientProvider::SERVICE_NAME, [
-            '/pbxcore/api/extensions/saveRecord',
-            PBXCoreRESTClientProvider::HTTP_METHOD_POST,
-            $dataStructure->toArray()
-        ]);
+        // Save employee data through the REST API v3
+        if ($isNewEmployee) {
+            // Create new employee
+            $restAnswer = $di->get(PBXCoreRESTClientProvider::SERVICE_NAME, [
+                '/pbxcore/api/v3/employees',
+                PBXCoreRESTClientProvider::HTTP_METHOD_POST,
+                $employeeData,
+                ['Content-Type' => 'application/json']
+            ]);
+        } else {
+            // Update existing employee using PATCH (partial update)
+            $restAnswer = $di->get(PBXCoreRESTClientProvider::SERVICE_NAME, [
+                '/pbxcore/api/v3/employees/' . $pbxUserData['user_id'],
+                PBXCoreRESTClientProvider::HTTP_METHOD_PATCH,
+                $employeeData,
+                ['Content-Type' => 'application/json']
+            ]);
+        }
 
         return new AnswerStructure($restAnswer);
     }
@@ -470,7 +512,7 @@ class LdapSyncMain extends Injectable
      * @param ?string $currentUserId The current user id.
      * @return array The user data if found, otherwise an empty array.
      */
-    public static function findUserInMikoPBX(array $userDataFromLdap, string $currentUserId = null): array
+    public static function findUserInMikoPBX(array $userDataFromLdap, ?string $currentUserId = null): array
     {
         $parameters = [
             'models' => [

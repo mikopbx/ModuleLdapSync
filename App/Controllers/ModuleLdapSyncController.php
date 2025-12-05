@@ -69,7 +69,7 @@ class ModuleLdapSyncController extends BaseController
      *
      * @return void
      */
-    public function modifyAction(string $id = null): void
+    public function modifyAction(?string $id = null): void
     {
         $this->view->showModuleStatusToggle = false;
         $footerCollection = $this->assets->collection(AssetProvider::FOOTER_JS);
