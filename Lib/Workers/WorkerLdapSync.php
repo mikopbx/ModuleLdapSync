@@ -43,6 +43,10 @@ class WorkerLdapSync extends WorkerBase
      */
     public function start(array $argv): void
     {
+        // Suppress deprecation warnings for PHP 8.4 compatibility
+        // while maintaining support for PHP 7.4
+        error_reporting(E_ALL & ~E_DEPRECATED);
+
         $managedCache = $this->di->get(ManagedCacheProvider::SERVICE_NAME);
 
         // Retrieve the last sync timestamp from the cache
