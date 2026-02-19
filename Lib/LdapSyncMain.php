@@ -71,7 +71,7 @@ class LdapSyncMain extends Injectable
         $processedUsers = [];
 
         // Check if LDAP retrieval was successful
-        if ($responseFromLdap->success = false) {
+        if ($responseFromLdap->success === false) {
             return $responseFromLdap;
         }
 
@@ -181,7 +181,9 @@ class LdapSyncMain extends Injectable
                 $response->data[Constants::USER_HAD_CHANGES_ON] = Constants::HAD_CHANGES_ON_PBX;
                 $response->data[Constants::USER_SYNC_RESULT] = Constants::SYNC_RESULT_UPDATED;
                 $previousSyncUser->domainParamsHash = $domainParamsHash;
-                $previousSyncUser->user_id = $response->data['user_id'];
+                if (!empty($response->data['id'])) {
+                    $previousSyncUser->user_id = $response->data['id'];
+                }
             } else {
                 $response->data[Constants::USER_SYNC_RESULT] = Constants::SYNC_RESULT_CONFLICT;
                 $response->data[Constants::SYNC_RESULT_CONFLICT_SIDE] = Constants::PBX_UPDATE_CONFLICT;
@@ -467,9 +469,13 @@ class LdapSyncMain extends Injectable
             $employeeData['user_avatar'] = $userDataFromLdap[Constants::USER_AVATAR_ATTR];
         }
 
-        // Trim transport value
+        // Validate sip_transport value
+        $validTransports = ['udp', 'tcp', 'tls', 'udp,tcp'];
         if (isset($employeeData['sip_transport'])) {
             $employeeData['sip_transport'] = trim($employeeData['sip_transport']);
+            if (!in_array($employeeData['sip_transport'], $validTransports, true)) {
+                $employeeData['sip_transport'] = 'udp,tcp';
+            }
         }
 
         // Remove read-only fields before saving
