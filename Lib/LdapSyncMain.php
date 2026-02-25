@@ -464,9 +464,10 @@ class LdapSyncMain extends Injectable
             $employeeData['user_username'] = $userDataFromLdap[Constants::USER_NAME_ATTR];
         }
 
-        // Update avatar
-        if (!empty($userDataFromLdap[Constants::USER_AVATAR_ATTR])) {
-            $employeeData['user_avatar'] = $userDataFromLdap[Constants::USER_AVATAR_ATTR];
+        // Update avatar (only if it looks like a real base64 image, not garbage data)
+        $avatarData = $userDataFromLdap[Constants::USER_AVATAR_ATTR] ?? '';
+        if (!empty($avatarData) && str_starts_with($avatarData, 'data:image')) {
+            $employeeData['user_avatar'] = $avatarData;
         }
 
         // Validate sip_transport value
