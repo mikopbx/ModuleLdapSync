@@ -234,7 +234,9 @@ class LdapSyncConnector extends Injectable
                     if ($user->hasAttribute($attribute)){
                         if ($attribute===$this->userAttributes[Constants::USER_AVATAR_ATTR]) {
                             $binData = $user->getFirstAttribute($attribute);
-                            $record[$attribute] = 'data:image/jpeg;base64,'.base64_encode($binData);
+                            if (self::isValidImageBinary($binData)) {
+                                $record[$attribute] = 'data:image/jpeg;base64,'.base64_encode($binData);
+                            }
                         } elseIf (
                                 !is_a($user, \LdapRecord\Models\ActiveDirectory\User::class)
                                 &&
@@ -342,6 +344,38 @@ class LdapSyncConnector extends Injectable
         }
 
         return $res;
+    }
+
+    /**
+     * Validate that binary data from LDAP is a real image
+     *
+     * Checks magic bytes and minimum size to prevent saving corrupt
+     * or garbage data from LDAP jpegPhoto/thumbnailPhoto attributes.
+     *
+     * @param mixed $data Raw binary data from LDAP attribute
+     * @return bool True if data looks like a valid image
+     */
+    private static function isValidImageBinary(mixed $data): bool
+    {
+        if (!is_string($data) || strlen($data) < 1024) {
+            return false;
+        }
+
+        $signatures = [
+            "\xFF\xD8\xFF",        // JPEG
+            "\x89PNG\r\n\x1A\n",  // PNG
+            "GIF87a",              // GIF
+            "GIF89a",              // GIF
+            "RIFF",                // WEBP
+        ];
+
+        foreach ($signatures as $signature) {
+            if (str_starts_with($data, $signature)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
 }
