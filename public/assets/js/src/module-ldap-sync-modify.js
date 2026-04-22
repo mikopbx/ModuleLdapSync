@@ -105,6 +105,56 @@ const ModuleLdapSyncModify = {
 	$useTlsDropdown: $('.use-tls-dropdown'),
 
 	/**
+	 * jQuery object for the whole TLS settings block (shown only for
+	 * encrypted modes — starttls / ldaps).
+	 * @type {jQuery}
+	 */
+	$tlsSettingsBlock: $('.tls-settings'),
+
+	/**
+	 * jQuery object for the "verify certificate" toggle.
+	 * @type {jQuery}
+	 */
+	$verifyCertCheckbox: $('input[name="verifyCert"]'),
+
+	/**
+	 * jQuery object for the "insecure TLS" warning banner.
+	 * @type {jQuery}
+	 */
+	$insecureTlsWarning: $('.insecure-tls-warning'),
+
+	/**
+	 * jQuery object for the Certificate tab header (shown only when encrypted).
+	 * @type {jQuery}
+	 */
+	$certificateTab: $('.item.tab-certificate'),
+
+	/**
+	 * jQuery object for the warning triangle icon inside the Certificate tab header.
+	 * @type {jQuery}
+	 */
+	$caMissingWarning: $('.ca-missing-warning'),
+
+	/**
+	 * jQuery object for the CA certificate textarea.
+	 * @type {jQuery}
+	 */
+	$caCertTextarea: $('textarea[name="caCertificate"]'),
+
+	/**
+	 * jQuery object for the "test bind" button on tabConnection.
+	 * @type {jQuery}
+	 */
+	$testBindButton: $('.test-ldap-bind'),
+
+	/**
+	 * jQuery object for the inline message that carries the result of the
+	 * bind test.
+	 * @type {jQuery}
+	 */
+	$testBindResult: $('.test-bind-result'),
+
+	/**
 	 * jQuery object for the message no any disabled users
 	 * @type {jQuery}
 	 */
@@ -216,6 +266,17 @@ const ModuleLdapSyncModify = {
 			onChange: ModuleLdapSyncModify.onChangeLdapType,
 		});
 
+		// Prime placeholders for the currently saved type on first render.
+		const initialType = ModuleLdapSyncModify.$formObj.form('get value', 'ldapType')
+			|| ModuleLdapSyncModify.$ldapTypeDropdown.dropdown('get value')
+			|| 'ActiveDirectory';
+		ModuleLdapSyncModify.onChangeLdapType(initialType);
+
+		ModuleLdapSyncModify.initializeTooltips();
+
+		// Native Fomantic tooltip on the icon-only "Test bind" button.
+		ModuleLdapSyncModify.$testBindButton.popup({ position: 'top right', delay: { show: 200, hide: 80 } });
+
 		ModuleLdapSyncModify.initializeForm();
 
 		// Handle get users list button click
@@ -228,6 +289,12 @@ const ModuleLdapSyncModify = {
 		ModuleLdapSyncModify.$syncUsersButton.on('click', function(e) {
 			e.preventDefault();
 			ModuleLdapSyncModify.apiCallSyncUsers();
+		});
+
+		// Handle test-bind button click on the connection tab.
+		ModuleLdapSyncModify.$testBindButton.on('click', function(e) {
+			e.preventDefault();
+			ModuleLdapSyncModify.apiCallTestBind();
 		});
 
 		ModuleLdapSyncModify.$mainTabMenu.tab();
@@ -248,21 +315,42 @@ const ModuleLdapSyncModify = {
 
 		ModuleLdapSyncModify.updateConflictsView();
 
-		// Handle change TLS protocol
+		// Handle change TLS protocol — three-way selector.
+		const currentTlsMode = ModuleLdapSyncModify.$formObj.form('get value', 'tlsMode') || 'none';
 		ModuleLdapSyncModify.$useTlsDropdown.dropdown({
 			values: [
 				{
 					name: 'ldap://',
-					value: '0',
-					selected : ModuleLdapSyncModify.$formObj.form('get value','useTLS')==='0'
+					value: 'none',
+					selected: currentTlsMode === 'none'
 				},
 				{
-					name     : 'ldaps://',
-					value    : '1',
-					selected : ModuleLdapSyncModify.$formObj.form('get value','useTLS')==='1'
+					name: 'ldap:// + STARTTLS',
+					value: 'starttls',
+					selected: currentTlsMode === 'starttls'
+				},
+				{
+					name: 'ldaps://',
+					value: 'ldaps',
+					selected: currentTlsMode === 'ldaps'
 				}
 			],
+			onChange: function (value) {
+				ModuleLdapSyncModify.$formObj.form('set value', 'tlsMode', value);
+				ModuleLdapSyncModify.refreshTlsSectionVisibility();
+			},
 		});
+
+		// Certificate validation toggle — refresh UX state (insecure banner,
+		// Certificate-tab warning triangle) on flip.
+		ModuleLdapSyncModify.$verifyCertCheckbox.on('change', function () {
+			ModuleLdapSyncModify.refreshTlsSectionVisibility();
+		});
+		// Typing into the CA textarea clears the "missing CA" warning.
+		ModuleLdapSyncModify.$caCertTextarea.on('input', function () {
+			ModuleLdapSyncModify.refreshTlsSectionVisibility();
+		});
+		ModuleLdapSyncModify.refreshTlsSectionVisibility();
 
 
 		ModuleLdapSyncModify.updateDisabledUsersView();
@@ -285,22 +373,251 @@ const ModuleLdapSyncModify = {
 	},
 
 	/**
-	 * Handles change LDAP dropdown.
+	 * Recomputes visibility of TLS-related UI elements based on the current
+	 * tlsMode / verifyCert / caCertificate state.
+	 *
+	 *  - verifyCert toggle and insecure-TLS warning live inside .tls-settings
+	 *    inside tabConnection; shown only for encrypted modes (starttls|ldaps).
+	 *  - Certificate tab header itself appears only for encrypted modes.
+	 *  - Warning triangle on the Certificate tab lights up when verification
+	 *    is on but the CA textarea is empty — i.e. the operator enabled
+	 *    strict validation but hasn't provided the trust anchor yet.
+	 *  - Insecure-TLS warning banner lights up only for ldaps:// without
+	 *    verification: traffic is encrypted but server identity is unverified.
+	 */
+	refreshTlsSectionVisibility(){
+		const tlsMode = ModuleLdapSyncModify.$formObj.form('get value', 'tlsMode') || 'none';
+		const verify = ModuleLdapSyncModify.$verifyCertCheckbox.is(':checked');
+		const encrypted = tlsMode === 'starttls' || tlsMode === 'ldaps';
+		const caEmpty = (ModuleLdapSyncModify.$caCertTextarea.val() || '').trim() === '';
+
+		if (encrypted) {
+			ModuleLdapSyncModify.$tlsSettingsBlock.show();
+			ModuleLdapSyncModify.$certificateTab.show();
+		} else {
+			ModuleLdapSyncModify.$tlsSettingsBlock.hide();
+			ModuleLdapSyncModify.$certificateTab.hide();
+		}
+
+		if (encrypted && verify && caEmpty) {
+			ModuleLdapSyncModify.$caMissingWarning.show();
+		} else {
+			ModuleLdapSyncModify.$caMissingWarning.hide();
+		}
+
+		if (tlsMode === 'ldaps' && !verify) {
+			ModuleLdapSyncModify.$insecureTlsWarning.show();
+		} else {
+			ModuleLdapSyncModify.$insecureTlsWarning.hide();
+		}
+	},
+
+	/**
+	 * Fires the lightweight bind check against the current form values.
+	 * Shows a green success message or a red error message inline under
+	 * the button, without touching any other form state.
+	 */
+	apiCallTestBind(){
+		$.api({
+			url: `${Config.pbxUrl}/pbxcore/api/modules/ModuleLdapSync/test-ldap-bind`,
+			on: 'now',
+			method: 'POST',
+			beforeSend(settings) {
+				ModuleLdapSyncModify.$testBindButton.addClass('loading disabled');
+				ModuleLdapSyncModify.$testBindResult
+					.removeClass('positive negative')
+					.hide();
+				settings.data = ModuleLdapSyncModify.$formObj.form('get values');
+				return settings;
+			},
+			successTest: PbxApi.successTest,
+			onSuccess(response) {
+				ModuleLdapSyncModify.$testBindButton.removeClass('loading disabled');
+				ModuleLdapSyncModify.$testBindResult
+					.removeClass('negative')
+					.addClass('positive')
+					.text(globalTranslate.module_ldap_TestBindSuccess)
+					.show();
+			},
+			onFailure(response) {
+				ModuleLdapSyncModify.$testBindButton.removeClass('loading disabled');
+				let text = globalTranslate.module_ldap_TestBindFailure;
+				const detail = ModuleLdapSyncModify.flattenMessages(response ? response.messages : null);
+				if (detail) {
+					text = `${text}: ${detail}`;
+				}
+				ModuleLdapSyncModify.$testBindResult
+					.removeClass('positive')
+					.addClass('negative')
+					.text(text)
+					.show();
+			},
+		});
+	},
+
+	/**
+	 * Flattens a PBXApiResult messages payload into a single string.
+	 * Accepts either a flat array of strings or a dict keyed by severity
+	 * (error/info/warning) whose values are arrays of strings.
+	 *
+	 * @param {*} messages
+	 * @returns {string}
+	 */
+	flattenMessages(messages){
+		if (!messages) {
+			return '';
+		}
+		if (Array.isArray(messages)) {
+			return messages.join('; ');
+		}
+		if (typeof messages === 'object') {
+			const lines = [];
+			Object.keys(messages).forEach((key) => {
+				const bucket = messages[key];
+				if (Array.isArray(bucket)) {
+					bucket.forEach((line) => lines.push(String(line)));
+				} else if (bucket) {
+					lines.push(String(bucket));
+				}
+			});
+			return lines.join('; ');
+		}
+		return String(messages);
+	},
+
+	/**
+	 * Per-server-type defaults. Values are used as placeholders (always) and
+	 * pre-fills (only for fields the user hasn't filled yet). Filter strings
+	 * are the only field for which we also overwrite non-empty values — the
+	 * old filter from a different server type would be objectively wrong on
+	 * the new one, and this field is short enough that losing it is cheap.
+	 */
+	ldapTypePresets: {
+		ActiveDirectory: {
+			administrativeLogin: 'CN=Admin,CN=Users,DC=example,DC=com',
+			baseDN: 'DC=example,DC=com',
+			organizationalUnit: 'OU=Users,DC=example,DC=com',
+			userFilter: '(&(objectClass=user)(objectCategory=PERSON))',
+			userNameAttribute: 'displayName',
+			userExtensionAttribute: 'telephoneNumber',
+			userMobileAttribute: 'mobile',
+			userEmailAttribute: 'mail',
+			userAvatarAttribute: 'thumbnailPhoto',
+			userAccountControl: 'userAccountControl',
+			userPasswordAttribute: '',
+		},
+		OpenLDAP: {
+			administrativeLogin: 'cn=admin,dc=example,dc=com',
+			baseDN: 'dc=example,dc=com',
+			organizationalUnit: 'ou=people,dc=example,dc=com',
+			userFilter: '(objectClass=inetOrgPerson)',
+			userNameAttribute: 'cn',
+			userExtensionAttribute: 'telephoneNumber',
+			userMobileAttribute: 'mobile',
+			userEmailAttribute: 'mail',
+			userAvatarAttribute: 'jpegPhoto',
+			userAccountControl: '',
+			userPasswordAttribute: 'userPassword',
+		},
+	},
+
+	/**
+	 * Handles change of the LDAP type dropdown.
+	 *
+	 * Rules:
+	 *  - Always refresh placeholders so the operator sees format hints for
+	 *    the new type even when fields are already populated.
+	 *  - Pre-fill empty fields from the preset; never overwrite user input.
+	 *  - Filter + bind-login hint banner are always swapped to the new type
+	 *    so stale examples don't linger.
 	 */
 	onChangeLdapType(value){
-		if(value==='OpenLDAP'){
-			ModuleLdapSyncModify.$formObj.form('set value','userIdAttribute','uid');
-			ModuleLdapSyncModify.$formObj.form('set value','administrativeLogin','cn=admin,dc=example,dc=com');
-			ModuleLdapSyncModify.$formObj.form('set value','userFilter','(objectClass=inetOrgPerson)');
-			ModuleLdapSyncModify.$formObj.form('set value','baseDN','dc=example,dc=com');
-			ModuleLdapSyncModify.$formObj.form('set value','organizationalUnit','ou=users, dc=domain, dc=com');
-		} else if(value==='ActiveDirectory'){
-			ModuleLdapSyncModify.$formObj.form('set value','administrativeLogin','admin');
-			ModuleLdapSyncModify.$formObj.form('set value','userIdAttribute','samaccountname')
-			ModuleLdapSyncModify.$formObj.form('set value','userFilter','(&(objectClass=user)(objectCategory=PERSON))');
-			ModuleLdapSyncModify.$formObj.form('set value','baseDN','dc=example,dc=com');
-			ModuleLdapSyncModify.$formObj.form('set value','organizationalUnit','ou=users, dc=domain, dc=com');
+		const preset = ModuleLdapSyncModify.ldapTypePresets[value];
+		if (!preset) {
+			return;
 		}
+
+		Object.keys(preset).forEach((field) => {
+			const input = ModuleLdapSyncModify.$formObj.find(`[name="${field}"]`);
+			if (!input.length) {
+				return;
+			}
+			// Always refresh the placeholder — it's a hint, not data.
+			input.attr('placeholder', preset[field] || '');
+			// Only fill empty fields — never destroy the operator's input.
+			const current = (input.val() || '').trim();
+			if (current === '' && preset[field]) {
+				ModuleLdapSyncModify.$formObj.form('set value', field, preset[field]);
+			}
+		});
+	},
+
+	/**
+	 * Wires tooltips for every annotated field on the form. Uses the shared
+	 * TooltipBuilder helper from the admin cabinet so the popup structure
+	 * matches the rest of MikoPBX (see docs/TOOLTIP_GUIDELINES.md).
+	 */
+	initializeTooltips() {
+		if (typeof TooltipBuilder === 'undefined') {
+			return;
+		}
+
+		const tooltipConfigs = {
+			serverName: TooltipBuilder.buildContent({
+				header: globalTranslate.module_ldap_tt_serverName_header,
+				list: [
+					{ term: 'ldap://', definition: globalTranslate.module_ldap_tt_serverName_plain },
+					{ term: 'ldap:// + STARTTLS', definition: globalTranslate.module_ldap_tt_serverName_starttls },
+					{ term: 'ldaps://', definition: globalTranslate.module_ldap_tt_serverName_ldaps },
+				],
+			}),
+			administrativeLogin: TooltipBuilder.buildContent({
+				header: globalTranslate.module_ldap_tt_adminLogin_header,
+				description: globalTranslate.module_ldap_tt_adminLogin_desc,
+				list: [
+					'mikopbx',
+					'mikopbx@miko.ru',
+					'MIKO\\mikopbx',
+					'CN=mikopbx,CN=Users,DC=miko,DC=ru',
+				],
+				note: globalTranslate.module_ldap_tt_adminLogin_note,
+			}),
+			verifyCert: TooltipBuilder.buildContent({
+				header: globalTranslate.module_ldap_tt_verify_header,
+				description: globalTranslate.module_ldap_tt_verify_desc,
+				warning: {
+					header: globalTranslate.module_ldap_tt_verify_warning_header,
+					text: globalTranslate.module_ldap_tt_verify_warning,
+				},
+			}),
+			updateAttributes: TooltipBuilder.buildContent({
+				header: globalTranslate.module_ldap_tt_updateAttr_header,
+				description: globalTranslate.module_ldap_tt_updateAttr_desc,
+				list: [
+					globalTranslate.module_ldap_tt_updateAttr_extension,
+					globalTranslate.module_ldap_tt_updateAttr_mobile,
+					globalTranslate.module_ldap_tt_updateAttr_email,
+					globalTranslate.module_ldap_tt_updateAttr_avatar,
+					globalTranslate.module_ldap_tt_updateAttr_sip,
+				],
+				note: globalTranslate.module_ldap_tt_updateAttr_note,
+			}),
+		};
+
+		$('.field-info-icon').each((i, el) => {
+			const $icon = $(el);
+			const content = tooltipConfigs[$icon.data('field')];
+			if (!content) {
+				return;
+			}
+			$icon.popup({
+				html: content,
+				position: 'top right',
+				hoverable: true,
+				delay: { show: 300, hide: 100 },
+				variation: 'flowing',
+			});
+		});
 	},
 
 	/**

@@ -83,7 +83,6 @@ class ModuleLdapSyncController extends BaseController
         if (!$serverConfig) {
             $serverConfig = new LdapServers();
             $serverConfig->disabled = '1';
-            $serverConfig->useTLS = '0';
         }
 
         $this->view->setVar('hiddenAttributes', json_encode([
@@ -114,10 +113,39 @@ class ModuleLdapSyncController extends BaseController
             $serverConfig = new LdapServers();
         }
 
+        // Reject malformed CA PEM before any DB writes so the user gets a clear
+        // validation error instead of a cryptic LDAP bind failure later.
+        $caPem = trim((string)($data['caCertificate'] ?? ''));
+        if ($caPem !== '' && !$this->isValidPem($caPem)) {
+            $this->flash->error($this->translation->_('module_ldap_InvalidPemCert'));
+            $this->view->success = false;
+            $this->dispatcher->forward([
+                'action' => 'modify',
+                'params' => [$data['id'] ?? ''],
+            ]);
+            return;
+        }
+
+        $tlsMode = $data['tlsMode'] ?? 'none';
+        if (!in_array($tlsMode, ['none', 'starttls', 'ldaps'], true)) {
+            $tlsMode = 'none';
+        }
+        $data['tlsMode'] = $tlsMode;
+
+        // Normalise the verifyCert checkbox — Fomantic omits the key when unchecked.
+        $data['verifyCert'] = (($data['verifyCert'] ?? '') === 'on' || ($data['verifyCert'] ?? '') === '1')
+            ? '1'
+            : '0';
+
         // Update serverConfig properties with the provided data
         foreach ($serverConfig as $name => $value) {
             switch ($name) {
                 case 'id':
+                    break;
+                case 'useTLS':
+                    // Deprecated column kept for upgrade compatibility only.
+                    // Never overwrite — the form no longer posts this field and
+                    // we want to preserve whatever value the migration wrote.
                     break;
                 case 'disabled':
                     $serverConfig->$name = $data['autosync']==='1'?'0':'1';
@@ -127,6 +155,9 @@ class ModuleLdapSyncController extends BaseController
                         && $data['administrativePasswordHidden'] !== Constants::HIDDEN_PASSWORD) {
                         $serverConfig->$name = $data['administrativePasswordHidden'];
                     }
+                    break;
+                case 'caCertificate':
+                    $serverConfig->$name = $caPem !== '' ? $caPem : null;
                     break;
                 default:
                     if (isset($data[$name])) {
@@ -152,6 +183,33 @@ class ModuleLdapSyncController extends BaseController
         $this->saveEntity($serverConfig, 'module-ldap-sync/module-ldap-sync/modify/{id}');
     }
 
+
+    /**
+     * Lightweight validation of a PEM-encoded certificate bundle. Accepts one
+     * or more concatenated CERTIFICATE blocks. openssl_x509_parse is used as
+     * the authoritative check so garbage (truncated Base64, wrong header, etc.)
+     * is rejected here rather than surfacing later as a vague LDAP error.
+     *
+     * @param string $pem Trimmed PEM content.
+     * @return bool
+     */
+    private function isValidPem(string $pem): bool
+    {
+        if (!preg_match_all(
+            '/-----BEGIN CERTIFICATE-----.+?-----END CERTIFICATE-----/s',
+            $pem,
+            $blocks
+        )) {
+            return false;
+        }
+        foreach ($blocks[0] as $block) {
+            // openssl_x509_parse() returns false on invalid/unparseable certs.
+            if (openssl_x509_parse($block) === false) {
+                return false;
+            }
+        }
+        return true;
+    }
 
     /**
      * Enables a ldap server.

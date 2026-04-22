@@ -82,6 +82,13 @@ class LdapSyncConf extends ConfigClass
                 $res->messages = $result->messages;
                 $res->data = $result->data;
                 break;
+            case 'TEST-LDAP-BIND':
+                $ldapCredentials = LdapSyncMain::postDataToLdapCredentials($data);
+                $result = LdapSyncMain::testLdapBind($ldapCredentials);
+                $res->success = $result->success;
+                $res->messages = $result->messages;
+                $res->data = $result->data;
+                break;
             case 'GET-DISABLED-LDAP-USERS':
                 if (!empty($data['id'])) {
                     $result = LdapSyncUsers::getDisabledUsers($data['id']);

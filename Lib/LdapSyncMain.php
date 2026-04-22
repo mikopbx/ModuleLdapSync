@@ -633,6 +633,20 @@ class LdapSyncMain extends Injectable
     }
 
     /**
+     * Runs a lightweight bind check against the target LDAP server.
+     * Useful to validate that the host/port/TLS/credentials combination is
+     * correct before any query is issued.
+     *
+     * @param array $ldapCredentials Prepared credentials (see postDataToLdapCredentials()).
+     * @return AnswerStructure
+     */
+    public static function testLdapBind(array $ldapCredentials): AnswerStructure
+    {
+        $connector = new LdapSyncConnector($ldapCredentials);
+        return $connector->testBind();
+    }
+
+    /**
      * Convert post data into LDAP credentials.
      *
      * @param array $postData The input post data.
@@ -642,13 +656,21 @@ class LdapSyncMain extends Injectable
     {
         // Admin password can be stored in DB on the time, on this way it has only xxxxxx value.
         // It can be empty as well, if some password manager tried to fill it.
+        $ldapConfig = null;
+        if (!empty($postData['id'])) {
+            $ldapConfig = LdapServers::findFirstById($postData['id']);
+        }
         if (empty($postData['administrativePasswordHidden'])
             || $postData['administrativePasswordHidden'] === Constants::HIDDEN_PASSWORD) {
-            $ldapConfig = LdapServers::findFirstById($postData['id']) ?? new LdapServers();
-            $postData['administrativePassword'] = $ldapConfig->administrativePassword ?? '';
+            $postData['administrativePassword'] = ($ldapConfig->administrativePassword ?? '');
         } else {
             $postData['administrativePassword'] = $postData['administrativePasswordHidden'];
         }
+
+        // CA certificate comes from DB rather than the form payload — the textarea
+        // is editable, but on "test connection" we also want to honour the saved
+        // value when the user hasn't touched it.
+        $caCertificate = $postData['caCertificate'] ?? ($ldapConfig->caCertificate ?? null);
 
         // Define attributes for LDAP search
         $attributes = [
@@ -675,7 +697,16 @@ class LdapSyncMain extends Injectable
             'organizationalUnit' => $postData['organizationalUnit'],
             'userFilter' => $postData['userFilter'],
             'updateAttributes' => $postData['updateAttributes'],
-            'useTLS' => $postData['useTLS'],
+            'tlsMode' => $postData['tlsMode'] ?? 'none',
+            // HTML checkboxes submit "on" when ticked — normalise it to the
+            // stored '1'/'0' form before forwarding to the connector so the
+            // test-bind REST path behaves identically to saveAction.
+            'verifyCert' => in_array(
+                strtolower((string)($postData['verifyCert'] ?? '')),
+                ['1', 'on', 'true', 'yes'],
+                true
+            ) ? '1' : '0',
+            'caCertificate' => $caCertificate,
         ];
     }
 
