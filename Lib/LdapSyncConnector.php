@@ -353,17 +353,17 @@ class LdapSyncConnector extends Injectable
             }
 
 
-            // If the server returned more records than requested, apply client-side pagination
+            // If the server returned more records than requested (non-AD path
+            // uses a single ->get() without pagination), slice the collection
+            // client-side. We keep Model objects throughout — converting to
+            // arrays here would strip the LdapRecord metadata methods we rely
+            // on below (hasAttribute, getFirstAttribute, getConvertedGuid,
+            // isDisabled).
             if ($items->count() > $itemsPerPage) {
-                // Convert the result to an array for easier manipulation
-                $allUsers = $items->toArray();
-
-                // Calculate the offset and take the required number of records
                 $offset = ($page - 1) * $itemsPerPage;
-                $paginatedUsers = array_slice($allUsers, $offset, $itemsPerPage);
+                $paginatedUsers = $items->slice($offset, $itemsPerPage);
             } else {
-                // Use the result returned by the server if it fits within the limit
-                $paginatedUsers = $items->toArray();
+                $paginatedUsers = $items;
             }
 
             // Check if we've reached the last page
