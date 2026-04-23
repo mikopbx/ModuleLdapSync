@@ -207,20 +207,33 @@ class LdapSyncConnector extends Injectable
     }
 
     /**
-     * Cleans up the CA bundle file written into the temp dir for this session.
+     * Cleans up the CA bundle file written into the temp dir for this session
+     * and resets the process-wide CACERTFILE pointer so a later connector in
+     * the same PHP-FPM / worker process can't inherit a dangling path to our
+     * already-unlinked bundle.
      */
     public function __destruct()
     {
-        if ($this->caBundlePath !== '' && is_file($this->caBundlePath)) {
+        if ($this->caBundlePath === '') {
+            return;
+        }
+        if (is_file($this->caBundlePath)) {
             @unlink($this->caBundlePath);
         }
+        // Repoint libldap at the system trust store (or empty to force its
+        // compiled default) so nothing in this process keeps looking for the
+        // temp file we just removed.
+        @ldap_set_option(null, LDAP_OPT_X_TLS_CACERTFILE, self::systemDefaultCaFile());
     }
 
     /**
      * Build the `options` array passed to LdapRecord\Connection.
-     * Sets `LDAP_OPT_X_TLS_REQUIRE_CERT` based on the verifyCert flag and, when
-     * a custom CA PEM is supplied, materializes it into a private temp file and
-     * points `LDAP_OPT_X_TLS_CACERTFILE` at that path.
+     * Sets `LDAP_OPT_X_TLS_REQUIRE_CERT` based on the verifyCert flag and
+     * always writes `LDAP_OPT_X_TLS_CACERTFILE` — either to the freshly
+     * materialised custom bundle or to the system trust store. Explicitly
+     * writing the option every time prevents a stale per-process CACERTFILE
+     * (set by a previous connector that has since been destroyed) from
+     * leaking into a later connection's TLS context.
      *
      * @param string|null $caCertificate PEM content (possibly concatenated).
      * @return array<int,int|string>
@@ -235,15 +248,47 @@ class LdapSyncConnector extends Injectable
                 : LDAP_OPT_X_TLS_ALLOW,
         ];
 
+        $caFile = self::systemDefaultCaFile();
         if ($this->verifyCert && !empty($caCertificate)) {
             $path = $this->materializeCaBundle($caCertificate);
             if ($path !== '') {
                 $this->caBundlePath = $path;
-                $options[LDAP_OPT_X_TLS_CACERTFILE] = $path;
+                $caFile = $path;
             }
         }
+        // Always set CACERTFILE — either the custom bundle for this session or
+        // a detected system bundle — so no previous connector's unlinked tmp
+        // path stays pinned in the process-wide libldap defaults.
+        $options[LDAP_OPT_X_TLS_CACERTFILE] = $caFile;
 
         return $options;
+    }
+
+    /**
+     * Probes a short list of well-known CA bundle locations and returns the
+     * first readable one. The result is cached for the lifetime of the
+     * process. Returns an empty string when no bundle is found — libldap
+     * will then fall back to its compiled-in default.
+     *
+     * @return string
+     */
+    private static function systemDefaultCaFile(): string
+    {
+        static $cached = null;
+        if ($cached !== null) {
+            return $cached;
+        }
+        $candidates = [
+            '/etc/ssl/certs/ca-certificates.crt',   // Debian / Alpine / MikoPBX
+            '/etc/pki/tls/certs/ca-bundle.crt',     // RHEL / CentOS
+            '/etc/ssl/cert.pem',                    // macOS / BSD
+        ];
+        foreach ($candidates as $path) {
+            if (@is_readable($path)) {
+                return $cached = $path;
+            }
+        }
+        return $cached = '';
     }
 
     /**
