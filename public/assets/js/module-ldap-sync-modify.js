@@ -969,16 +969,44 @@ var ModuleLdapSyncModify = {
 
     $.each(conflicts, function (index, record) {
       var prettyJSON = JSON.stringify(record['params'], null, 2);
+      var errorsHtml = ModuleLdapSyncModify.renderConflictErrors(record['errors']);
       html += "<tr class=\"item\" data-value=\"".concat(record['id'], "\">");
       html += '<td>' + record['lastTime'] + '</td>';
       html += '<td>' + ModuleLdapSyncModify.getTranslation(record['side']) + '</td>';
-      html += '<td>' + record['errors'] + '</td>';
+      html += '<td class="conflict-errors">' + errorsHtml + '</td>';
       html += '<td><pre>' + prettyJSON + '</pre></td>';
       html += "<td><div class=\"ui icon basic button popuped delete-conflict\" data-content=\"".concat(ModuleLdapSyncModify.getTranslation('deleteCurrentConflict'), "\"><i class=\"icon trash red\"></i></div></td>");
       html += '</tr>';
     });
     html += '</tbody></table>';
     return html;
+  },
+
+  /**
+   * Renders the `errors` field of a conflict record as a stack of short
+   * lines instead of one huge blob. Accepts the decoded shape returned by
+   * getServerConflicts: an array of strings, a single string, or null.
+   *
+   * @param {*} errors Decoded errors payload from the conflict row.
+   * @returns {string} Sanitised HTML fragment.
+   */
+  renderConflictErrors: function renderConflictErrors(errors) {
+    var escape = function escape(s) {
+      return $('<div>').text(String(s)).html();
+    };
+    var lines = [];
+    if (Array.isArray(errors)) {
+      lines = errors.map(String);
+    } else if (errors !== null && errors !== undefined && errors !== '') {
+      lines = [String(errors)];
+    }
+    if (lines.length === 0) {
+      return '';
+    }
+    var body = lines.map(function (line) {
+      return '<div>' + escape(line) + '</div>';
+    }).join('');
+    return '<div class="conflict-errors-body">' + body + '</div>';
   },
 
   /**

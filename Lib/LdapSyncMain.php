@@ -92,7 +92,8 @@ class LdapSyncMain extends Injectable
                 $processedUser[Constants::USER_SYNC_RESULT] = $result->data[Constants::USER_SYNC_RESULT];
 
                 if ($result->data[Constants::USER_SYNC_RESULT] === Constants::SYNC_RESULT_CONFLICT) {
-                    LdapSyncConflicts::recordSyncConflict($ldapCredentials['id'], $result->data[Constants::CONFLICT_DATA], $result->messages, $result->data[Constants::SYNC_RESULT_CONFLICT_SIDE]);
+                    $cleanMessages = self::distillRestErrors($result->messages);
+                    LdapSyncConflicts::recordSyncConflict($ldapCredentials['id'], $result->data[Constants::CONFLICT_DATA], $cleanMessages, $result->data[Constants::SYNC_RESULT_CONFLICT_SIDE]);
                 }
             }
             if (!empty($result->data[Constants::USER_ID_IN_MIKOPBX])) {
@@ -789,5 +790,51 @@ class LdapSyncMain extends Injectable
         ];
     }
 
+    /**
+     * Distill PBXCoreRESTClientProvider error strings down to the core's
+     * `messages.error` list.
+     *
+     * On 4xx the REST client packs the entire raw HTTP response (headers +
+     * body) into a single string and stuffs it under messages.error — which
+     * then gets rendered verbatim on the Conflicts tab as one gigantic line
+     * without wraps, breaking the page layout. We extract the JSON body and
+     * use only the core's own error messages; anything that isn't shaped
+     * like that wrapper is passed through untouched.
+     *
+     * @param array $messages PBXApiResult-style messages bucket
+     * @return array Same shape, with `error` rewritten where possible.
+     */
+    private static function distillRestErrors(array $messages): array
+    {
+        if (empty($messages['error']) || !is_array($messages['error'])) {
+            return $messages;
+        }
 
+        $distilled = [];
+        foreach ($messages['error'] as $raw) {
+            $rawStr = (string)$raw;
+
+            // REST client prefix is literal and stable; if present, try to
+            // parse out the JSON body shipped after the blank line.
+            if (str_starts_with($rawStr, 'Rest API request error')) {
+                if (preg_match('/\{.*\}\s*$/s', $rawStr, $m)) {
+                    $parsed = json_decode($m[0], true);
+                    if (is_array($parsed)
+                        && isset($parsed['messages']['error'])
+                        && is_array($parsed['messages']['error'])
+                    ) {
+                        foreach ($parsed['messages']['error'] as $cleanMsg) {
+                            $distilled[] = (string)$cleanMsg;
+                        }
+                        continue;
+                    }
+                }
+            }
+
+            $distilled[] = $rawStr;
+        }
+
+        $messages['error'] = $distilled;
+        return $messages;
+    }
 }

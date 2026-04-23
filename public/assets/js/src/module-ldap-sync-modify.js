@@ -991,16 +991,46 @@ const ModuleLdapSyncModify = {
 		// Generate the HTML table with conflicts data
 		$.each(conflicts, (index, record) => {
 			const prettyJSON = JSON.stringify(record['params'], null, 2);
+			const errorsHtml = ModuleLdapSyncModify.renderConflictErrors(record['errors']);
 			html += `<tr class="item" data-value="${record['id']}">`;
 			html += '<td>'+record['lastTime']+'</td>';
 			html += '<td>'+ModuleLdapSyncModify.getTranslation(record['side'])+'</td>';
-			html += '<td>'+record['errors']+'</td>';
+			html += '<td class="conflict-errors">'+errorsHtml+'</td>';
 			html += '<td><pre>'+prettyJSON+'</pre></td>';
 			html += `<td><div class="ui icon basic button popuped delete-conflict" data-content="${ModuleLdapSyncModify.getTranslation('deleteCurrentConflict')}"><i class="icon trash red"></i></div></td>`;
 			html += '</tr>';
 		});
 		html += '</tbody></table>';
 		return html;
+	},
+
+	/**
+	 * Renders the `errors` field of a conflict record as a stack of short
+	 * lines instead of one huge blob. Accepts the decoded shape returned by
+	 * getServerConflicts: an array of strings, a single string, or null.
+	 * Each entry is HTML-escaped and wrapped in a <div> so the browser can
+	 * break between lines and the `.conflict-errors` cell CSS can handle
+	 * word-wrap inside each line.
+	 *
+	 * @param {*} errors Decoded errors payload from the conflict row.
+	 * @returns {string} Sanitised HTML fragment.
+	 */
+	renderConflictErrors(errors){
+		const escape = (s) => $('<div>').text(String(s)).html();
+		let lines = [];
+		if (Array.isArray(errors)) {
+			lines = errors.map(String);
+		} else if (errors !== null && errors !== undefined && errors !== '') {
+			lines = [String(errors)];
+		}
+		if (lines.length === 0) {
+			return '';
+		}
+		// Wrap in a container so CSS max-height + overflow-y can cap the
+		// visible height — max-height on <td> itself is not honoured by
+		// most browsers.
+		const body = lines.map((line) => `<div>${escape(line)}</div>`).join('');
+		return `<div class="conflict-errors-body">${body}</div>`;
 	},
 
 	/**
