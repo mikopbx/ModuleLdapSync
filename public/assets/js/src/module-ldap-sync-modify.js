@@ -954,7 +954,7 @@ const ModuleLdapSyncModify = {
 				rowClass += ' positive';
 			}
 
-			html += `<tr data-value="${user['extensionIdInMikoPBX']}" class="${rowClass} open-user-row">`;
+			html += `<tr data-value="${user['userIdInMikoPBX']}" class="${rowClass} open-user-row">`;
 
 			$.each(uniqueAttributes, (attrIndex, attrValue) => {
 				const cellValue = user[attrIndex] || '';

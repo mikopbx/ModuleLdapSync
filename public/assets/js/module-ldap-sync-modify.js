@@ -934,7 +934,7 @@ var ModuleLdapSyncModify = {
         rowClass += ' positive';
       }
 
-      html += "<tr data-value=\"".concat(user['extensionIdInMikoPBX'], "\" class=\"").concat(rowClass, " open-user-row\">");
+      html += "<tr data-value=\"".concat(user['userIdInMikoPBX'], "\" class=\"").concat(rowClass, " open-user-row\">");
       $.each(uniqueAttributes, function (attrIndex, attrValue) {
         var cellValue = user[attrIndex] || '';
 
