@@ -24,3 +24,27 @@
 #disabled-users-result th {
     padding: .4em .6em;
 }
+
+/*
+ * Conflicts tab: the "Errors" cell can hold multi-line REST responses
+ * (even after distillRestErrors leaves something long behind) and a
+ * single unwrappable glyph-run must not blow the row width out.
+ * Cap the cell, keep word breaks sane, and allow vertical scroll as
+ * a last resort instead of pushing neighbouring columns off-screen.
+ */
+#conflicts-result td.conflict-errors {
+    max-width: 32em;
+    vertical-align: top;
+    white-space: normal;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+}
+
+#conflicts-result td.conflict-errors .conflict-errors-body {
+    max-height: 14em;
+    overflow-y: auto;
+}
+
+#conflicts-result td.conflict-errors .conflict-errors-body > div + div {
+    margin-top: .25em;
+}

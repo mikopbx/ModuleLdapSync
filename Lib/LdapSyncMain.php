@@ -23,6 +23,7 @@ use MikoPBX\Common\Models\Extensions;
 use MikoPBX\Common\Models\Sip;
 use MikoPBX\Common\Models\Users;
 use MikoPBX\Common\Providers\PBXCoreRESTClientProvider;
+use MikoPBX\Core\System\PasswordService;
 use MikoPBX\Modules\Logger;
 use Modules\ModuleLdapSync\Lib\Workers\WorkerLdapSync;
 use Modules\ModuleLdapSync\Models\ADUsers;
@@ -91,11 +92,12 @@ class LdapSyncMain extends Injectable
                 $processedUser[Constants::USER_SYNC_RESULT] = $result->data[Constants::USER_SYNC_RESULT];
 
                 if ($result->data[Constants::USER_SYNC_RESULT] === Constants::SYNC_RESULT_CONFLICT) {
-                    LdapSyncConflicts::recordSyncConflict($ldapCredentials['id'], $result->data[Constants::CONFLICT_DATA], $result->messages, $result->data[Constants::SYNC_RESULT_CONFLICT_SIDE]);
+                    $cleanMessages = self::distillRestErrors($result->messages);
+                    LdapSyncConflicts::recordSyncConflict($ldapCredentials['id'], $result->data[Constants::CONFLICT_DATA], $cleanMessages, $result->data[Constants::SYNC_RESULT_CONFLICT_SIDE]);
                 }
             }
-            if (!empty($result->data[Constants::EXTENSION_ID_IN_MIKOPBX])) {
-                $processedUser[Constants::EXTENSION_ID_IN_MIKOPBX] = $result->data[Constants::EXTENSION_ID_IN_MIKOPBX];
+            if (!empty($result->data[Constants::USER_ID_IN_MIKOPBX])) {
+                $processedUser[Constants::USER_ID_IN_MIKOPBX] = $result->data[Constants::USER_ID_IN_MIKOPBX];
             }
 
             if ($result->success) {
@@ -177,6 +179,29 @@ class LdapSyncMain extends Injectable
 
             // 5. Changes on domain side, need update PBX info first
             $response = self::createUpdateUser($userDataFromLdap, $previousSyncUser->user_id);
+
+            // If LDAP-sourced SIP password failed core-side strength preflight,
+            // surface it on the Conflicts tab independently of the PATCH result —
+            // the other fields still sync, but the admin sees the specific reason.
+            if (!empty($response->data[Constants::WEAK_LDAP_PASSWORD_NOTICE])) {
+                $notice = $response->data[Constants::WEAK_LDAP_PASSWORD_NOTICE];
+                LdapSyncConflicts::recordSyncConflict(
+                    (string)$ldapCredentials['id'],
+                    [
+                        'kind' => Constants::CONFLICT_KIND_WEAK_LDAP_SECRET,
+                        'userName' => (string)($notice['userName'] ?? ''),
+                        'guid' => (string)($notice['guid'] ?? ''),
+                    ],
+                    ['error' => [sprintf(
+                        '%s: %s',
+                        $notice['userName'] ?? '',
+                        $notice['reason'] ?? ''
+                    )]],
+                    Constants::LDAP_UPDATE_CONFLICT
+                );
+                unset($response->data[Constants::WEAK_LDAP_PASSWORD_NOTICE]);
+            }
+
             if ($response->success) {
                 $response->data[Constants::USER_HAD_CHANGES_ON] = Constants::HAD_CHANGES_ON_PBX;
                 $response->data[Constants::USER_SYNC_RESULT] = Constants::SYNC_RESULT_UPDATED;
@@ -210,15 +235,15 @@ class LdapSyncMain extends Injectable
             // No changes on both sides
             $response = new AnswerStructure();
             $response->data[Constants::USER_SYNC_RESULT] = Constants::SYNC_RESULT_SKIPPED;
-            if (isset($userDataFromMikoPBX[Constants::EXTENSION_ID_IN_MIKOPBX])){
-                $response->data[Constants::EXTENSION_ID_IN_MIKOPBX] = $userDataFromMikoPBX[Constants::EXTENSION_ID_IN_MIKOPBX];
+            if (isset($userDataFromMikoPBX[Constants::USER_ID_IN_MIKOPBX])){
+                $response->data[Constants::USER_ID_IN_MIKOPBX] = $userDataFromMikoPBX[Constants::USER_ID_IN_MIKOPBX];
             }
             $response->success = true;
             return $response;
         }
 
-        if (isset($userDataFromMikoPBX[Constants::EXTENSION_ID_IN_MIKOPBX])){
-            $response->data[Constants::EXTENSION_ID_IN_MIKOPBX] = $userDataFromMikoPBX[Constants::EXTENSION_ID_IN_MIKOPBX];
+        if (isset($userDataFromMikoPBX[Constants::USER_ID_IN_MIKOPBX])){
+            $response->data[Constants::USER_ID_IN_MIKOPBX] = $userDataFromMikoPBX[Constants::USER_ID_IN_MIKOPBX];
         }
 
         // Save hashes into database
@@ -320,7 +345,7 @@ class LdapSyncMain extends Injectable
                 Constants::USER_EMAIL_ATTR => 'Users.email',
                 Constants::USER_AVATAR_ATTR => 'Users.avatar',
                 Constants::USER_PASSWORD_ATTR => 'Sip.secret',
-                Constants::EXTENSION_ID_IN_MIKOPBX=>'Extensions.id',
+                Constants::USER_ID_IN_MIKOPBX=>'Users.id',
             ],
             'joins' => [
                 'Extensions' => [
@@ -364,6 +389,11 @@ class LdapSyncMain extends Injectable
      */
     public static function createUpdateUser(array $userDataFromLdap, ?string $currentUserId = null): AnswerStructure
     {
+        // Collected during preflight; non-null value means LDAP shipped a too-weak
+        // SIP password. Attached to the returned AnswerStructure so updateUserData
+        // can record it as a conflict on the Conflicts tab.
+        $weakPasswordNotice = null;
+
         $pbxUserData = self::findUserInMikoPBX($userDataFromLdap, $currentUserId);
 
         if ($userDataFromLdap[Constants::USER_DISABLED] ?? false) {
@@ -453,10 +483,56 @@ class LdapSyncMain extends Injectable
             }
         }
 
-        // Update SIP password if provided
+        // SIP password handling.
+        //
+        // IMPORTANT: PATCH re-validates every field present in the payload, including
+        // sip_secret. The default payload carries sip_secret forward from the GET
+        // snapshot (current value in DB), so a legacy secret that was fine years ago
+        // can now be rejected by today's stricter rules (SCORE_FAIR for CONTEXT_SIP)
+        // and block the whole employee update. We therefore strip sip_secret in every
+        // case except when LDAP supplied a *new* value that passes preflight.
+        //
+        // Note: same pattern may be needed for other fields if their validation
+        // tightens in core — consider rebuilding the PATCH payload from scratch
+        // instead of mutating the GET response next time we touch this.
         $sipPassword = $userDataFromLdap[Constants::USER_PASSWORD_ATTR] ?? null;
+        $pushSipSecret = false;
         if (!empty($sipPassword) && $sipPassword !== ($employeeData['sip_secret'] ?? '')) {
-            $employeeData['sip_secret'] = $sipPassword;
+            // Preflight against the same rules the core endpoint will enforce.
+            $passwordValidation = PasswordService::validate(
+                $sipPassword,
+                PasswordService::CONTEXT_SIP,
+                ['minLength' => 5]
+            );
+            if ($passwordValidation['isValid']) {
+                $employeeData['sip_secret'] = $sipPassword;
+                $pushSipSecret = true;
+            } else {
+                $userName = $userDataFromLdap[Constants::USER_NAME_ATTR] ?? '(unknown)';
+                $reason = implode('; ', $passwordValidation['messages']);
+                $weakLogger = new Logger('LdapSyncMain', 'ModuleLdapSync');
+                $weakLogger->writeError(sprintf(
+                    'LDAP SIP password for user "%s" rejected by core security policy: %s. Skipping password update (other fields will still sync).',
+                    $userName,
+                    $reason
+                ));
+                $weakPasswordNotice = [
+                    'userName' => $userName,
+                    'guid' => $userDataFromLdap[Constants::USER_GUID_ATTR] ?? '',
+                    'reason' => $reason,
+                    'messages' => $passwordValidation['messages'],
+                ];
+            }
+        }
+        if (!$pushSipSecret && !$isNewEmployee) {
+            // UPDATE path only: either LDAP didn't provide a secret, it matched the stored
+            // one, or preflight failed — never resend sip_secret on PATCH to avoid revalidating
+            // unchanged legacy secrets.
+            //
+            // CREATE path intentionally keeps $employeeData['sip_secret'] from
+            // employees:getDefault (Sip::generateSipPassword()) so POST has a required,
+            // strong secret even when LDAP has none or supplied a weak one.
+            unset($employeeData['sip_secret']);
         }
 
         // Update username
@@ -509,7 +585,11 @@ class LdapSyncMain extends Injectable
             ]);
         }
 
-        return new AnswerStructure($restAnswer);
+        $answer = new AnswerStructure($restAnswer);
+        if ($weakPasswordNotice !== null) {
+            $answer->data[Constants::WEAK_LDAP_PASSWORD_NOTICE] = $weakPasswordNotice;
+        }
+        return $answer;
     }
 
     /**
@@ -633,6 +713,20 @@ class LdapSyncMain extends Injectable
     }
 
     /**
+     * Runs a lightweight bind check against the target LDAP server.
+     * Useful to validate that the host/port/TLS/credentials combination is
+     * correct before any query is issued.
+     *
+     * @param array $ldapCredentials Prepared credentials (see postDataToLdapCredentials()).
+     * @return AnswerStructure
+     */
+    public static function testLdapBind(array $ldapCredentials): AnswerStructure
+    {
+        $connector = new LdapSyncConnector($ldapCredentials);
+        return $connector->testBind();
+    }
+
+    /**
      * Convert post data into LDAP credentials.
      *
      * @param array $postData The input post data.
@@ -642,13 +736,21 @@ class LdapSyncMain extends Injectable
     {
         // Admin password can be stored in DB on the time, on this way it has only xxxxxx value.
         // It can be empty as well, if some password manager tried to fill it.
+        $ldapConfig = null;
+        if (!empty($postData['id'])) {
+            $ldapConfig = LdapServers::findFirstById($postData['id']);
+        }
         if (empty($postData['administrativePasswordHidden'])
             || $postData['administrativePasswordHidden'] === Constants::HIDDEN_PASSWORD) {
-            $ldapConfig = LdapServers::findFirstById($postData['id']) ?? new LdapServers();
-            $postData['administrativePassword'] = $ldapConfig->administrativePassword ?? '';
+            $postData['administrativePassword'] = ($ldapConfig->administrativePassword ?? '');
         } else {
             $postData['administrativePassword'] = $postData['administrativePasswordHidden'];
         }
+
+        // CA certificate comes from DB rather than the form payload — the textarea
+        // is editable, but on "test connection" we also want to honour the saved
+        // value when the user hasn't touched it.
+        $caCertificate = $postData['caCertificate'] ?? ($ldapConfig->caCertificate ?? null);
 
         // Define attributes for LDAP search
         $attributes = [
@@ -675,9 +777,64 @@ class LdapSyncMain extends Injectable
             'organizationalUnit' => $postData['organizationalUnit'],
             'userFilter' => $postData['userFilter'],
             'updateAttributes' => $postData['updateAttributes'],
-            'useTLS' => $postData['useTLS'],
+            'tlsMode' => $postData['tlsMode'] ?? 'none',
+            // HTML checkboxes submit "on" when ticked — normalise it to the
+            // stored '1'/'0' form before forwarding to the connector so the
+            // test-bind REST path behaves identically to saveAction.
+            'verifyCert' => in_array(
+                strtolower((string)($postData['verifyCert'] ?? '')),
+                ['1', 'on', 'true', 'yes'],
+                true
+            ) ? '1' : '0',
+            'caCertificate' => $caCertificate,
         ];
     }
 
+    /**
+     * Distill PBXCoreRESTClientProvider error strings down to the core's
+     * `messages.error` list.
+     *
+     * On 4xx the REST client packs the entire raw HTTP response (headers +
+     * body) into a single string and stuffs it under messages.error — which
+     * then gets rendered verbatim on the Conflicts tab as one gigantic line
+     * without wraps, breaking the page layout. We extract the JSON body and
+     * use only the core's own error messages; anything that isn't shaped
+     * like that wrapper is passed through untouched.
+     *
+     * @param array $messages PBXApiResult-style messages bucket
+     * @return array Same shape, with `error` rewritten where possible.
+     */
+    private static function distillRestErrors(array $messages): array
+    {
+        if (empty($messages['error']) || !is_array($messages['error'])) {
+            return $messages;
+        }
 
+        $distilled = [];
+        foreach ($messages['error'] as $raw) {
+            $rawStr = (string)$raw;
+
+            // REST client prefix is literal and stable; if present, try to
+            // parse out the JSON body shipped after the blank line.
+            if (str_starts_with($rawStr, 'Rest API request error')) {
+                if (preg_match('/\{.*\}\s*$/s', $rawStr, $m)) {
+                    $parsed = json_decode($m[0], true);
+                    if (is_array($parsed)
+                        && isset($parsed['messages']['error'])
+                        && is_array($parsed['messages']['error'])
+                    ) {
+                        foreach ($parsed['messages']['error'] as $cleanMsg) {
+                            $distilled[] = (string)$cleanMsg;
+                        }
+                        continue;
+                    }
+                }
+            }
+
+            $distilled[] = $rawStr;
+        }
+
+        $messages['error'] = $distilled;
+        return $messages;
+    }
 }

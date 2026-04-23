@@ -33,7 +33,7 @@ class Constants
     public const USER_ACCOUNT_CONTROL_ATTR = 'userAccountControl';
     public const USER_DISABLED = 'userDisabled';
     public const USER_SYNC_RESULT = 'usersSyncResult';
-    public const EXTENSION_ID_IN_MIKOPBX = 'extensionIdInMikoPBX';
+    public const USER_ID_IN_MIKOPBX = 'userIdInMikoPBX';
     public const SYNC_RESULT_UPDATED = 'UPDATED';
     public const SYNC_RESULT_SKIPPED = 'SKIPPED';
 
@@ -47,4 +47,11 @@ class Constants
     public const PBX_UPDATE_CONFLICT = 'PBX_UPDATE_CONFLICT';
     public const LDAP_UPDATE_CONFLICT = 'LDAP_UPDATE_CONFLICT';
     public const CONFLICT_DATA= 'CONFLICT_DATA';
+
+    // Internal marker carried on the AnswerStructure data bucket to signal that
+    // an LDAP SIP password failed core-side strength preflight. updateUserData
+    // records it as a conflict (so the admin sees it on the Conflicts tab) and
+    // strips the marker before the response is handed further up.
+    public const WEAK_LDAP_PASSWORD_NOTICE = 'weakLdapPasswordNotice';
+    public const CONFLICT_KIND_WEAK_LDAP_SECRET = 'LDAP_WEAK_SIP_SECRET';
 }
