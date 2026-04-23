@@ -59,7 +59,7 @@
                     {{ ldapForm.render('administrativePasswordHidden') }}
                 </div>
                 <div class="two wide field">
-                    <div class="ui icon basic fluid button test-ldap-bind"
+                    <div class="ui icon basic button test-ldap-bind"
                          data-tooltip="{{ t._('module_ldap_TestBindButton') }}"
                          data-position="top right"
                          data-variation="tiny">
