@@ -43,6 +43,11 @@ class WorkerLdapSync extends WorkerBase
      */
     public function start(array $argv): void
     {
+        // Carbon 3.x / PHP 8.4: createFromTimestamp() signature is incompatible
+        // with the new DateTime::createFromTimestamp(int|float): static built-in.
+        // Suppress E_DEPRECATED for the process lifetime; remove once Carbon fixes it.
+        error_reporting(error_reporting() & ~E_DEPRECATED);
+
         $managedCache = $this->di->get(ManagedCacheProvider::SERVICE_NAME);
 
         // Retrieve the last sync timestamp from the cache

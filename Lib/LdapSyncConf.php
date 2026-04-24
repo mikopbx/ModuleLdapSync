@@ -70,6 +70,16 @@ class LdapSyncConf extends ConfigClass
      */
     public function moduleRestAPICallback(array $request): PBXApiResult
     {
+        // Carbon 3.x defines createFromTimestamp() with a wider signature than
+        // PHP 8.4's new DateTime::createFromTimestamp(int|float): static.
+        // Whoops (active in WorkerApiCommands) converts E_DEPRECATED to a fatal
+        // exception when Carbon's class is first autoloaded.  Preload the class
+        // here, while E_DEPRECATED is suppressed, so the autoloader never runs
+        // inside Whoops's error handler.
+        $prevErrorReporting = error_reporting(error_reporting() & ~E_DEPRECATED);
+        class_exists(\Carbon\Carbon::class);
+        error_reporting($prevErrorReporting);
+
         $res = new PBXApiResult();
         $res->processor = __METHOD__;
         $action = strtoupper($request['action']);
