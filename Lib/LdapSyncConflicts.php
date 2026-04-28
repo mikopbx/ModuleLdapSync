@@ -90,6 +90,13 @@ class LdapSyncConflicts extends Injectable
      */
     public static function recordSyncConflict(string $ldapServerID, array $userData, array $errors, string $side): void
     {
+        // The conflict payload travels straight to the Conflicts UI; the SIP
+        // secret (or LDAP-side password value) has no diagnostic value there
+        // and must not be persisted in cleartext.
+        if (!empty($userData[Constants::USER_PASSWORD_ATTR])) {
+            $userData[Constants::USER_PASSWORD_ATTR] = '****************';
+        }
+
         $paramsHash = md5(implode('', $userData));
         // Attempt to find an existing conflict record by the domain parameters hash
         $storedRecord = Conflicts::findFirst("paramsHash='$paramsHash'");

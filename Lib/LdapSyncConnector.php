@@ -479,6 +479,7 @@ class LdapSyncConnector extends Injectable
     {
         $res = new AnswerStructure();
         $res->data[Constants::USER_SYNC_RESULT]=Constants::SYNC_RESULT_SKIPPED;
+        $dirtyAttributes = [];
 
         try {
             $this->connection->connect();
@@ -509,7 +510,8 @@ class LdapSyncConnector extends Injectable
                         $binaryData = base64_decode($base64Data);
                         $user->{$this->userAttributes[$attribute]} = $binaryData;
                     } elseif ($attribute===Constants::USER_MOBILE_ATTR){
-                        if (preg_replace('/\D/', '', $user->getFirstAttribute($this->userAttributes[$attribute]))!==$value) {
+                        $current = (string)($user->getFirstAttribute($this->userAttributes[$attribute]) ?? '');
+                        if (preg_replace('/\D/', '', $current) !== $value) {
                             $user->{$this->userAttributes[$attribute]} = $value;
                         }
                     } else {
@@ -517,6 +519,10 @@ class LdapSyncConnector extends Injectable
                     }
                 }
             }
+            // Capture which attributes are actually being modified so a server-side
+            // refusal ("operation restricted", "WILL_NOT_PERFORM", ACL denials)
+            // names the offender on the Conflicts tab instead of a bare diagnostic.
+            $dirtyAttributes = array_keys($user->getDirty());
             $user->save();
             $res->success = true;
             $res->messages['info'][]= 'User '.$newUserData[Constants::USER_NAME_ATTR].' was updated on server '.$this->serverName;
@@ -525,7 +531,13 @@ class LdapSyncConnector extends Injectable
             $res->messages['info'][]= 'User '.$newUserData[Constants::USER_NAME_ATTR].' was not updated on server '.$this->serverName.' because of insufficient access rights';
             $res->success = true;
         } catch (\LdapRecord\LdapRecordException $e) {
-            $res->messages['error'][]= $e->getDetailedError()->getDiagnosticMessage();
+            $detail = $e->getDetailedError();
+            $diag = $detail !== null ? $detail->getDiagnosticMessage() : '';
+            $message = $diag !== '' ? $diag : $e->getMessage();
+            if (!empty($dirtyAttributes)) {
+                $message .= ' (attempted attributes: ' . implode(', ', $dirtyAttributes) . ')';
+            }
+            $res->messages['error'][]= $message;
             $res->success = false;
         } catch (\Throwable $e) {
             $res->messages['error'][] = CriticalErrorsHandler::handleExceptionWithSyslog($e);
